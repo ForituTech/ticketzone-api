@@ -3,6 +3,8 @@ from typing import Any, Generic, List, Optional, Protocol, Type, TypeVar, Union
 from django.db.models import Model
 from rest_framework.serializers import Serializer
 
+from core.exceptions import ObjectNotFoundException
+
 ModelType = TypeVar("ModelType", bound=Model)
 CreateSerializer = TypeVar("CreateSerializer", bound=Serializer)
 UpdateSerializer = TypeVar("UpdateSerializer", bound=Serializer)
@@ -39,7 +41,7 @@ class CreateService(Generic[ModelType, CreateSerializer]):
     ) -> ModelType:
         if hasattr(self, "on_pre_create"):
             self.on_pre_create(obj_in)
-        obj = self.model(**obj_in.validated_data)
+        obj = self.model.objects.create(**obj_in.validated_data)
         if hasattr(self, "on_post_create"):
             self.on_post_create(obj)
         return obj
@@ -56,11 +58,18 @@ class UpdateService(Generic[ModelType, UpdateSerializer]):
         self.model = model
 
     def update(
-        self: Union[Any, ServiceInterface], *, obj: ModelType, obj_in: UpdateSerializer
+        self: Union[Any, ServiceInterface],
+        *,
+        obj_id: Union[str, int],
+        obj_in: UpdateSerializer,
     ) -> ModelType:
+        try:
+            obj = self.model.objects.get(pk=obj_id)
+        except self.model.DoesNotExist:
+            raise ObjectNotFoundException(model=f"{ModelType}", pk=obj_id)
         if hasattr(self, "on_pre_update"):
             self.on_pre_update(obj_in)
-        obj = self.model.objects.filter(pk=obj.pk).update(**obj_in.validated_data)
+        self.model.objects.filter(pk=obj_id).update(**obj_in.validated_data)
         if hasattr(self, "on_post_update"):
             self.on_post_update(obj)
         return obj
@@ -86,8 +95,8 @@ class ReadService(Generic[ModelType]):
 
     def get(self: Union[Any, ModelType], *, pk: Any) -> Optional[ModelType]:
         try:
-            obj = self.objects.get(pk=pk)
-        except self.DoesNotExist:
+            obj = self.model.objects.get(pk=pk)
+        except self.model.DoesNotExist:
             return None
 
         return obj
@@ -96,10 +105,10 @@ class ReadService(Generic[ModelType]):
         self: Union[Any, ModelType],
         *,
         filters: Optional[dict[str, Any]] = None,
-        limit: Optional[int] = None
+        limit: Optional[int] = None,
     ) -> List[ModelType]:
         if filters:
-            return list(self.objects.filter(**filters)[:limit])
+            return list(self.model.objects.filter(**filters)[:limit])
         return list(self.model.objects.all()[:limit])
 
 

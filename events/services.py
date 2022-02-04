@@ -1,7 +1,7 @@
 from typing import Dict
 
-from db.exceptions import ObjectNotFoundException
-from db.services import CRUDService
+from core.exceptions import ObjectNotFoundException
+from core.services import CRUDService
 from events.models import Event, EventPromotion, TicketPromotion, TicketType
 from events.serializers import (EventPromotionSerializer,
                                 EventPromotionUpdateSerializer,
@@ -16,9 +16,10 @@ from partner.models import Partner
 class EventService(CRUDService[Event, EventSerializer, EventUpdateSerializer]):
     def on_pre_create(self, obj_in: EventSerializer) -> None:
         try:
-            Partner.objects.get(pk=obj_in.partner)
+            partner = Partner.objects.get(pk=obj_in.partner)
         except Partner.DoesNotExist:
             raise ObjectNotFoundException("Partner", obj_in.partner)
+        obj_in.validated_data["partner"] = partner
 
     def get_partner_events(self, partner_id: int, **filters):
         return Event.objects.filter(partner=partner_id)

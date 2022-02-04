@@ -1,7 +1,17 @@
 from rest_framework import serializers
 
+from core.serializers import BaseSerializer
 
-class EventSerializer(serializers.Serializer):
+
+class EventBaseSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=256, required=False)
+    poster = serializers.CharField(required=False)
+    event_date = serializers.DateField(required=False)
+    event_location = serializers.CharField(required=False)
+    description = serializers.CharField(required=False)
+
+
+class EventSerializer(BaseSerializer):
     name = serializers.CharField(max_length=256)
     poster = serializers.CharField()
     event_date = serializers.DateField()
@@ -10,16 +20,12 @@ class EventSerializer(serializers.Serializer):
     partner = serializers.IntegerField()
 
 
-class EventUpdateSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=256, required=False)
-    poster = serializers.CharField(required=False)
-    event_date = serializers.DateField(required=False)
-    event_location = serializers.CharField(required=False)
-    description = serializers.CharField(required=False)
-
-
-class EventReadSerializer(EventUpdateSerializer):
+class EventReadSerializer(EventBaseSerializer):
     pass
+
+
+class EventUpdateSerializer(BaseSerializer, EventBaseSerializer):
+    id = serializers.IntegerField()
 
 
 class TicketTypeSerializer(serializers.Serializer):
