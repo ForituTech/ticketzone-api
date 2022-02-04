@@ -1,14 +1,17 @@
-from typing import Dict
+from typing import Dict, List
 
-from core.exceptions import ObjectNotFoundException
+from rest_framework import status
+
+from core.error_codes import ErrorCodes
+from core.exceptions import HttpErrorException, ObjectNotFoundException
 from core.services import CRUDService
 from events.models import Event, EventPromotion, TicketPromotion, TicketType
 from events.serializers import (EventPromotionSerializer,
                                 EventPromotionUpdateSerializer,
                                 EventSerializer, EventUpdateSerializer,
+                                TicketTypeCreateSerializer,
                                 TicketTypePromotionSerializer,
                                 TicketTypePromotionUpdateSerializer,
-                                TicketTypeSerializer,
                                 TicketTypeUpdateSerializer)
 from partner.models import Partner
 
@@ -34,8 +37,17 @@ event_service = EventService(Event)
 
 
 class TicketTypeService(
-    CRUDService[TicketType, TicketTypeSerializer, TicketTypeUpdateSerializer]
+    CRUDService[TicketType, TicketTypeCreateSerializer, TicketTypeUpdateSerializer]
 ):
+    def get_ticket_types_for_event(self, event_id: str) -> List[TicketType]:
+        try:
+            event = Event.objects.get(pk=event_id)
+        except Event.DoesNotExist:
+            raise HttpErrorException(
+                status.HTTP_404_NOT_FOUND, ErrorCodes.INVALID_EVENT_ID
+            )
+        return TicketType.objects.filter(event=event)
+
     def get_ticket_price_totals(self, ticket_types: Dict[int, int]) -> int:
         total_price: int = 0
         for ticket_type_id, multiplier in enumerate(ticket_types):

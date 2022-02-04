@@ -28,23 +28,24 @@ class EventUpdateSerializer(BaseSerializer, EventBaseSerializer):
     id = serializers.IntegerField()
 
 
-class TicketTypeSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=256)
-    price = serializers.IntegerField()
-    event = serializers.IntegerField()
-    active = serializers.BooleanField()
-    inactive_msg = serializers.CharField(max_length=256)
-    amount = serializers.IntegerField()
-    is_visible = serializers.BooleanField()
-
-
-class TicketTypeUpdateSerializer(serializers.Serializer):
+class TicketTypeBaseSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=256, required=False)
     price = serializers.IntegerField(required=False)
     active = serializers.BooleanField(required=False)
     inactive_msg = serializers.CharField(max_length=256, required=False)
     amount = serializers.IntegerField(required=False)
-    is_visible = serializers.BooleanField(required=False)
+
+
+class TicketTypeCreateSerializer(BaseSerializer, TicketTypeBaseSerializer):
+    event = serializers.IntegerField()
+
+
+class TicketTypeUpdateSerializer(BaseSerializer, serializers.Serializer):
+    id = serializers.IntegerField()
+
+
+class TickeTypeReadSerializer(TicketTypeBaseSerializer):
+    pass
 
 
 class EventPromotionSerializer(serializers.Serializer):

@@ -1,9 +1,10 @@
-from typing import Any, Generic, List, Optional, Protocol, Type, TypeVar, Union
+from typing import (Any, Dict, Generic, List, Optional, Protocol, Type,
+                    TypeVar, Union)
 
 from django.db.models import Model
 from rest_framework.serializers import Serializer
 
-from core.exceptions import ObjectNotFoundException
+from core.exceptions import ObjectInvalidException, ObjectNotFoundException
 
 ModelType = TypeVar("ModelType", bound=Model)
 CreateSerializer = TypeVar("CreateSerializer", bound=Serializer)
@@ -37,8 +38,14 @@ class CreateService(Generic[ModelType, CreateSerializer]):
         self.model = model
 
     def create(
-        self: Union[Any, ServiceInterface], *, obj_in: CreateSerializer
+        self: Union[Any, ServiceInterface],
+        *,
+        obj_data: Dict[str, Any],
+        serializer: Type[CreateSerializer],
     ) -> ModelType:
+        obj_in = serializer(data_in=obj_data, data=obj_data)
+        if not obj_in.is_valid(raise_exception=False):
+            raise ObjectInvalidException("Event")
         if hasattr(self, "on_pre_create"):
             self.on_pre_create(obj_in)
         obj = self.model.objects.create(**obj_in.validated_data)
@@ -60,16 +67,19 @@ class UpdateService(Generic[ModelType, UpdateSerializer]):
     def update(
         self: Union[Any, ServiceInterface],
         *,
-        obj_id: Union[str, int],
-        obj_in: UpdateSerializer,
+        obj_data: Dict[str, Any],
+        serializer: Type[UpdateSerializer],
     ) -> ModelType:
+        obj_in = serializer(data_in=obj_data, data=obj_data)
+        if not obj_in.is_valid(raise_exception=False):
+            raise ObjectInvalidException(f"{ModelType}")
         try:
-            obj = self.model.objects.get(pk=obj_id)
+            obj = self.model.objects.get(pk=obj_in.id)
         except self.model.DoesNotExist:
-            raise ObjectNotFoundException(model=f"{ModelType}", pk=obj_id)
+            raise ObjectNotFoundException(model=f"{ModelType}", pk=obj_in.id)
         if hasattr(self, "on_pre_update"):
             self.on_pre_update(obj_in)
-        self.model.objects.filter(pk=obj_id).update(**obj_in.validated_data)
+        self.model.objects.filter(pk=obj_in.id).update(**obj_in.validated_data)
         if hasattr(self, "on_post_update"):
             self.on_post_update(obj)
         return obj
@@ -85,7 +95,12 @@ class DeleteService(Generic[ModelType]):
     def __init__(self, model: Type[ModelType]):
         self.model = model
 
-    def remove(self: Union[Any, ModelType], *, obj: ModelType):
+    def remove(self: Union[Any, ModelType], *, obj_id: Union[str, int]):
+        try:
+            obj = self.model.object.get(pk=obj_id)
+        except self.model.DoesNotExist:
+            return
+
         obj.delete()
 
 
