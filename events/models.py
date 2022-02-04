@@ -4,7 +4,9 @@ from partner.models import Partner
 
 
 class Event(models.Model):
-    name = models.CharField(max_length=256, null=True, blank=True, default="new-event")
+    name = models.CharField(
+        max_length=256, null=False, blank=False, default="new-event"
+    )
     poster = models.ImageField(null=False, blank=False, upload_to="media/")
     event_date = models.DateField(null=True, blank=True, auto_now=False)
     event_location = models.CharField(max_length=1024, null=True, blank=True)

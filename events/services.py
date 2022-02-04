@@ -20,10 +20,10 @@ class EventService(CRUDService[Event, EventSerializer, EventUpdateSerializer]):
         except Partner.DoesNotExist:
             raise ObjectNotFoundException("Partner", obj_in.partner)
 
-    def get_partner_events(partner_id: int, **filters):
+    def get_partner_events(self, partner_id: int, **filters):
         return Event.objects.filter(partner=partner_id)
 
-    def get_event_ticket_types(event_id: int, **filters):
+    def get_event_ticket_types(self, event_id: int, **filters):
         return TicketType.objects.filter(event=event_id).filter(**filters)
 
     # def get_event_promotions()
@@ -35,9 +35,9 @@ event_service = EventService(Event)
 class TicketTypeService(
     CRUDService[TicketType, TicketTypeSerializer, TicketTypeUpdateSerializer]
 ):
-    def get_ticket_price_totals(ticket_types: Dict[int, int]) -> int:
+    def get_ticket_price_totals(self, ticket_types: Dict[int, int]) -> int:
         total_price: int = 0
-        for ticket_type_id, multiplier in ticket_types:
+        for ticket_type_id, multiplier in enumerate(ticket_types):
             ticket_type = TicketType.objects.get(pk=ticket_type_id)
             total_price += ticket_type.price * multiplier
 
@@ -69,11 +69,11 @@ class TicketTypePromotionService(
         TicketTypePromotionUpdateSerializer,
     ]
 ):
-    def on_pre_create(self, obj_in: EventPromotionSerializer) -> None:
+    def on_pre_create(self, obj_in: TicketTypePromotionSerializer) -> None:
         try:
-            TicketType.objects.get(pk=obj_in.event)
-        except Event.DoesNotExist:
-            raise ObjectNotFoundException("Event", pk=obj_in.event)
+            TicketType.objects.get(pk=obj_in.ticket)
+        except TicketType.DoesNotExist:
+            raise ObjectNotFoundException("TicketType", pk=obj_in.ticket)
 
 
 ticket_type_promo_service = TicketTypePromotionService(TicketPromotion)

@@ -40,7 +40,9 @@ class PaymentMethodType(models.Model, metaclass=AbstractModelMeta):
 class Payment(models.Model):
     made_at = models.DateTimeField(null=True, blank=True, auto_now=True)
     amount = models.IntegerField(null=False, blank=False)
-    person = models.ForeignKey(Person, on_delete=models.SET_NULL, null=True, blank=True)
+    person = models.ForeignKey(
+        Person, on_delete=models.DO_NOTHING, null=False, blank=False
+    )
     # mapping from payment provider ids to internal relations
     transaction_id = models.CharField(max_length=256, null=False, blank=False)
 

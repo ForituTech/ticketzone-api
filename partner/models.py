@@ -21,6 +21,9 @@ class PartnerBankingInfo(models.Model):
 
 
 class Partner(models.Model):
+    owner = models.ForeignKey(
+        Person, on_delete=models.CASCADE, null=False, blank=False, related_name="owner"
+    )
     contact_person = models.ForeignKey(
         Person, on_delete=models.SET_NULL, null=True, blank=True
     )
@@ -29,4 +32,4 @@ class Partner(models.Model):
     )
 
     def __str__(self) -> str:
-        return self.contact_person.name
+        return self.owner.name

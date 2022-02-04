@@ -4,7 +4,7 @@ from rest_framework import serializers
 class EventSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=256)
     poster = serializers.CharField()
-    event_date = serializers.DateField(format="YYYY-MM-DD")
+    event_date = serializers.DateField()
     event_location = serializers.CharField()
     description = serializers.CharField()
     partner = serializers.IntegerField()
@@ -13,7 +13,7 @@ class EventSerializer(serializers.Serializer):
 class EventUpdateSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=256, required=False)
     poster = serializers.CharField(required=False)
-    event_date = serializers.DateField(format="YYYY-MM-DD", required=False)
+    event_date = serializers.DateField(required=False)
     event_location = serializers.CharField(required=False)
     description = serializers.CharField(required=False)
 
