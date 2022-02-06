@@ -26,4 +26,4 @@ class ObjectInvalidException(APIException):
 class HttpErrorException(APIException):
     def __init__(self, status_code: status, code: ErrorCodes) -> None:
         self.status_code = status_code
-        super().__init__(detail=f"{code.name}: {code.value}", code=status_code.__name__)
+        super().__init__(detail=f"{code.name}: {code.value}", code=status_code)

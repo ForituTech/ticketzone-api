@@ -1,4 +1,5 @@
 import abc
+import uuid
 
 from django.db import models
 
@@ -10,6 +11,7 @@ class AbstractModelMeta(abc.ABCMeta, type(models.Model)):
 
 
 class PaymentMethodType(models.Model, metaclass=AbstractModelMeta):
+
     name = models.CharField(max_length=256, null=False, blank=False, unique=True)
 
     class Meta:
@@ -38,6 +40,10 @@ class PaymentMethodType(models.Model, metaclass=AbstractModelMeta):
 
 
 class Payment(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    created_at = models.DateField(auto_now_add=True)
+    updated_at = models.DateField(auto_now=True)
+
     made_at = models.DateTimeField(null=True, blank=True, auto_now=True)
     amount = models.IntegerField(null=False, blank=False)
     person = models.ForeignKey(

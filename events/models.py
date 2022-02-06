@@ -1,9 +1,15 @@
+import uuid
+
 from django.db import models
 
 from partner.models import Partner
 
 
 class Event(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    created_at = models.DateField(auto_now_add=True)
+    updated_at = models.DateField(auto_now=True)
+
     name = models.CharField(
         max_length=256, null=False, blank=False, default="new-event"
     )
@@ -17,7 +23,7 @@ class Event(models.Model):
     is_public = models.BooleanField(
         null=False,
         blank=False,
-        default=True,
+        default=False,
         verbose_name="Has the event been published",
     )
 
@@ -26,6 +32,10 @@ class Event(models.Model):
 
 
 class TicketType(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    created_at = models.DateField(auto_now_add=True)
+    updated_at = models.DateField(auto_now=True)
+
     name = models.CharField(max_length=256, null=False, blank=False)
     price = models.IntegerField(null=False, blank=False)
     event = models.ForeignKey(Event, on_delete=models.CASCADE, null=False, blank=False)
@@ -47,6 +57,10 @@ class TicketType(models.Model):
 
 
 class EventPromotion(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    created_at = models.DateField(auto_now_add=True)
+    updated_at = models.DateField(auto_now=True)
+
     name = models.CharField(max_length=256, null=False, blank=False)
     event = models.ForeignKey(Event, on_delete=models.CASCADE, null=False, blank=False)
     promotion_rate = models.IntegerField(null=False, blank=False, default=100)
@@ -57,6 +71,10 @@ class EventPromotion(models.Model):
 
 
 class TicketPromotion(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    created_at = models.DateField(auto_now_add=True)
+    updated_at = models.DateField(auto_now=True)
+
     name = models.CharField(max_length=256, null=False, blank=False)
     ticket = models.ForeignKey(
         TicketType, on_delete=models.CASCADE, null=False, blank=False

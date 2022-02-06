@@ -2,6 +2,8 @@ from typing import (Any, Dict, Generic, List, Optional, Protocol, Type,
                     TypeVar, Union)
 
 from django.db.models import Model
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.request import Request
 from rest_framework.serializers import Serializer
 
 from core.exceptions import ObjectInvalidException, ObjectNotFoundException
@@ -30,6 +32,9 @@ class ServiceInterface(Protocol[ModelType]):
         pass
 
     def on_post_update(self, obj: ModelType) -> None:
+        pass
+
+    def on_pre_delete(self, obj: ModelType) -> None:
         pass
 
 
@@ -68,18 +73,19 @@ class UpdateService(Generic[ModelType, UpdateSerializer]):
         self: Union[Any, ServiceInterface],
         *,
         obj_data: Dict[str, Any],
-        serializer: Type[UpdateSerializer],
+        serializer: UpdateSerializer,
+        obj_id: Union[str, int],
     ) -> ModelType:
         obj_in = serializer(data_in=obj_data, data=obj_data)
         if not obj_in.is_valid(raise_exception=False):
-            raise ObjectInvalidException(f"{ModelType}")
+            raise ObjectInvalidException(f"{self.model.__name__}")
         try:
-            obj = self.model.objects.get(pk=obj_in.id)
+            obj = self.model.objects.get(pk=obj_id)
         except self.model.DoesNotExist:
-            raise ObjectNotFoundException(model=f"{ModelType}", pk=obj_in.id)
+            raise ObjectNotFoundException(model=f"{self.model.__name__}", pk=obj_in.id)
         if hasattr(self, "on_pre_update"):
             self.on_pre_update(obj_in)
-        self.model.objects.filter(pk=obj_in.id).update(**obj_in.validated_data)
+        self.model.objects.filter(pk=obj_id).update(**obj_in.validated_data)
         if hasattr(self, "on_post_update"):
             self.on_post_update(obj)
         return obj
@@ -97,11 +103,15 @@ class DeleteService(Generic[ModelType]):
 
     def remove(self: Union[Any, ModelType], *, obj_id: Union[str, int]):
         try:
-            obj = self.model.object.get(pk=obj_id)
+            obj = self.model.objects.get(pk=obj_id)
         except self.model.DoesNotExist:
             return
-
+        if hasattr(self, "on_pre_delete"):
+            self.on_pre_delete(obj)
         obj.delete()
+
+    def on_pre_delete(self, obj: ModelType) -> None:
+        pass
 
 
 class ReadService(Generic[ModelType]):
@@ -119,12 +129,18 @@ class ReadService(Generic[ModelType]):
     def get_filtered(
         self: Union[Any, ModelType],
         *,
+        paginator: PageNumberPagination,
+        request: Request,
         filters: Optional[dict[str, Any]] = None,
         limit: Optional[int] = None,
     ) -> List[ModelType]:
         if filters:
-            return list(self.model.objects.filter(**filters)[:limit])
-        return list(self.model.objects.all()[:limit])
+            return paginator.paginate_queryset(
+                list(self.model.objects.filter(**filters)[:limit]), request=request
+            )
+        return paginator.paginate_queryset(
+            list(self.model.objects.all()[:limit]), request=request
+        )
 
 
 class CRUDService(

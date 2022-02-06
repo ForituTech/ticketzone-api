@@ -17,15 +17,15 @@ class EventSerializer(BaseSerializer):
     event_date = serializers.DateField()
     event_location = serializers.CharField()
     description = serializers.CharField()
-    partner = serializers.IntegerField()
+    partner = serializers.UUIDField()
 
 
 class EventReadSerializer(EventBaseSerializer):
-    pass
+    id = serializers.UUIDField()
 
 
 class EventUpdateSerializer(BaseSerializer, EventBaseSerializer):
-    id = serializers.IntegerField()
+    pass
 
 
 class TicketTypeBaseSerializer(serializers.Serializer):
@@ -37,20 +37,20 @@ class TicketTypeBaseSerializer(serializers.Serializer):
 
 
 class TicketTypeCreateSerializer(BaseSerializer, TicketTypeBaseSerializer):
-    event = serializers.IntegerField()
+    event = serializers.UUIDField()
 
 
-class TicketTypeUpdateSerializer(BaseSerializer, serializers.Serializer):
-    id = serializers.IntegerField()
+class TicketTypeUpdateSerializer(BaseSerializer, TicketTypeBaseSerializer):
+    pass
 
 
 class TickeTypeReadSerializer(TicketTypeBaseSerializer):
-    pass
+    id = serializers.UUIDField()
 
 
 class EventPromotionSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=256)
-    event = serializers.IntegerField()
+    event = serializers.UUIDField()
     promotion_rate = serializers.IntegerField()
     expiry = serializers.DateField()
 
@@ -63,7 +63,7 @@ class EventPromotionUpdateSerializer(serializers.Serializer):
 
 class TicketTypePromotionSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=256)
-    ticket = serializers.IntegerField()
+    ticket = serializers.UUIDField()
     promotion_rate = serializers.IntegerField()
     expiry = serializers.DateField()
 
