@@ -1,5 +1,4 @@
-from typing import (Any, Dict, Generic, List, Optional, Protocol, Type,
-                    TypeVar, Union)
+from typing import Any, Dict, Generic, List, Optional, Protocol, Type, TypeVar, Union
 
 from django.db.models import Model
 from rest_framework.pagination import PageNumberPagination
@@ -105,7 +104,7 @@ class DeleteService(Generic[ModelType]):
         try:
             obj = self.model.objects.get(pk=obj_id)
         except self.model.DoesNotExist:
-            return
+            raise ObjectNotFoundException(model=f"{self.model.__name__}", pk=obj_id)
         if hasattr(self, "on_pre_delete"):
             self.on_pre_delete(obj)
         obj.delete()

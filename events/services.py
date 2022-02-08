@@ -6,13 +6,16 @@ from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException, ObjectNotFoundException
 from core.services import CRUDService
 from events.models import Event, EventPromotion, TicketPromotion, TicketType
-from events.serializers import (EventPromotionSerializer,
-                                EventPromotionUpdateSerializer,
-                                EventSerializer, EventUpdateSerializer,
-                                TicketTypeCreateSerializer,
-                                TicketTypePromotionSerializer,
-                                TicketTypePromotionUpdateSerializer,
-                                TicketTypeUpdateSerializer)
+from events.serializers import (
+    EventPromotionSerializer,
+    EventPromotionUpdateSerializer,
+    EventSerializer,
+    EventUpdateSerializer,
+    TicketTypeCreateSerializer,
+    TicketTypePromotionSerializer,
+    TicketTypePromotionUpdateSerializer,
+    TicketTypeUpdateSerializer,
+)
 from partner.models import Partner
 
 

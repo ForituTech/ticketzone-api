@@ -7,11 +7,14 @@ from rest_framework.response import Response
 
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException
-from events.serializers import (EventReadSerializer, EventSerializer,
-                                EventUpdateSerializer,
-                                TicketTypeCreateSerializer,
-                                TicketTypeUpdateSerializer,
-                                TickeTypeReadSerializer)
+from events.serializers import (
+    EventReadSerializer,
+    EventSerializer,
+    EventUpdateSerializer,
+    TicketTypeCreateSerializer,
+    TicketTypeUpdateSerializer,
+    TickeTypeReadSerializer,
+)
 from events.services import event_service, ticket_type_service
 
 paginator = PageNumberPagination()
@@ -85,3 +88,7 @@ class TicketTypeViewSet(viewsets.ViewSet):
         raise HttpErrorException(
             status_code=status.HTTP_200_OK, code=ErrorCodes.TICKET_TYPE_OBJECT_DELETED
         )
+
+
+class TicketTypePromotionViewset(viewsets.ViewSet):
+    pass
