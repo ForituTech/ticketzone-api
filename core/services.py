@@ -72,7 +72,7 @@ class UpdateService(Generic[ModelType, UpdateSerializer]):
         self: Union[Any, ServiceInterface],
         *,
         obj_data: Dict[str, Any],
-        serializer: UpdateSerializer,
+        serializer: Type[UpdateSerializer],
         obj_id: Union[str, int],
     ) -> ModelType:
         obj_in = serializer(data_in=obj_data, data=obj_data)

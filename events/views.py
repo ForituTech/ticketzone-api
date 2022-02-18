@@ -57,7 +57,7 @@ class EventVieset(viewsets.ViewSet):
 
 
 class TicketTypeViewSet(viewsets.ViewSet):
-    def list(self, request: Request):
+    def list(self, request: Request) -> Response:
         filters = request.query_params.dict()
         if not filters or "event_id" not in filters:
             raise HttpErrorException(
@@ -71,19 +71,19 @@ class TicketTypeViewSet(viewsets.ViewSet):
             TickeTypeReadSerializer(ticket_types, many=True).data
         )
 
-    def create(self, request: Request):
+    def create(self, request: Request) -> Response:
         ticket_type = ticket_type_service.create(
             obj_data=request.data, serializer=TicketTypeCreateSerializer
         )
         return Response(TickeTypeReadSerializer(ticket_type, many=True).data)
 
-    def update(self, request: Request, pk: Union[str, int]):
-        event = event_service.update(
+    def update(self, request: Request, pk: Union[str, int]) -> Response:
+        event = ticket_type_service.update(
             obj_data=request.data, serializer=TicketTypeUpdateSerializer, obj_id=pk
         )
         return Response(EventReadSerializer(event).data)
 
-    def delete(request: Request, pk: Union[str, int]):
+    def delete(self, request: Request, pk: Union[str, int]) -> Response:
         ticket_type_service.remove(obj_id=pk)
         raise HttpErrorException(
             status_code=status.HTTP_200_OK, code=ErrorCodes.TICKET_TYPE_OBJECT_DELETED

@@ -1,14 +1,10 @@
-import uuid
-
 from django.contrib.auth.models import User
 from django.db import models
 
+from core.db import BaseModel
 
-class Person(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    created_at = models.DateField(auto_now_add=True)
-    updated_at = models.DateField(auto_now=True)
 
+class Person(BaseModel):
     name = models.CharField(max_length=256, null=False, blank=False)
     email = models.CharField(
         verbose_name="E-mail", max_length=256, null=False, blank=False, default="0"
@@ -19,11 +15,7 @@ class Person(models.Model):
         return self.name
 
 
-class PartnerBankingInfo(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    created_at = models.DateField(auto_now_add=True)
-    updated_at = models.DateField(auto_now=True)
-
+class PartnerBankingInfo(BaseModel):
     bank_code = models.IntegerField(null=False, blank=False)
     bank_account_number = models.IntegerField(null=False, blank=False)
 
@@ -31,13 +23,9 @@ class PartnerBankingInfo(models.Model):
         return f"Banking info"
 
 
-class Partner(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    created_at = models.DateField(auto_now_add=True)
-    updated_at = models.DateField(auto_now=True)
-
+class Partner(BaseModel):
     owner = models.ForeignKey(
-        User, on_delete=models.CASCADE, null=False, blank=False, related_name="owner"
+        Person, on_delete=models.CASCADE, null=False, blank=False, related_name="owner"
     )
     contact_person = models.ForeignKey(
         Person, on_delete=models.SET_NULL, null=True, blank=True

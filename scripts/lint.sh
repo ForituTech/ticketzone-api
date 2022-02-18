@@ -1,3 +1,3 @@
 set -x
 
-black .. --check && isort --check-only .. && flake8 ..
+mypy .. && black .. --check && isort --check-only .. && flake8 ..

@@ -1,4 +1,5 @@
 from typing import Union
+import uuid
 
 from rest_framework import status
 from rest_framework.exceptions import APIException
@@ -9,7 +10,7 @@ from core.error_codes import ErrorCodes
 class ObjectNotFoundException(APIException):
     status_code = status.HTTP_404_NOT_FOUND
 
-    def __init__(self, model: str, pk: Union[str, int]):
+    def __init__(self, model: str, pk: uuid.UUID):
         super().__init__(detail=f"{model} with id: {pk} not found", code="not_found")
 
 

@@ -1,15 +1,10 @@
-import uuid
-
 from django.db import models
 
+from core.db import BaseModel
 from partner.models import Partner
 
 
-class Event(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    created_at = models.DateField(auto_now_add=True)
-    updated_at = models.DateField(auto_now=True)
-
+class Event(BaseModel):
     name = models.CharField(
         max_length=256, null=False, blank=False, default="new-event"
     )
@@ -31,11 +26,7 @@ class Event(models.Model):
         return self.name
 
 
-class TicketType(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    created_at = models.DateField(auto_now_add=True)
-    updated_at = models.DateField(auto_now=True)
-
+class TicketType(BaseModel):
     name = models.CharField(max_length=256, null=False, blank=False)
     price = models.IntegerField(null=False, blank=False)
     event = models.ForeignKey(Event, on_delete=models.CASCADE, null=False, blank=False)
@@ -56,11 +47,7 @@ class TicketType(models.Model):
         return "{0} - {1}".format(self.event.name, self.name)
 
 
-class EventPromotion(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    created_at = models.DateField(auto_now_add=True)
-    updated_at = models.DateField(auto_now=True)
-
+class EventPromotion(BaseModel):
     name = models.CharField(max_length=256, null=False, blank=False)
     event = models.ForeignKey(Event, on_delete=models.CASCADE, null=False, blank=False)
     promotion_rate = models.IntegerField(null=False, blank=False, default=100)
@@ -70,11 +57,7 @@ class EventPromotion(models.Model):
         return self.name
 
 
-class TicketPromotion(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    created_at = models.DateField(auto_now_add=True)
-    updated_at = models.DateField(auto_now=True)
-
+class TicketPromotion(BaseModel):
     name = models.CharField(max_length=256, null=False, blank=False)
     ticket = models.ForeignKey(
         TicketType, on_delete=models.CASCADE, null=False, blank=False
