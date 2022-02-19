@@ -71,7 +71,7 @@ class TicketTypeViewSet(viewsets.ViewSet):
         ticket_type = ticket_type_service.create(
             obj_data=request.data, serializer=TicketTypeCreateSerializer
         )
-        return Response(TickeTypeReadSerializer(ticket_type, many=True).data)
+        return Response(TickeTypeReadSerializer(ticket_type).data)
 
     def update(self, request: Request, pk: Union[str, int]) -> Response:
         event = ticket_type_service.update(

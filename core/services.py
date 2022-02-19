@@ -87,7 +87,8 @@ class UpdateService(Generic[ModelType, UpdateSerializer]):
             )
         if hasattr(self, "on_pre_update"):
             self.on_pre_update(obj_in)
-        self.model.objects.filter(pk=obj_id).update(**obj_in.validated_data)
+        self.model.objects.filter(pk=obj_id).update(**dict(obj_in.validated_data))
+        obj = self.model.objects.get(pk=obj_id)
         if hasattr(self, "on_post_update"):
             self.on_post_update(obj)
         return obj

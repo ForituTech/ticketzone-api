@@ -46,6 +46,13 @@ event_service = EventService(Event)
 class TicketTypeService(
     CRUDService[TicketType, TicketTypeCreateSerializer, TicketTypeUpdateSerializer]
 ):
+    def on_pre_create(self, obj_in: TicketTypeCreateSerializer) -> None:
+        try:
+            event = Event.objects.get(pk=obj_in.event)
+        except Event.DoesNotExist:
+            raise ObjectNotFoundException("Event", str(obj_in.event))
+        obj_in.validated_data["event"] = event
+
     def get_ticket_types_for_event(self, event_id: str) -> List[TicketType]:
         try:
             event = Event.objects.get(pk=event_id)

@@ -13,18 +13,18 @@ env:
   DEBUG: ${{ secrets.DEBUG }}
 
 jobs:
-  Typing-Lint:
+  Typing-Lint-Checks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
 
       - name: Get changed files
-        id: changed-files-app
+        id: changed-files
         uses: tj-actions/changed-files@v7
         with:
           files: |
             .
-      - name: Set up Python 3.x
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.9'
@@ -44,7 +44,42 @@ jobs:
         run: |
           poetry install --no-root
       - name: Run linting
-        if: steps.changed-files-app.outputs.any_changed == 'true'
+        if: steps.changed-files.outputs.any_changed == 'true'
         run: |
           chmod +x scripts/lint.sh
           poetry run ./scripts/lint.sh
+
+  Unit-Tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v7
+        with:
+          files: |
+            .
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Setup poetry
+        uses: Gr1N/setup-poetry@v7
+        with:
+          poetry-version: 1.1.12
+
+      - name: Setup cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+
+      - name: Install dependencies
+        run: |
+          poetry install --no-root
+      - name: Run Tests
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          poetry run ./manage.py test

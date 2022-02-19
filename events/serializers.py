@@ -32,7 +32,7 @@ class TicketTypeBaseSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=256, required=False)
     price = serializers.IntegerField(required=False)
     active = serializers.BooleanField(required=False)
-    inactive_msg = serializers.CharField(max_length=256, required=False)
+    amsg = serializers.CharField(max_length=256, required=False)
     amount = serializers.IntegerField(required=False)
 
 
@@ -40,7 +40,7 @@ class TicketTypeSerializer(BaseSerializer):
     name = serializers.CharField(max_length=256)
     price = serializers.IntegerField()
     active = serializers.BooleanField()
-    inactive_msg = serializers.CharField()
+    amsg = serializers.CharField()
     amount = serializers.IntegerField()
 
 
