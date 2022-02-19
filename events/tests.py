@@ -1,1 +1,70 @@
-# Create your tests here.
+from django.test import TestCase
+from rest_framework import status
+from rest_framework.test import APIClient
+
+from events.fixtures import event_fixtures
+from events.models import TicketType
+
+
+class EventTestCase(TestCase):
+    fixtures = [
+        "banking_info.json",
+        "person.json",
+        "partner.json",
+        "events.json",
+        "ticket_types.json",
+    ]
+
+    def setUp(self) -> None:
+        self.client = APIClient()
+
+    def test_create_event__no_data(self) -> None:
+        res = self.client.post("/events/events/", data={}, format="json")
+        assert res.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    def test_create_event(self) -> None:
+        res = self.client.post(
+            "/events/events/", data=event_fixtures.event_fixture, format="json"
+        )
+        assert res.status_code == status.HTTP_200_OK
+
+    def test_update_event(self) -> None:
+        name = "Test Event Update"
+        update_data = {
+            "name": name,
+        }
+        event = event_fixtures.create_event_object()
+        res = self.client.put(
+            f"/events/events/{event.id}/", data=update_data, format="json"
+        )
+        assert res.status_code == status.HTTP_200_OK
+        assert res.json()["name"] == name
+
+    def test_create_ticket_type(self) -> None:
+        res = self.client.post(
+            "/events/tickets/", data=event_fixtures.ticket_type_fixture, format="json"
+        )
+        assert res.status_code == status.HTTP_200_OK
+
+    def test_list_ticket_types__generic(self) -> None:
+        res = self.client.get("/events/tickets/")
+        assert res.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_list_ticket_types(self) -> None:
+        event1 = event_fixtures.create_event_object()
+        event2 = event_fixtures.create_event_object()
+        event_fixtures.create_ticket_type_obj(event1)
+        event_fixtures.create_ticket_type_obj(event2)
+        res = self.client.get(f"/events/tickets/?event_id={event1.id}")
+        assert res.status_code == status.HTTP_200_OK
+        assert res.json()["count"] == 1
+
+    def test_update_ticket_type(self) -> None:
+        ticket: TicketType = event_fixtures.create_ticket_type_obj()
+        name = "Test VIP ticket"
+        data = {
+            "name": name,
+        }
+        res = self.client.put(f"/events/tickets/{ticket.id}/", data=data, format="json")
+        assert res.status_code == status.HTTP_200_OK
+        assert res.json()["name"] == name

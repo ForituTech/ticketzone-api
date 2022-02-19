@@ -1,0 +1,14 @@
+[
+{
+    "model": "partner.partner",
+    "pk": "4c545373-d195-4e67-873b-24c7e6b580d0",
+    "fields": {
+        "created_at": "2022-02-19",
+        "updated_at": "2022-02-19",
+        "name": "Muze Ticketing",
+        "owner": "ad85e010-d24b-491e-b06c-c1bd77c87642",
+        "contact_person": null,
+        "banking_info": "f153d108-e16b-4bc4-bc6f-0735a8d38f61"
+    }
+}
+]
