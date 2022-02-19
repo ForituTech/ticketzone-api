@@ -1,4 +1,3 @@
-from django.contrib.auth.models import User
 from django.db import models
 
 from core.db import BaseModel
@@ -20,7 +19,7 @@ class PartnerBankingInfo(BaseModel):
     bank_account_number = models.IntegerField(null=False, blank=False)
 
     def __str__(self) -> str:
-        return f"Banking info"
+        return "Banking info"
 
 
 class Partner(BaseModel):

@@ -9,12 +9,12 @@ class Event(BaseModel):
         max_length=256, null=False, blank=False, default="new-event"
     )
     poster = models.ImageField(null=False, blank=False, upload_to="media/")
-    event_date = models.DateField(null=True, blank=True, auto_now=False)
-    event_location = models.CharField(max_length=1024, null=True, blank=True)
+    event_date = models.DateField(null=False, blank=False, auto_now=False)
+    event_location = models.CharField(max_length=1024, null=False, blank=False)
     description = models.CharField(max_length=1024, null=False, blank=False)
     partner = models.ForeignKey(
         Partner, on_delete=models.CASCADE, null=False, blank=False
-    )
+    )  # type: ignore
     is_public = models.BooleanField(
         null=False,
         blank=False,
@@ -29,7 +29,9 @@ class Event(BaseModel):
 class TicketType(BaseModel):
     name = models.CharField(max_length=256, null=False, blank=False)
     price = models.IntegerField(null=False, blank=False)
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, null=False, blank=False)
+    event = models.ForeignKey(
+        Event, on_delete=models.CASCADE, null=False, blank=False
+    )  # type: ignore
     active = models.BooleanField(null=False, blank=False, default=True)
     amsg = models.CharField(
         verbose_name="Active Message",
@@ -44,12 +46,14 @@ class TicketType(BaseModel):
     )
 
     def __str__(self) -> str:
-        return "{0} - {1}".format(self.event.name, self.name)
+        return "{0} - {1}".format(self.event.name, self.name)  # type: ignore
 
 
 class EventPromotion(BaseModel):
     name = models.CharField(max_length=256, null=False, blank=False)
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, null=False, blank=False)
+    event = models.ForeignKey(
+        Event, on_delete=models.CASCADE, null=False, blank=False
+    )  # type: ignore
     promotion_rate = models.IntegerField(null=False, blank=False, default=100)
     expiry = models.DateField(null=False, blank=False, auto_now=False)
 
@@ -61,7 +65,7 @@ class TicketPromotion(BaseModel):
     name = models.CharField(max_length=256, null=False, blank=False)
     ticket = models.ForeignKey(
         TicketType, on_delete=models.CASCADE, null=False, blank=False
-    )
+    )  # type: ignore
     promotion_rate = models.IntegerField(null=False, blank=False, default=100)
     expiry = models.DateField(null=False, blank=False, auto_now=False)
 

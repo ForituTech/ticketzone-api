@@ -6,7 +6,7 @@ import sys
 import django
 
 
-def main():
+def main() -> None:
     """Run administrative tasks."""
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eticketing_api.settings")
     django.setup()

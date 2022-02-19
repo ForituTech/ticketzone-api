@@ -1,5 +1,5 @@
-from typing import Union
 import uuid
+from typing import Union
 
 from rest_framework import status
 from rest_framework.exceptions import APIException
@@ -10,7 +10,7 @@ from core.error_codes import ErrorCodes
 class ObjectNotFoundException(APIException):
     status_code = status.HTTP_404_NOT_FOUND
 
-    def __init__(self, model: str, pk: uuid.UUID):
+    def __init__(self, model: str, pk: Union[uuid.UUID, str]):
         super().__init__(detail=f"{model} with id: {pk} not found", code="not_found")
 
 
@@ -20,11 +20,11 @@ class ObjectInvalidException(APIException):
     def __init__(self, model: str):
         super().__init__(
             detail=f"Couldn't construct an instance of {model} with the provided data",
-            code="not_found",
+            code="unprocessable_entity",
         )
 
 
 class HttpErrorException(APIException):
-    def __init__(self, status_code: status, code: ErrorCodes) -> None:
+    def __init__(self, status_code: int, code: ErrorCodes) -> None:
         self.status_code = status_code
-        super().__init__(detail=f"{code.name}: {code.value}", code=status_code)
+        super().__init__(detail=f"{code.name}: {code.value}", code=code.value)

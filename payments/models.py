@@ -1,4 +1,5 @@
 import abc
+from typing import Optional
 
 from django.db import models
 
@@ -12,19 +13,22 @@ class Payment(BaseModel):
     amount = models.IntegerField(null=False, blank=False)
     person = models.ForeignKey(
         Person, on_delete=models.DO_NOTHING, null=False, blank=False
-    )
+    )  # type: ignore
     # mapping from payment provider ids to internal relations
     transaction_id = models.CharField(max_length=256, null=False, blank=False)
 
     def __str__(self) -> str:
-        return f"{self.person.name} paid {self.amount} at {self.made_at}"
+        return (
+            f"{self.person.name} paid "  # type: ignore
+            f"{self.amount} at {self.made_at}"
+        )
 
 
-class AbstractModelMeta(abc.ABCMeta, type(models.Model)):
+class AbstractModelMeta(abc.ABCMeta, type(models.Model)):  # type: ignore
     pass
 
 
-class PaymentMethodType(models.Model, metaclass=AbstractModelMeta):
+class PaymentMethodType(models.Model, metaclass=AbstractModelMeta):  # type: ignore
 
     name = models.CharField(max_length=256, null=False, blank=False, unique=True)
 
@@ -45,9 +49,9 @@ class PaymentMethodType(models.Model, metaclass=AbstractModelMeta):
 
     # partner disbursment
     @abc.abstractmethod
-    def b2b_send(self) -> PaymentStates:
+    def b2b_send(self, *, amount: int, partner: Partner) -> PaymentStates:
         pass
 
     @abc.abstractmethod
-    def search(self, *, transaction_id: str) -> Payment:
+    def search(self, *, transaction_id: str) -> Optional[Payment]:
         pass

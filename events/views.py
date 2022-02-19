@@ -27,8 +27,9 @@ class EventVieset(viewsets.ViewSet):
         events = event_service.get_filtered(
             paginator=paginator, request=request, filters=filters
         )
+        paginated_events = paginator.paginate_queryset(events, request=request)
         return paginator.get_paginated_response(
-            EventReadSerializer(events, many=True).data
+            EventReadSerializer(paginated_events, many=True).data
         )
 
     def retrieve(self, request: Request, pk: Union[str, int]) -> Response:
