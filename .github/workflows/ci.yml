@@ -4,11 +4,16 @@ on:
     branches:
       - master
 concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  SECRET_KEY: ${{ secrets.SECRET_KEY }}
+  ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
+  DEBUG: ${{ secrets.DEBUG }}
 
 jobs:
-  Typing & Lint:
+  Typing-Lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

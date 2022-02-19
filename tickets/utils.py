@@ -5,7 +5,7 @@ from tickets.models import Ticket
 
 
 def compute_ticket_hash(ticket: Ticket) -> str:
-    person: Person = ticket.payment.person  # type: ignore
+    person: Person = ticket.payment.person
     ticket_dict = ticket.__dict__
     ticket_dict.update(person.__dict__)
     str_to_be_hashed: str = ""

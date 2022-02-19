@@ -13,15 +13,12 @@ class Payment(BaseModel):
     amount = models.IntegerField(null=False, blank=False)
     person = models.ForeignKey(
         Person, on_delete=models.DO_NOTHING, null=False, blank=False
-    )  # type: ignore
+    )
     # mapping from payment provider ids to internal relations
     transaction_id = models.CharField(max_length=256, null=False, blank=False)
 
     def __str__(self) -> str:
-        return (
-            f"{self.person.name} paid "  # type: ignore
-            f"{self.amount} at {self.made_at}"
-        )
+        return f"{self.person.name} paid " f"{self.amount} at {self.made_at}"
 
 
 class AbstractModelMeta(abc.ABCMeta, type(models.Model)):  # type: ignore

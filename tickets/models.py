@@ -11,7 +11,7 @@ class Ticket(BaseModel):
     )
     payment = models.ForeignKey(
         Payment, on_delete=models.CASCADE, null=False, blank=False
-    )  # type: ignore
+    )
     sent = models.BooleanField(
         null=False,
         blank=False,
@@ -27,8 +27,8 @@ class Ticket(BaseModel):
 
     def __str__(self) -> str:
         return (
-            f"{self.payment.person.name}'s"  # type: ignore
-            f"{self.ticket_type.event.name}"  # type: ignore
+            f"{self.payment.person.name}'s"
+            f"{self.ticket_type.event.name}"
             f"{self.ticket_type.name} ticket"
         )
 
