@@ -36,7 +36,15 @@ class TicketTypeBaseSerializer(serializers.Serializer):
     amount = serializers.IntegerField(required=False)
 
 
-class TicketTypeCreateSerializer(BaseSerializer, TicketTypeBaseSerializer):
+class TicketTypeSerializer(BaseSerializer):
+    name = serializers.CharField(max_length=256)
+    price = serializers.IntegerField()
+    active = serializers.BooleanField()
+    inactive_msg = serializers.CharField()
+    amount = serializers.IntegerField()
+
+
+class TicketTypeCreateSerializer(TicketTypeSerializer):
     event = serializers.UUIDField()
 
 

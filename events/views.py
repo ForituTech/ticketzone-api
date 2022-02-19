@@ -50,12 +50,6 @@ class EventVieset(viewsets.ViewSet):
         )
         return Response(EventReadSerializer(event).data)
 
-    def destroy(self, request: Request, pk: Union[str, int]) -> Response:
-        event_service.remove(obj_id=pk)
-        raise HttpErrorException(
-            status_code=status.HTTP_200_OK, code=ErrorCodes.EVENT_DELETED
-        )
-
 
 class TicketTypeViewSet(viewsets.ViewSet):
     def list(self, request: Request) -> Response:
@@ -68,8 +62,9 @@ class TicketTypeViewSet(viewsets.ViewSet):
         ticket_types = ticket_type_service.get_filtered(
             paginator=paginator, request=request, filters=filters
         )
+        paginated_tickets = paginator.paginate_queryset(ticket_types, request=request)
         return paginator.get_paginated_response(
-            TickeTypeReadSerializer(ticket_types, many=True).data
+            TickeTypeReadSerializer(paginated_tickets, many=True).data
         )
 
     def create(self, request: Request) -> Response:
@@ -83,12 +78,6 @@ class TicketTypeViewSet(viewsets.ViewSet):
             obj_data=request.data, serializer=TicketTypeUpdateSerializer, obj_id=pk
         )
         return Response(EventReadSerializer(event).data)
-
-    def delete(self, request: Request, pk: Union[str, int]) -> Response:
-        ticket_type_service.remove(obj_id=pk)
-        raise HttpErrorException(
-            status_code=status.HTTP_200_OK, code=ErrorCodes.TICKET_TYPE_OBJECT_DELETED
-        )
 
 
 class TicketTypePromotionViewset(viewsets.ViewSet):
