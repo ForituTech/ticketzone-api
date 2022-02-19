@@ -9,3 +9,6 @@ class ErrorCodes(enum.Enum):
     GENERIC_TICKET_TYPE_LISTING = (
         "Global ticket type listing is forbidden. event_id filter is required."
     )
+    UNSUPPORTED_ENCODING = (
+        "The encoding passed to the endpoint did not match the expected format."
+    )
