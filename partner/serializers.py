@@ -56,3 +56,8 @@ class PertnerReadSerializer(PartnerBaseSerializer):
 
 class PartnerUpdateSerializer(BaseSerializer, PartnerBaseSerializer):
     pass
+
+
+class UserSerializer(serializers.Serializer):
+    phonenumber = serializers.CharField()
+    password = serializers.CharField()

@@ -7,9 +7,9 @@
         "updated_at": "2022-02-19",
         "name": "Nelson Mongare",
         "email": "nelsonmongare@protonmail.com",
-        "phone_number": "254799762765",
+        "phone_number": "254799762766",
         "person_type": "PR",
-        "hashed_password": "123456"
+        "hashed_password": "$2b$12$IjyvmhueX4ebK0WOElWvJODwy9zWfqSZDhul/BF8l7cVGahv/WYo6"
     }
 }
 ]
