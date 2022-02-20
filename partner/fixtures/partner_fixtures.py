@@ -1,11 +1,12 @@
 from partner.models import Partner, PartnerBankingInfo, Person
+from partner.utils import create_access_token
 
 person_fixture = {
     "name": "Nelson Mongare",
     "email": "nelsonmongare@protonmail.com",
     "phone_number": "254799762765",
     "person_type": "PR",
-    "hashed_password": "123456",
+    "hashed_password": "$2b$12$IjyvmhueX4ebK0WOElWvJODwy9zWfqSZDhul/BF8l7cVGahv/WYo6",
 }
 
 partner_banking_info_fixture = {
@@ -23,6 +24,11 @@ partner_fixture = {
 def create_person_obj() -> Person:
     person: Person = Person.objects.create(**person_fixture)
     return person
+
+
+def create_auth_token() -> str:
+    user: Person = create_person_obj()
+    return create_access_token(user)
 
 
 def create_banking_info_obj() -> PartnerBankingInfo:

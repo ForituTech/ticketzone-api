@@ -10,6 +10,7 @@ admin.site.index_title = "Welcome to Eticketing Super-Admin Portal"
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("events/", include("events.urls")),
+    path("partner/", include("partner.urls")),
     path(
         "openapi",
         get_schema_view(

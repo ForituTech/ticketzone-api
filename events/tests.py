@@ -4,6 +4,7 @@ from rest_framework.test import APIClient
 
 from events.fixtures import event_fixtures
 from events.models import TicketType
+from partner.fixtures import partner_fixtures
 
 
 class EventTestCase(TestCase):
@@ -16,7 +17,8 @@ class EventTestCase(TestCase):
     ]
 
     def setUp(self) -> None:
-        self.client = APIClient()
+        self.auth_header = {"Authorization": partner_fixtures.create_auth_token()}
+        self.client = APIClient(**self.auth_header)
 
     def test_create_event__no_data(self) -> None:
         res = self.client.post("/events/events/", data={}, format="json")

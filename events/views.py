@@ -1,12 +1,13 @@
 from typing import Union
 
-from rest_framework import status, viewsets
+from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException
+from core.views import AbstractPermissionedView
 from events.serializers import (
     EventReadSerializer,
     EventSerializer,
@@ -16,12 +17,19 @@ from events.serializers import (
     TickeTypeReadSerializer,
 )
 from events.services import event_service, ticket_type_service
+from partner.permissions import PartnerPermissions
 
 paginator = PageNumberPagination()
 paginator.page_size = 15
 
 
-class EventVieset(viewsets.ViewSet):
+class EventVieset(AbstractPermissionedView):
+
+    permissions_by_action = {
+        "create": [PartnerPermissions],
+        "update": [PartnerPermissions],
+    }
+
     def list(self, request: Request) -> Response:
         filters = request.query_params.dict()
         events = event_service.get_filtered(
@@ -51,7 +59,13 @@ class EventVieset(viewsets.ViewSet):
         return Response(EventReadSerializer(event).data)
 
 
-class TicketTypeViewSet(viewsets.ViewSet):
+class TicketTypeViewSet(AbstractPermissionedView):
+
+    permissions_by_action = {
+        "create": [PartnerPermissions],
+        "update": [PartnerPermissions],
+    }
+
     def list(self, request: Request) -> Response:
         filters = request.query_params.dict()
         if not filters or "event_id" not in filters:
@@ -80,5 +94,5 @@ class TicketTypeViewSet(viewsets.ViewSet):
         return Response(EventReadSerializer(event).data)
 
 
-class TicketTypePromotionViewset(viewsets.ViewSet):
+class TicketTypePromotionViewset(AbstractPermissionedView):
     pass
