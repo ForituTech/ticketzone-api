@@ -23,7 +23,7 @@ paginator = PageNumberPagination()
 paginator.page_size = 15
 
 
-class EventVieset(AbstractPermissionedView):
+class EventViewset(AbstractPermissionedView):
 
     permissions_by_action = {
         "create": [PartnerPermissions],
@@ -41,12 +41,12 @@ class EventVieset(AbstractPermissionedView):
         )
 
     def retrieve(self, request: Request, pk: Union[str, int]) -> Response:
-        obj = event_service.get(pk=pk)
-        if not obj:
+        event = event_service.get(pk=pk)
+        if not event:
             raise HttpErrorException(
                 status_code=status.HTTP_404_NOT_FOUND, code=ErrorCodes.INVALID_EVENT_ID
             )
-        return Response(EventReadSerializer(obj).data)
+        return Response(EventReadSerializer(event).data)
 
     def create(self, request: Request) -> Response:
         event = event_service.create(obj_data=request.data, serializer=EventSerializer)

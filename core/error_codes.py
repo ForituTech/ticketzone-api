@@ -5,6 +5,7 @@ class ErrorCodes(enum.Enum):
     ACCESS_DENIED = "You don't have permissions to access this resource"
     INVALID_EVENT_FOR_TICKET = "Invalid event id on tickect creation"
     INVALID_EVENT_ID = "An event with the given ID does not exist"
+    INVALID_PERSON_ID = "The person with the given ID does not exist"
     TICKET_TYPE_OBJECT_DELETED = "Ticket type object sucessfully deleted"
     EVENT_DELETED = "The event has been deleted"
     GENERIC_TICKET_TYPE_LISTING = (
