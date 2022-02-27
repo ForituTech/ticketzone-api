@@ -3,7 +3,7 @@ from typing import Optional
 
 from django.db import models
 
-from core.db import BaseModel
+from core.models import BaseModel
 from partner.models import Partner, Person
 from payments.constants import PaymentStates
 

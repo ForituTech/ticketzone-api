@@ -1,6 +1,6 @@
 from django.db import models
 
-from core.db import BaseModel
+from core.models import BaseModel
 from partner.constants import PersonType
 
 

@@ -1,6 +1,6 @@
 from django.db import models
 
-from core.db import BaseModel
+from core.models import BaseModel
 from events.models import TicketType
 from payments.models import Payment
 
