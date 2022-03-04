@@ -29,9 +29,6 @@ class EventTestCase(TestCase):
         res = self.client.post(
             "/events/events/", data=event_fixtures.event_fixture(), format="json"
         )
-        import pdb
-
-        pdb.set_trace()
         assert res.status_code == status.HTTP_200_OK
 
     def test_update_event(self) -> None:
@@ -50,9 +47,6 @@ class EventTestCase(TestCase):
         res = self.client.post(
             "/events/tickets/", data=event_fixtures.ticket_type_fixture(), format="json"
         )
-        import pdb
-
-        pdb.set_trace()
         assert res.status_code == status.HTTP_200_OK
 
     def test_list_ticket_types__generic(self) -> None:
