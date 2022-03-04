@@ -17,7 +17,7 @@ from events.serializers import (
     TickeTypeReadSerializer,
 )
 from events.services import event_service, ticket_type_service
-from partner.permissions import PartnerPermissions
+from partner.permissions import PartnerOwnerPermissions
 
 paginator = PageNumberPagination()
 paginator.page_size = 15
@@ -26,8 +26,8 @@ paginator.page_size = 15
 class EventViewset(AbstractPermissionedView):
 
     permissions_by_action = {
-        "create": [PartnerPermissions],
-        "update": [PartnerPermissions],
+        "create": [PartnerOwnerPermissions],
+        "update": [PartnerOwnerPermissions],
     }
 
     def list(self, request: Request) -> Response:
@@ -62,8 +62,8 @@ class EventViewset(AbstractPermissionedView):
 class TicketTypeViewSet(AbstractPermissionedView):
 
     permissions_by_action = {
-        "create": [PartnerPermissions],
-        "update": [PartnerPermissions],
+        "create": [PartnerOwnerPermissions],
+        "update": [PartnerOwnerPermissions],
     }
 
     def list(self, request: Request) -> Response:

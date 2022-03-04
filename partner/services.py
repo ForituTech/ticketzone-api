@@ -31,7 +31,7 @@ class PersonService(
         if not user_in.is_valid():
             raise credential_error_exception
         try:
-            user = Person.objects.get(phone_number=user_in.data["phonenumber"])
+            user = Person.objects.get(phone_number=user_in.data["phone_number"])
         except Person.DoesNotExist:
             raise credential_error_exception
         except Person.MultipleObjectsReturned:
