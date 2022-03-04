@@ -59,5 +59,5 @@ class PartnerUpdateSerializer(BaseSerializer, PartnerBaseSerializer):
 
 
 class UserSerializer(serializers.Serializer):
-    phonenumber = serializers.CharField()
+    phone_number = serializers.CharField()
     password = serializers.CharField()

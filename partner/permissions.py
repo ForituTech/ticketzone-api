@@ -6,7 +6,7 @@ from rest_framework.request import Request
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException
 from partner.constants import PersonType
-from partner.utils import get_user_from_access_token
+from partner.utils import decode_access_token
 
 ACCESS_DENIED_EXCEPTION = HttpErrorException(
     status_code=403,
@@ -19,19 +19,26 @@ def check_permissions(request: Request, person_type: PersonType) -> bool:
     if token_key not in request.META:
         raise ACCESS_DENIED_EXCEPTION
 
-    user = get_user_from_access_token(request.META[token_key])
+    user_data = decode_access_token(request.META[token_key])
 
-    if user.person_type != person_type:
+    if user_data["membership"] != person_type.value:
         raise ACCESS_DENIED_EXCEPTION
 
     return True
 
 
-class PartnerPermissions(BasePermission):
-    message = "Access Denied (Partner)"
+class PartnerOwnerPermissions(BasePermission):
+    message = "Access Denied (Partner Ownership)"
 
     def has_permission(self, request: Request, view: Any) -> bool:
-        return check_permissions(request=request, person_type=PersonType.PARTNER)
+        return check_permissions(request=request, person_type=PersonType.OWNER)
+
+
+class PartnerMembershipPermissions(BasePermission):
+    message = "Acces Denied (Partner Membership)"
+
+    def has_permission(self, request: Request, view: Any) -> bool:
+        return check_permissions(request=request, person_type=PersonType.PARTNER_MEMBER)
 
 
 class TicketingAgentPermissions(BasePermission):

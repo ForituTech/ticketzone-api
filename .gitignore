@@ -5,3 +5,4 @@ __pycache__
 media/
 *mypy_cache*
 .pytest_cache/
+TODO

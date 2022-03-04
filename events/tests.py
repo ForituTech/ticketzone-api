@@ -4,21 +4,22 @@ from rest_framework.test import APIClient
 
 from events.fixtures import event_fixtures
 from events.models import TicketType
+from partner.constants import PersonType
 from partner.fixtures import partner_fixtures
 
 
 class EventTestCase(TestCase):
-    fixtures = [
-        "banking_info.json",
-        "person.json",
-        "partner.json",
-        "events.json",
-        "ticket_types.json",
-    ]
-
     def setUp(self) -> None:
-        self.auth_header = {"Authorization": partner_fixtures.create_auth_token()}
+        self.owner = partner_fixtures.create_partner_person(
+            person_type=PersonType.OWNER
+        )
+        self.auth_header = {
+            "Authorization": partner_fixtures.create_auth_token(self.owner.person)
+        }
         self.client = APIClient(**self.auth_header)
+
+    def tearDown(self) -> None:
+        self.owner.person.delete()
 
     def test_create_event__no_data(self) -> None:
         res = self.client.post("/events/events/", data={}, format="json")
@@ -26,7 +27,7 @@ class EventTestCase(TestCase):
 
     def test_create_event(self) -> None:
         res = self.client.post(
-            "/events/events/", data=event_fixtures.event_fixture, format="json"
+            "/events/events/", data=event_fixtures.event_fixture(), format="json"
         )
         assert res.status_code == status.HTTP_200_OK
 
@@ -35,7 +36,7 @@ class EventTestCase(TestCase):
         update_data = {
             "name": name,
         }
-        event = event_fixtures.create_event_object()
+        event = event_fixtures.create_event_object(owner=self.owner.person)
         res = self.client.put(
             f"/events/events/{event.id}/", data=update_data, format="json"
         )
@@ -44,7 +45,7 @@ class EventTestCase(TestCase):
 
     def test_create_ticket_type(self) -> None:
         res = self.client.post(
-            "/events/tickets/", data=event_fixtures.ticket_type_fixture, format="json"
+            "/events/tickets/", data=event_fixtures.ticket_type_fixture(), format="json"
         )
         assert res.status_code == status.HTTP_200_OK
 
@@ -53,16 +54,18 @@ class EventTestCase(TestCase):
         assert res.status_code == status.HTTP_403_FORBIDDEN
 
     def test_list_ticket_types(self) -> None:
-        event1 = event_fixtures.create_event_object()
-        event2 = event_fixtures.create_event_object()
-        event_fixtures.create_ticket_type_obj(event1)
-        event_fixtures.create_ticket_type_obj(event2)
+        event1 = event_fixtures.create_event_object(self.owner.person)
+        event2 = event_fixtures.create_event_object(self.owner.person)
+        event_fixtures.create_ticket_type_obj(event=event1)
+        event_fixtures.create_ticket_type_obj(event=event2)
         res = self.client.get(f"/events/tickets/?event_id={event1.id}")
         assert res.status_code == status.HTTP_200_OK
         assert res.json()["count"] == 1
 
     def test_update_ticket_type(self) -> None:
-        ticket: TicketType = event_fixtures.create_ticket_type_obj()
+        ticket: TicketType = event_fixtures.create_ticket_type_obj(
+            owner=self.owner.person
+        )
         name = "Test VIP ticket"
         data = {
             "name": name,
