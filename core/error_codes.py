@@ -16,7 +16,9 @@ class ErrorCodes(enum.Enum):
     )
     BAD_PHONENUMBER = "The phone number provided is invalid/ doesn't belong to any user"
     INVALID_CREDENTIALS = "The provided credentials don't match any user"
-    NOT_A_MEMBER = "The given user has no membership"
+    NO_PARTNERSHIP = "The given person has no partner"
     MULTIPLE_USERS_SAME_PHONENUMBER = (
         "Internal Error: The server returned multiple people with a single phonenumer"
     )
+    ACCESS_ONLY_FOR_SELF = "This action can only be performed on your own data"
+    INVALID_PARTNER_ID = "A partner with the given ID does not exist"

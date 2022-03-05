@@ -20,6 +20,7 @@ drf-yasg = "^1.20.0"
 flake8 = ">=3.7.9"
 python-jose = "^3.3.0"
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+PyYAML = "^6.0"
 
 [tool.isort]
 profile = "black"

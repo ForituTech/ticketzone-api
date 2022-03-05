@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from core.serializers import BaseSerializer
+from core.serializers import BaseSerializer, InDBBaseSerializer
 from partner.utils import random_password
 
 
@@ -15,12 +15,11 @@ class PersonBaseSerializer(serializers.Serializer):
 class PersonSerializer(BaseSerializer):
     name = serializers.CharField(max_length=256)
     email = serializers.CharField(max_length=255)
-    phone_number = serializers.CharField(max_length=15)
-    person_type = serializers.CharField(max_length=255)
+    phone_number = serializers.CharField(max_length=30)
 
 
-class PersonReadSerializer(PersonBaseSerializer):
-    id = serializers.UUIDField()
+class PersonReadSerializer(InDBBaseSerializer, PersonBaseSerializer):
+    pass
 
 
 class PersonCreateSerializer(PersonSerializer):
@@ -32,8 +31,8 @@ class PersonUpdateSerializer(BaseSerializer, PersonBaseSerializer):
 
 
 class PartnerBankingInfoSerializer(serializers.Serializer):
-    bank_code = serializers.IntegerField()
-    bank_account_number = serializers.IntegerField()
+    bank_code = serializers.IntegerField(required=False)
+    bank_account_number = serializers.IntegerField(required=False)
 
 
 class PartnerBaseSerializer(serializers.Serializer):
@@ -50,14 +49,39 @@ class PartnerSerializer(BaseSerializer):
     banking_info = PartnerBankingInfoSerializer()
 
 
-class PertnerReadSerializer(PartnerBaseSerializer):
-    id = serializers.UUIDField()
+class PartnerReadSerializer(InDBBaseSerializer, PartnerBaseSerializer):
+    pass
 
 
 class PartnerUpdateSerializer(BaseSerializer, PartnerBaseSerializer):
-    pass
+    banking_info_id = serializers.CharField(max_length=255, required=False)
 
 
 class UserSerializer(serializers.Serializer):
     phone_number = serializers.CharField()
     password = serializers.CharField()
+
+
+class PartnerPersonBaseSerializer(serializers.Serializer):
+    person_type = serializers.CharField(required=False, max_length=255)
+    is_active = serializers.BooleanField(required=False)
+    is_hidden = serializers.BooleanField(required=False)
+
+
+class PartnerPersonCreateSerializer(BaseSerializer, PartnerPersonBaseSerializer):
+    person_id = serializers.CharField(max_length=255)
+    partner_id = serializers.CharField(max_length=255)
+
+
+class PartnerPersonUpdateSerializer(BaseSerializer, PartnerPersonBaseSerializer):
+    pass
+
+
+class PartnerPersonSerializer(BaseSerializer, PartnerPersonBaseSerializer):
+    person_id = serializers.CharField(max_length=255)
+    partner_id = serializers.CharField(max_length=255)
+
+
+class PartnerPersonReadSerializer(InDBBaseSerializer, PartnerPersonBaseSerializer):
+    person_id = serializers.CharField(max_length=255)
+    partner_id = serializers.CharField(max_length=255)

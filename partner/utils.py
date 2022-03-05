@@ -31,8 +31,8 @@ def verify_password(plaintext: str, hashed: str) -> bool:
 
 
 def get_membership_or_ownership(user: Person) -> Tuple[str, str]:
-    non_existant_membership_exception = HttpErrorException(
-        status_code=404, code=ErrorCodes.NOT_A_MEMBER
+    non_existant_partneship_exception = HttpErrorException(
+        status_code=404, code=ErrorCodes.NO_PARTNERSHIP
     )
     try:
         partner = Partner.objects.get(owner=user.id)
@@ -43,7 +43,7 @@ def get_membership_or_ownership(user: Person) -> Tuple[str, str]:
             membership = person.person_type
             partner = person.partner
         except PartnerPerson.DoesNotExist:
-            raise non_existant_membership_exception
+            raise non_existant_partneship_exception
     return (str(partner.id), membership)
 
 
@@ -56,6 +56,19 @@ def create_access_token(
         "user_id": str(user.id),
         "partner": membership[0],
         "membership": membership[1],
+    }
+    expire = datetime.utcnow() + timedelta(minutes=1440)
+    to_encode.update({"expiry": expire.strftime("%H:%M:%S %d-%b-%Y")})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+def create_access_token_lite(
+    user: Person, expires_delta: Union[timedelta, None] = None
+) -> str:
+    to_encode = {
+        "phone_number": user.phone_number,
+        "user_id": str(user.id),
     }
     expire = datetime.utcnow() + timedelta(minutes=1440)
     to_encode.update({"expiry": expire.strftime("%H:%M:%S %d-%b-%Y")})
@@ -77,7 +90,12 @@ def decode_access_token(token: str) -> Dict[str, Any]:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         phone_number: str = payload.get("phone_number", None)
-        if phone_number is None:
+        if (
+            phone_number is None
+            or "user_id" not in payload
+            or "partner" not in payload
+            or "membership" not in payload
+        ):
             raise broken_token_exception
         try:
             Person.objects.get(phone_number=phone_number)
