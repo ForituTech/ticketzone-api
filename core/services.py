@@ -1,11 +1,28 @@
-from typing import Any, Dict, Generic, Optional, Protocol, Type, TypeVar, Union
+from http import HTTPStatus
+from typing import (
+    Any,
+    Dict,
+    Generic,
+    Optional,
+    Protocol,
+    Type,
+    TypeVar,
+    Union,
+    no_type_check,
+)
 
+from django.contrib.postgres.search import SearchQuery, SearchVector
 from django.db.models import Model
 from django.db.models.query import QuerySet
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.request import Request
 
-from core.exceptions import ObjectInvalidException, ObjectNotFoundException
+from core.error_codes import ErrorCodes
+from core.exceptions import (
+    HttpErrorException,
+    ObjectInvalidException,
+    ObjectNotFoundException,
+)
 from core.serializers import BaseSerializer
 
 ModelType = TypeVar("ModelType", bound=Model)
@@ -166,6 +183,27 @@ class ReadService(Generic[ModelType]):
         if filters:
             return self.model.objects.filter(**filters).order_by("id")[:limit]
         return self.model.objects.all().order_by("id")[:limit]
+
+    @no_type_check  # FIX
+    def search(self, *, search_term: str) -> QuerySet[ModelType]:
+        if hasattr(self.model, "search_vector") and len(self.model.search_vector) > 0:
+            unpacked_vector = None
+            for vector in self.model.search_vector:
+                if self.model.search_vector.index(vector) == 0:
+                    unpacked_vector = SearchVector(vector)
+                    continue
+                unpacked_vector += SearchVector(vector)
+            query = SearchQuery(search_term)
+            return (
+                self.model.objects.annotate(search=unpacked_vector)
+                .filter(search=query)
+                .order_by("id")
+            )
+        else:
+            raise HttpErrorException(
+                status_code=HTTPStatus.BAD_REQUEST,
+                code=ErrorCodes.TARGET_MODEL_HAS_NO_SEARCH_VECTOR,
+            )
 
 
 class CRUDService(

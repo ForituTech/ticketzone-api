@@ -1,6 +1,7 @@
 from typing import Union
 
 from rest_framework import status
+from rest_framework.decorators import api_view
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -21,6 +22,15 @@ from partner.permissions import PartnerOwnerPermissions
 
 paginator = PageNumberPagination()
 paginator.page_size = 15
+
+
+@api_view(["GET"])
+def search_events(request: Request, search_term: str) -> Response:
+    events = event_service.search(search_term=search_term)
+    paginated_events = paginator.paginate_queryset(events, request=request)
+    return paginator.get_paginated_response(
+        EventReadSerializer(paginated_events, many=True).data
+    )
 
 
 class EventViewset(AbstractPermissionedView):

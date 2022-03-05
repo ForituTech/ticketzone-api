@@ -2,6 +2,7 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from events.constants import EventState
 from events.fixtures import event_fixtures
 from events.models import TicketType
 from partner.constants import PersonType
@@ -105,3 +106,48 @@ class EventTestCase(TestCase):
         res = self.client.put(f"/events/tickets/{ticket.id}/", data=data, format="json")
         assert res.status_code == status.HTTP_200_OK
         assert res.json()["name"] == name
+
+    def test_event_search(self) -> None:
+        event = event_fixtures.create_event_object()
+        res = self.client.get(f"/events/search/{event.event_location}%20{event.name}/")
+
+        assert res.status_code == 200
+        assert res.json()["count"] == 1
+
+    def test_event_search__by_description(self) -> None:
+        event = event_fixtures.create_event_object()
+        res = self.client.get(f"/events/search/{event.description}/")
+
+        assert res.status_code == 200
+        assert res.json()["count"] == 1
+
+    def test_event_search__non_existant_terms(self) -> None:
+        event = event_fixtures.create_event_object()
+        res = self.client.get(f"/events/search/{event.event_location}-1234/")
+
+        assert res.status_code == 200
+        assert res.json()["count"] == 0
+
+    def test_event_filter(self) -> None:
+        event = event_fixtures.create_event_object()
+        res = self.client.get(f"/events/events/?event_date={event.event_date}")
+
+        assert res.status_code == 200
+        assert res.json()["count"] == 1
+
+        res = self.client.get(f"/events/events/?partner={event.partner.id}")
+
+        assert res.status_code == 200
+        assert res.json()["count"] == 1
+
+        res = self.client.get(f"/events/events/?event_state={event.event_state}")
+
+        assert res.status_code == 200
+        assert res.json()["count"] == 1
+
+        res = self.client.get(f"/events/events/?event_state={EventState.CLOSED}")
+
+        assert res.status_code == 200
+        assert res.json()["count"] == 0
+
+        event.delete()
