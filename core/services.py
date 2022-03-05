@@ -164,8 +164,8 @@ class ReadService(Generic[ModelType]):
         limit: Optional[int] = None,
     ) -> QuerySet[ModelType]:
         if filters:
-            return self.model.objects.filter(**filters)[:limit]
-        return self.model.objects.all()[:limit]
+            return self.model.objects.filter(**filters).order_by("id")[:limit]
+        return self.model.objects.all().order_by("id")[:limit]
 
 
 class CRUDService(
