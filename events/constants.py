@@ -7,3 +7,4 @@ class EventState(models.TextChoices):
     ACTIVE = "AE", _("ACTIVE")
     PRE_CLOSED = "PC", _("PRE_CLOSED")
     CLOSED = "CD", _("CLOSED")
+    ARCHIVED = "AD", _("ARCHIVED")
