@@ -36,9 +36,8 @@ class EventTestCase(TestCase):
         assert res.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_create_event(self) -> None:
-        res = self.client.post(
-            "/events/events/", data=event_fixtures.event_fixture(), format="json"
-        )
+        data = event_fixtures.event_fixture(partner_id=self.owner.partner.id)
+        res = self.client.post("/events/events/", data=data, format="json")
         assert res.status_code == status.HTTP_200_OK
 
     def test_create_event__non_owner(self) -> None:
@@ -77,9 +76,9 @@ class EventTestCase(TestCase):
         assert res.json()["id"] == str(event.id)
 
     def test_create_ticket_type(self) -> None:
-        res = self.client.post(
-            "/events/tickets/", data=event_fixtures.ticket_type_fixture(), format="json"
-        )
+        event = event_fixtures.create_event_object(owner=self.owner.person)
+        data = event_fixtures.ticket_type_fixture(event_id=event.id)
+        res = self.client.post("/events/tickets/", data=data, format="json")
         assert res.status_code == status.HTTP_200_OK
 
     def test_list_ticket_types__generic(self) -> None:

@@ -1,19 +1,21 @@
 from datetime import date, timedelta
-from typing import Optional
+from typing import Optional, Union
 
 from events.models import Event, TicketType
 from partner.fixtures import partner_fixtures
 from partner.models import Person
 
 
-def event_fixture() -> dict:
+def event_fixture(partner_id: Union[str, int] = None) -> dict:
     return {
         "name": "new-event",
         "poster": "media/42_EluV6G9.jpg",
         "event_date": (date.today() + timedelta(days=30)).strftime("%Y-%m-%d"),
         "event_location": "Nairobi",
         "description": "A random event description",
-        "partner_id": str(partner_fixtures.create_partner_obj().id),
+        "partner_id": partner_id
+        if partner_id
+        else str(partner_fixtures.create_partner_obj().id),
         "is_public": False,
         "event_state": "PR",
     }
@@ -27,11 +29,11 @@ def create_event_object(owner: Optional[Person] = None) -> Event:
     return event
 
 
-def ticket_type_fixture() -> dict:
+def ticket_type_fixture(event_id: Union[str, int] = None) -> dict:
     return {
         "name": "VIP",
         "price": 12000,
-        "event_id": str(create_event_object().id),
+        "event_id": event_id if event_id else str(create_event_object().id),
         "active": True,
         "amsg": "Open Soon",
         "amount": 1200,
