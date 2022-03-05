@@ -1,3 +1,5 @@
+from typing import List
+
 from django.db import models
 
 from core.models import BaseModel
@@ -32,6 +34,15 @@ class Event(BaseModel):
 
     def __str__(self) -> str:
         return self.name
+
+    @classmethod
+    @property
+    def search_vector(cls) -> List[str]:
+        return [
+            "name",
+            "event_location",
+            "description",
+        ]
 
 
 class TicketType(BaseModel):

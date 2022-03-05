@@ -22,3 +22,4 @@ class ErrorCodes(enum.Enum):
     )
     ACCESS_ONLY_FOR_SELF = "This action can only be performed on your own data"
     INVALID_PARTNER_ID = "A partner with the given ID does not exist"
+    TARGET_MODEL_HAS_NO_SEARCH_VECTOR = "The target model does not have a search vector"
