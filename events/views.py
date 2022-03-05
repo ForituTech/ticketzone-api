@@ -7,7 +7,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from core.error_codes import ErrorCodes
-from core.exceptions import HttpErrorException
+from core.exceptions import HttpErrorException, ObjectNotFoundException
 from core.views import AbstractPermissionedView
 from events.serializers import (
     EventReadSerializer,
@@ -18,7 +18,7 @@ from events.serializers import (
     TickeTypeReadSerializer,
 )
 from events.services import event_service, ticket_type_service
-from partner.permissions import PartnerOwnerPermissions
+from partner.permissions import PartnerOwnerPermissions, check_self
 
 paginator = PageNumberPagination()
 paginator.page_size = 15
@@ -60,9 +60,19 @@ class EventViewset(AbstractPermissionedView):
 
     def create(self, request: Request) -> Response:
         event = event_service.create(obj_data=request.data, serializer=EventSerializer)
+        # TODO: check_self before event creation
+        try:
+            check_self(request, str(event.partner.owner.id))
+        except Exception as exc:
+            event.delete()
+            raise exc
         return Response(EventReadSerializer(event).data)
 
     def update(self, request: Request, pk: Union[str, int]) -> Response:
+        event = event_service.get(pk=pk)
+        if not event:
+            raise ObjectNotFoundException("Event", str(pk))
+        check_self(request, str(event.partner.owner.id))
         event = event_service.update(
             obj_data=request.data, serializer=EventUpdateSerializer, obj_id=pk
         )
@@ -95,13 +105,22 @@ class TicketTypeViewSet(AbstractPermissionedView):
         ticket_type = ticket_type_service.create(
             obj_data=request.data, serializer=TicketTypeCreateSerializer
         )
+        # TODO: check_self before ticket_type creation
+        try:
+            check_self(request, str(ticket_type.event.partner.owner.id))
+        except Exception as exc:
+            ticket_type.delete()
+            raise exc
         return Response(TickeTypeReadSerializer(ticket_type).data)
 
     def update(self, request: Request, pk: Union[str, int]) -> Response:
-        event = ticket_type_service.update(
+        ticket_type = ticket_type_service.update(
             obj_data=request.data, serializer=TicketTypeUpdateSerializer, obj_id=pk
         )
-        return Response(EventReadSerializer(event).data)
+        if not ticket_type:
+            raise ObjectNotFoundException("Event", str(pk))
+        check_self(request, str(ticket_type.event.partner.owner.id))
+        return Response(EventReadSerializer(ticket_type).data)
 
 
 class TicketTypePromotionViewset(AbstractPermissionedView):
