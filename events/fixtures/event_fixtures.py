@@ -13,7 +13,7 @@ def event_fixture() -> dict:
         "event_date": (date.today() + timedelta(days=30)).strftime("%Y-%m-%d"),
         "event_location": "Nairobi",
         "description": "A random event description",
-        "partner": str(partner_fixtures.create_partner_obj().id),
+        "partner_id": str(partner_fixtures.create_partner_obj().id),
         "is_public": False,
         "event_state": "PR",
     }
@@ -21,7 +21,7 @@ def event_fixture() -> dict:
 
 def create_event_object(owner: Optional[Person] = None) -> Event:
     data = event_fixture()
-    data["partner"] = partner_fixtures.create_partner_obj(owner=owner)
+    data["partner_id"] = partner_fixtures.create_partner_obj(owner=owner).id
     event: Event = Event.objects.create(**data)
     event.save()
     return event
@@ -31,7 +31,7 @@ def ticket_type_fixture() -> dict:
     return {
         "name": "VIP",
         "price": 12000,
-        "event": str(create_event_object().id),
+        "event_id": str(create_event_object().id),
         "active": True,
         "amsg": "Open Soon",
         "amount": 1200,
@@ -44,9 +44,9 @@ def create_ticket_type_obj(
 ) -> TicketType:
     data = ticket_type_fixture()
     if not event:
-        data["event"] = create_event_object(owner)
+        data["event_id"] = create_event_object(owner).id
     else:
-        data["event"] = event
+        data["event_id"] = event.id
     ticket_type: TicketType = TicketType.objects.create(**data)
     ticket_type.save()
     return ticket_type

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from core.serializers import BaseSerializer
+from core.serializers import BaseSerializer, InDBBaseSerializer
 
 
 class EventBaseSerializer(serializers.Serializer):
@@ -17,11 +17,11 @@ class EventSerializer(BaseSerializer):
     event_date = serializers.DateField()
     event_location = serializers.CharField()
     description = serializers.CharField()
-    partner = serializers.UUIDField()
+    partner_id = serializers.CharField(max_length=255)
 
 
-class EventReadSerializer(EventBaseSerializer):
-    id = serializers.UUIDField()
+class EventReadSerializer(InDBBaseSerializer, EventBaseSerializer):
+    pass
 
 
 class EventUpdateSerializer(BaseSerializer, EventBaseSerializer):
@@ -45,27 +45,27 @@ class TicketTypeSerializer(BaseSerializer):
 
 
 class TicketTypeCreateSerializer(TicketTypeSerializer):
-    event = serializers.UUIDField()
+    event_id = serializers.CharField(max_length=255)
 
 
 class TicketTypeUpdateSerializer(BaseSerializer, TicketTypeBaseSerializer):
     pass
 
 
-class TickeTypeReadSerializer(TicketTypeBaseSerializer):
-    id = serializers.UUIDField()
+class TickeTypeReadSerializer(InDBBaseSerializer, TicketTypeBaseSerializer):
+    pass
 
 
 class EventPromotionBaseSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=256, required=False)
-    event = serializers.UUIDField(required=False)
+    event_id = serializers.CharField(max_length=255, required=False)
     promotion_rate = serializers.IntegerField(required=False)
     expiry = serializers.DateField(required=False)
 
 
 class EventPromotionSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=256)
-    event = serializers.UUIDField()
+    event_id = serializers.CharField(max_length=255)
     promotion_rate = serializers.IntegerField()
     expiry = serializers.DateField()
 
@@ -80,7 +80,7 @@ class EventPromotionCreateSerializer(BaseSerializer, EventPromotionSerializer):
 
 class TicketTypePromotionSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=256)
-    ticket = serializers.UUIDField()
+    ticket_id = serializers.CharField(max_length=255)
     promotion_rate = serializers.IntegerField()
     expiry = serializers.DateField()
 

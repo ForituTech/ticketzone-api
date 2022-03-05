@@ -13,10 +13,19 @@ class EventTestCase(TestCase):
         self.owner = partner_fixtures.create_partner_person(
             person_type=PersonType.OWNER
         )
+        self.ticketing_agent = partner_fixtures.create_partner_person(
+            person_type=PersonType.TICKETING_AGENT
+        )
         self.auth_header = {
             "Authorization": partner_fixtures.create_auth_token(self.owner.person)
         }
+        self.ta_auth_header = {
+            "Authorization": partner_fixtures.create_auth_token(
+                self.ticketing_agent.person
+            )
+        }
         self.client = APIClient(**self.auth_header)
+        self.ta_client = APIClient(**self.ta_auth_header)
 
     def tearDown(self) -> None:
         self.owner.person.delete()
@@ -31,6 +40,12 @@ class EventTestCase(TestCase):
         )
         assert res.status_code == status.HTTP_200_OK
 
+    def test_create_event__non_owner(self) -> None:
+        res = self.ta_client.post(
+            "/events/events/", data=event_fixtures.event_fixture(), format="json"
+        )
+        assert res.status_code == status.HTTP_403_FORBIDDEN
+
     def test_update_event(self) -> None:
         name = "Test Event Update"
         update_data = {
@@ -42,6 +57,23 @@ class EventTestCase(TestCase):
         )
         assert res.status_code == status.HTTP_200_OK
         assert res.json()["name"] == name
+
+    def test_update_event__non_owner(self) -> None:
+        name = "Test Event Update"
+        update_data = {
+            "name": name,
+        }
+        event = event_fixtures.create_event_object(owner=self.owner.person)
+        res = self.ta_client.put(
+            f"/events/events/{event.id}/", data=update_data, format="json"
+        )
+        assert res.status_code == 403
+
+    def test_read_event(self) -> None:
+        event = event_fixtures.create_event_object(owner=self.owner.person)
+        res = self.client.put(f"/events/events/{event.id}/", format="json")
+        assert res.status_code == 200
+        assert res.json()["id"] == str(event.id)
 
     def test_create_ticket_type(self) -> None:
         res = self.client.post(

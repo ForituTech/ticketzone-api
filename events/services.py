@@ -5,7 +5,11 @@ from django.db.models.query import QuerySet
 from rest_framework import status
 
 from core.error_codes import ErrorCodes
-from core.exceptions import HttpErrorException, ObjectNotFoundException
+from core.exceptions import (
+    HttpErrorException,
+    ObjectInvalidException,
+    ObjectNotFoundException,
+)
 from core.services import CRUDService
 from events.models import Event, EventPromotion, TicketPromotion, TicketType
 from events.serializers import (
@@ -22,12 +26,13 @@ from partner.models import Partner
 
 
 class EventService(CRUDService[Event, EventSerializer, EventUpdateSerializer]):
-    def on_pre_create(self, obj_in: EventSerializer) -> None:
+    def on_pre_create(self, obj_in: Dict[str, Any]) -> None:
         try:
-            partner = Partner.objects.get(pk=obj_in.partner)
+            Partner.objects.get(pk=obj_in["partner_id"])
         except Partner.DoesNotExist:
-            raise ObjectNotFoundException("Partner", str(obj_in.partner))
-        obj_in.validated_data["partner"] = partner
+            raise ObjectNotFoundException("Partner", str(obj_in["partner_id"]))
+        except KeyError:
+            raise ObjectInvalidException("Event")
 
     def get_partner_events(self, partner_id: uuid.UUID) -> QuerySet[Event]:
         return Event.objects.filter(partner=partner_id)
@@ -46,12 +51,13 @@ event_service = EventService(Event)
 class TicketTypeService(
     CRUDService[TicketType, TicketTypeCreateSerializer, TicketTypeUpdateSerializer]
 ):
-    def on_pre_create(self, obj_in: TicketTypeCreateSerializer) -> None:
+    def on_pre_create(self, obj_in: Dict[str, Any]) -> None:
         try:
-            event = Event.objects.get(pk=obj_in.event)
+            Event.objects.get(pk=obj_in["event_id"])
         except Event.DoesNotExist:
-            raise ObjectNotFoundException("Event", str(obj_in.event))
-        obj_in.validated_data["event"] = event
+            raise ObjectNotFoundException("Event", str(obj_in["event_id"]))
+        except KeyError:
+            raise ObjectInvalidException("TicketType")
 
     def get_ticket_types_for_event(self, event_id: str) -> List[TicketType]:
         try:
@@ -79,11 +85,13 @@ class EventPromotionService(
         EventPromotion, EventPromotionCreateSerializer, EventPromotionUpdateSerializer
     ]
 ):
-    def on_pre_create(self, obj_in: EventPromotionCreateSerializer) -> None:
+    def on_pre_create(self, obj_in: Dict[str, Any]) -> None:
         try:
-            Event.objects.get(pk=obj_in.event)
+            Event.objects.get(pk=obj_in["event_id"])
         except Event.DoesNotExist:
-            raise ObjectNotFoundException("Event", pk=str(obj_in.event))
+            raise ObjectNotFoundException("Event", pk=str(obj_in["event_id"]))
+        except KeyError:
+            raise ObjectInvalidException("EventPromotion")
 
 
 event_promo_service = EventPromotionService(EventPromotion)
@@ -96,11 +104,13 @@ class TicketTypePromotionService(
         TicketTypePromotionUpdateSerializer,
     ]
 ):
-    def on_pre_create(self, obj_in: TicketTypePromotionCreateSerializer) -> None:
+    def on_pre_create(self, obj_in: Dict[str, Any]) -> None:
         try:
-            TicketType.objects.get(pk=obj_in.ticket)
+            TicketType.objects.get(pk=obj_in["ticket_id"])
         except TicketType.DoesNotExist:
-            raise ObjectNotFoundException("TicketType", pk=str(obj_in.ticket))
+            raise ObjectNotFoundException("TicketType", pk=str(obj_in["ticket_id"]))
+        except KeyError:
+            raise ObjectInvalidException("TicketTypePromotion")
 
 
 ticket_type_promo_service = TicketTypePromotionService(TicketPromotion)
