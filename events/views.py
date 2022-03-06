@@ -10,15 +10,31 @@ from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException, ObjectNotFoundException
 from core.views import AbstractPermissionedView
 from events.serializers import (
+    EventPromotionCreateSerializer,
+    EventPromotionReadSerializer,
+    EventPromotionUpdateSerializer,
     EventReadSerializer,
     EventSerializer,
     EventUpdateSerializer,
     TicketTypeCreateSerializer,
+    TicketTypePromotionCreateSerializer,
+    TicketTypePromotionReadSerializer,
+    TicketTypePromotionUpdateSerializer,
     TicketTypeUpdateSerializer,
     TickeTypeReadSerializer,
 )
-from events.services import event_service, ticket_type_service
-from partner.permissions import PartnerOwnerPermissions, check_self
+from events.services import (
+    event_promo_service,
+    event_service,
+    ticket_type_promo_service,
+    ticket_type_service,
+)
+from partner.permissions import (
+    PartnerMembershipPermissions,
+    PartnerOwnerPermissions,
+    check_self,
+    get_request_user_id,
+)
 
 paginator = PageNumberPagination()
 paginator.page_size = 15
@@ -82,8 +98,8 @@ class EventViewset(AbstractPermissionedView):
 class TicketTypeViewSet(AbstractPermissionedView):
 
     permissions_by_action = {
-        "create": [PartnerOwnerPermissions],
-        "update": [PartnerOwnerPermissions],
+        "create": [PartnerMembershipPermissions],
+        "update": [PartnerMembershipPermissions],
     }
 
     def list(self, request: Request) -> Response:
@@ -124,4 +140,90 @@ class TicketTypeViewSet(AbstractPermissionedView):
 
 
 class TicketTypePromotionViewset(AbstractPermissionedView):
-    pass
+
+    permissions_by_action = {
+        "create": [PartnerMembershipPermissions],
+        "update": [PartnerMembershipPermissions],
+        "list": [PartnerOwnerPermissions],
+    }
+
+    def create(self, request: Request) -> Response:
+        ticket_promo = ticket_type_promo_service.create(
+            obj_data=request.data,
+            serializer=TicketTypePromotionCreateSerializer,
+        )
+        try:
+            check_self(request, str(ticket_promo.ticket.event.partner.owner.id))
+        except Exception as exc:
+            ticket_promo.delete()
+            raise exc
+        return Response(TicketTypePromotionReadSerializer(ticket_promo).data)
+
+    def update(self, request: Request, pk: Union[str, int]) -> Response:
+        ticket_promo = ticket_type_promo_service.get(pk=pk)
+        if not ticket_promo:
+            raise ObjectNotFoundException("Ticket Promotion", str(pk))
+        check_self(request, str(ticket_promo.ticket.event.partner.owner.id))
+        ticket_promo = ticket_type_promo_service.update(
+            obj_data=request.data,
+            serializer=TicketTypePromotionUpdateSerializer,
+            obj_id=pk,
+        )
+        return Response(TicketTypePromotionReadSerializer(ticket_promo).data)
+
+    def list(self, request: Request) -> Response:
+        filters = request.query_params.dict()
+        if not filters:
+            filters = {}
+        filters["ticket__event__partner__owner_id"] = get_request_user_id(request)
+        ticket_promos = ticket_type_promo_service.get_filtered(
+            paginator=paginator, request=request, filters=filters
+        )
+        ticket_promos_page = paginator.paginate_queryset(ticket_promos, request=request)
+        return paginator.get_paginated_response(
+            TicketTypePromotionReadSerializer(ticket_promos_page, many=True).data
+        )
+
+
+class EventPromotionViewset(AbstractPermissionedView):
+
+    permissions_by_action = {
+        "create": [PartnerOwnerPermissions, PartnerMembershipPermissions],
+        "update": [PartnerOwnerPermissions, PartnerMembershipPermissions],
+        "list": [PartnerOwnerPermissions],
+    }
+
+    def create(self, request: Request) -> Response:
+        event_promo = event_promo_service.create(
+            obj_data=request.data,
+            serializer=EventPromotionCreateSerializer,
+        )
+        try:
+            check_self(request, str(event_promo.event.partner.owner.id))
+        except Exception as exc:
+            event_promo.delete()
+            raise exc
+        return Response(EventPromotionReadSerializer(event_promo).data)
+
+    def update(self, request: Request, pk: Union[str, int]) -> Response:
+        event_promo = event_promo_service.get(pk=pk)
+        if not event_promo:
+            raise ObjectNotFoundException("Event Promotion", str(pk))
+        check_self(request, str(event_promo.event.partner.owner.id))
+        event_promo = event_promo_service.update(
+            obj_data=request.data, serializer=EventPromotionUpdateSerializer, obj_id=pk
+        )
+        return Response(EventPromotionReadSerializer(event_promo).data)
+
+    def list(self, request: Request) -> Response:
+        filters = request.query_params.dict()
+        if not filters:
+            filters = {}
+        filters["event__partner__owner_id"] = get_request_user_id(request)
+        event_promos = event_promo_service.get_filtered(
+            paginator=paginator, request=request, filters=filters
+        )
+        event_promos_list = paginator.paginate_queryset(event_promos, request=request)
+        return paginator.get_paginated_response(
+            EventPromotionReadSerializer(event_promos_list, many=True).data
+        )

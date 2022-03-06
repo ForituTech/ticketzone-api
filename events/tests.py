@@ -1,3 +1,5 @@
+from random import randint
+
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -150,3 +152,156 @@ class EventTestCase(TestCase):
         assert res.json()["count"] == 0
 
         event.delete()
+
+    def test_event_promo_create(self) -> None:
+        event = event_fixtures.create_event_object(owner=self.owner.person)
+        event_data = event_fixtures.event_promo_fixture(event_id=event.id)
+        res = self.client.post("/events/event/promo/", data=event_data, format="json")
+
+        assert res.status_code == 200
+        assert res.json()["event_id"] == str(event.id)
+
+    def test_event_promo_create__non_self(self) -> None:
+        event_data = event_fixtures.event_promo_fixture()
+        res = self.client.post("/events/event/promo/", data=event_data, format="json")
+
+        assert res.status_code == 403
+
+    def test_event_promo_create__non_owner(self) -> None:
+        event = event_fixtures.create_event_object(owner=self.owner.person)
+        event_data = event_fixtures.event_promo_fixture(event_id=event.id)
+        res = self.ta_client.post(
+            "/events/event/promo/", data=event_data, format="json"
+        )
+
+        assert res.status_code == 403
+
+    def test_list_event_promos(self) -> None:
+        event = event_fixtures.create_event_object(owner=self.owner.person)
+        event_fixtures.create_event_promo_obj(event=event)
+        event_fixtures.create_event_promo_obj()
+
+        res = self.client.get("/events/event/promo/")
+
+        assert res.status_code == 200
+        assert res.json()["count"] == 1
+
+    def test_update_event_promo(self) -> None:
+        event = event_fixtures.create_event_object(owner=self.owner.person)
+        promo = event_fixtures.create_event_promo_obj(event=event)
+        rate = 15
+        update_data = {"promotion_rate": rate}
+
+        res = self.client.put(
+            f"/events/event/promo/{promo.id}/", data=update_data, format="json"
+        )
+
+        assert res.status_code == 200
+        assert res.json()["promotion_rate"] == rate
+
+    def test_update_event_promo__non_self(self) -> None:
+        promo = event_fixtures.create_event_promo_obj()
+        rate = 15
+        update_data = {"promotion_rate": rate}
+
+        res = self.client.put(
+            f"/events/event/promo/{promo.id}/", data=update_data, format="json"
+        )
+
+        assert res.status_code == 403
+
+    def test_update_event_promo__non_owner(self) -> None:
+        event = event_fixtures.create_event_object(owner=self.owner.person)
+        promo = event_fixtures.create_event_promo_obj(event=event)
+        rate = 15
+        update_data = {"promotion_rate": rate}
+
+        res = self.ta_client.put(
+            f"/events/event/promo/{promo.id}/", data=update_data, format="json"
+        )
+
+        assert res.status_code == 403
+
+    def test_ticket_promo_create(self) -> None:
+        ticket_type = event_fixtures.create_ticket_type_obj(owner=self.owner.person)
+        ticket_promo_data = event_fixtures.ticket_promo_fixture(ticket_type.id)
+
+        res = self.client.post(
+            "/events/ticket/promo/", data=ticket_promo_data, format="json"
+        )
+
+        assert res.status_code == 200
+        assert res.json()["ticket_id"] == str(ticket_type.id)
+
+    def test_ticket_promo_create__non_self(self) -> None:
+        ticket_promo_data = event_fixtures.ticket_promo_fixture()
+
+        res = self.client.post(
+            "/events/ticket/promo/", data=ticket_promo_data, format="json"
+        )
+
+        assert res.status_code == 403
+
+    def test_ticket_promo_create__non_owner(self) -> None:
+        ticket_promo_data = event_fixtures.ticket_promo_fixture()
+
+        res = self.ta_client.post(
+            "/events/ticket/promo/", data=ticket_promo_data, format="json"
+        )
+
+        assert res.status_code == 403
+
+    def test_ticket_promo_list(self) -> None:
+        ticket_type = event_fixtures.create_ticket_type_obj(owner=self.owner.person)
+        event_fixtures.create_ticket_promo_obj(ticket_type)
+        event_fixtures.create_ticket_promo_obj()
+
+        res = self.client.get("/events/ticket/promo/")
+
+        assert res.status_code == 200
+        assert res.json()["count"] == 1
+
+    def test_ticket_promo_update(self) -> None:
+        ticket_type = event_fixtures.create_ticket_type_obj(owner=self.owner.person)
+        ticket_promo = event_fixtures.create_ticket_promo_obj(ticket_type)
+        rate = randint(11, 30)
+
+        update_data = {
+            "promotion_rate": rate,
+        }
+
+        res = self.client.put(
+            f"/events/ticket/promo/{ticket_promo.id}/", data=update_data, format="json"
+        )
+
+        assert res.status_code == 200
+        assert res.json()["promotion_rate"] == rate
+
+    def test_ticket_promo_update__non_self(self) -> None:
+        ticket_promo = event_fixtures.create_ticket_promo_obj()
+        rate = randint(11, 30)
+
+        update_data = {
+            "promotion_rate": rate,
+        }
+
+        res = self.client.put(
+            f"/events/ticket/promo/{ticket_promo.id}/", data=update_data, format="json"
+        )
+
+        assert res.status_code == 403
+
+    def test_ticket_promo_update__non_owner(self) -> None:
+        ticket_type = event_fixtures.create_ticket_type_obj(owner=self.owner.person)
+        ticket_promo = event_fixtures.create_ticket_promo_obj(ticket_type)
+        rate = randint(11, 30)
+
+        update_data = {
+            "promotion_rate": rate,
+        }
+
+        res = self.ta_client.put(
+            f"/events/ticket/promo/{ticket_promo.id}/", data=update_data, format="json"
+        )
+
+        assert res.status_code == 403

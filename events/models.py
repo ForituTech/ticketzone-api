@@ -72,8 +72,9 @@ class TicketType(BaseModel):
 class EventPromotion(BaseModel):
     name = models.CharField(max_length=256, null=False, blank=False)
     event = models.ForeignKey(Event, on_delete=models.CASCADE, null=False, blank=False)
-    promotion_rate = models.IntegerField(null=False, blank=False, default=100)
+    promotion_rate = models.IntegerField(null=False, blank=False, default=10)
     expiry = models.DateField(null=False, blank=False, auto_now=False)
+    use_limit = models.IntegerField(null=False, blank=False, default=100)
 
     def __str__(self) -> str:
         return self.name
@@ -84,8 +85,9 @@ class TicketPromotion(BaseModel):
     ticket = models.ForeignKey(
         TicketType, on_delete=models.CASCADE, null=False, blank=False
     )
-    promotion_rate = models.IntegerField(null=False, blank=False, default=100)
+    promotion_rate = models.IntegerField(null=False, blank=False, default=10)
     expiry = models.DateField(null=False, blank=False, auto_now=False)
+    use_limit = models.IntegerField(null=False, blank=False, default=100)
 
     def __str__(self) -> str:
         return self.name
