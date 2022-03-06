@@ -163,6 +163,20 @@ class PartnerTestCase(TestCase):
 
         assert res.status_code == 403
 
+    def test_partner_person_create__invalid_number(self) -> None:
+        partner_person_data = partner_fixtures.partner_person_fixture()
+        partner_person_data["person"] = partner_fixtures.person_fixture()
+        partner_person_data["partner_id"] = str(partner_person_data["partner_id"])
+        partner_person_data["person"]["phone_number"] = partner_person_data["person"][
+            "phone_number"
+        ].strip("+")
+
+        res = self.authed_client.post(
+            "/partner/partnership/person/", data=partner_person_data, format="json"
+        )
+
+        assert res.status_code == 422
+
     def test_partner_person_update(self) -> None:
         partner_person = partner_fixtures.create_partner_person(
             person_type=PersonType.TICKETING_AGENT

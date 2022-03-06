@@ -1,7 +1,9 @@
+from typing import Any
+
 from rest_framework import serializers
 
 from core.serializers import BaseSerializer, InDBBaseSerializer
-from partner.utils import random_password
+from partner.utils import random_password, validate_email, validate_phonenumber
 
 
 class PersonBaseSerializer(serializers.Serializer):
@@ -11,11 +13,31 @@ class PersonBaseSerializer(serializers.Serializer):
     person_type = serializers.CharField(max_length=255, required=False)
     hashed_password = serializers.CharField(default=random_password(), required=False)
 
+    def validate_email(self, email: str) -> Any:
+        if not validate_email(email):
+            raise serializers.ValidationError("Email is invalid")
+        return email
+
+    def validate_phone_number(self, phone: str) -> Any:
+        if not validate_phonenumber(phone):
+            raise serializers.ValidationError("Phonenumber is invalid")
+        return phone
+
 
 class PersonSerializer(BaseSerializer):
     name = serializers.CharField(max_length=256)
     email = serializers.CharField(max_length=255)
     phone_number = serializers.CharField(max_length=30)
+
+    def validate_email(self, email: str) -> Any:
+        if not validate_email(email):
+            raise serializers.ValidationError("Email is invalid")
+        return email
+
+    def validate_phone_number(self, phone: str) -> Any:
+        if not validate_phonenumber(phone):
+            raise serializers.ValidationError("Phonenumber is invalid")
+        return phone
 
 
 class PersonReadSerializer(InDBBaseSerializer, PersonBaseSerializer):

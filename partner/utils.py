@@ -1,9 +1,13 @@
 import random
+import re
 from datetime import datetime, timedelta
 from typing import Any, Dict, Tuple, Union
 
+import phonenumbers
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from phonenumbers import NumberParseException, carrier
+from phonenumbers.phonenumberutil import number_type
 
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException
@@ -118,3 +122,15 @@ def get_user_from_access_token(token: str) -> Person:
             code=ErrorCodes.UNPROCESSABLE_TOKEN,
         )
     return user
+
+
+def validate_phonenumber(number: str) -> bool:
+    try:
+        return carrier._is_mobile(number_type(phonenumbers.parse(number)))
+    except NumberParseException:
+        return False
+
+
+def validate_email(email: str) -> bool:
+    email_regex = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
+    return True if re.match(email_regex, email) else False
