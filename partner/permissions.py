@@ -38,6 +38,16 @@ def check_self(request: Request, pk: Union[str, int]) -> bool:
     return True
 
 
+def get_request_user_id(request: Request) -> str:
+    token_key = "Authorization"
+    if token_key not in request.META:
+        raise ACCESS_DENIED_EXCEPTION
+
+    user_data = decode_access_token(request.META[token_key])
+
+    return user_data["user_id"]
+
+
 def check_permissions(request: Request, person_type: PersonType) -> bool:
     token_key = "Authorization"
     if token_key not in request.META:
@@ -71,16 +81,24 @@ class PartnerMembershipPermissions(BasePermission):
     message = "Acces Denied (Partner Membership)"
 
     def has_permission(self, request: Request, view: Any) -> bool:
-        return check_permissions(request=request, person_type=PersonType.PARTNER_MEMBER)
+        try:
+            return check_permissions(
+                request=request, person_type=PersonType.PARTNER_MEMBER
+            )
+        except Exception:
+            return check_permissions(request=request, person_type=PersonType.OWNER)
 
 
 class TicketingAgentPermissions(BasePermission):
     message = "Access Denied (TicketingAgent)"
 
     def has_permission(self, request: Request, view: Any) -> bool:
-        return check_permissions(
-            request=request, person_type=PersonType.TICKETING_AGENT
-        )
+        try:
+            return check_permissions(
+                request=request, person_type=PersonType.TICKETING_AGENT
+            )
+        except Exception:
+            return check_permissions(request=request, person_type=PersonType.OWNER)
 
 
 class CustomerPermissions(BasePermission):

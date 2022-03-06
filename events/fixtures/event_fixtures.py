@@ -1,7 +1,7 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import Optional, Union
 
-from events.models import Event, TicketType
+from events.models import Event, EventPromotion, TicketPromotion, TicketType
 from partner.fixtures import partner_fixtures
 from partner.models import Person
 
@@ -52,3 +52,35 @@ def create_ticket_type_obj(
     ticket_type: TicketType = TicketType.objects.create(**data)
     ticket_type.save()
     return ticket_type
+
+
+def event_promo_fixture(event_id: Optional[str] = None) -> dict:
+    return {
+        "name": "10poff",
+        "event_id": event_id if event_id else str(create_event_object().id),
+        "promotion_rate": 10,
+        "expiry": (datetime.today() + timedelta(days=10)).strftime("%Y-%m-%d"),
+        "use_limit": 10,
+    }
+
+
+def create_event_promo_obj(event: Optional[Event] = None) -> EventPromotion:
+    data = event_promo_fixture(event_id=str(event.id) if event else None)
+    return EventPromotion.objects.create(**data)
+
+
+def ticket_promo_fixture(ticket_id: Optional[str] = None) -> dict:
+    return {
+        "name": "10poff",
+        "ticket_id": ticket_id if ticket_id else str(create_ticket_type_obj().id),
+        "promotion_rate": 10,
+        "expiry": (datetime.today() + timedelta(days=10)).strftime("%Y-%m-%d"),
+        "use_limit": 10,
+    }
+
+
+def create_ticket_promo_obj(
+    ticket_type: Optional[TicketType] = None,
+) -> TicketPromotion:
+    data = ticket_promo_fixture(ticket_id=str(ticket_type.id) if ticket_type else None)
+    return TicketPromotion.objects.create(**data)
