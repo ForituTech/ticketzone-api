@@ -27,8 +27,8 @@ class EventTestCase(TestCase):
                 self.ticketing_agent.person
             )
         }
-        self.client = APIClient(**self.auth_header)
-        self.ta_client = APIClient(**self.ta_auth_header)
+        self.client = APIClient(False, **self.auth_header)
+        self.ta_client = APIClient(False, **self.ta_auth_header)
 
     def tearDown(self) -> None:
         self.owner.person.delete()
@@ -38,7 +38,7 @@ class EventTestCase(TestCase):
         assert res.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_create_event(self) -> None:
-        data = event_fixtures.event_fixture(partner_id=self.owner.partner.id)
+        data = event_fixtures.event_fixture(partner_id=str(self.owner.partner.id))
         res = self.client.post("/events/events/", data=data, format="json")
         assert res.status_code == status.HTTP_200_OK
 
@@ -79,7 +79,7 @@ class EventTestCase(TestCase):
 
     def test_create_ticket_type(self) -> None:
         event = event_fixtures.create_event_object(owner=self.owner.person)
-        data = event_fixtures.ticket_type_fixture(event_id=event.id)
+        data = event_fixtures.ticket_type_fixture(event_id=str(event.id))
         res = self.client.post("/events/tickets/", data=data, format="json")
         assert res.status_code == status.HTTP_200_OK
 
@@ -155,7 +155,7 @@ class EventTestCase(TestCase):
 
     def test_event_promo_create(self) -> None:
         event = event_fixtures.create_event_object(owner=self.owner.person)
-        event_data = event_fixtures.event_promo_fixture(event_id=event.id)
+        event_data = event_fixtures.event_promo_fixture(event_id=str(event.id))
         res = self.client.post("/events/event/promo/", data=event_data, format="json")
 
         assert res.status_code == 200
@@ -169,7 +169,7 @@ class EventTestCase(TestCase):
 
     def test_event_promo_create__non_owner(self) -> None:
         event = event_fixtures.create_event_object(owner=self.owner.person)
-        event_data = event_fixtures.event_promo_fixture(event_id=event.id)
+        event_data = event_fixtures.event_promo_fixture(event_id=str(event.id))
         res = self.ta_client.post(
             "/events/event/promo/", data=event_data, format="json"
         )
@@ -224,7 +224,7 @@ class EventTestCase(TestCase):
 
     def test_ticket_promo_create(self) -> None:
         ticket_type = event_fixtures.create_ticket_type_obj(owner=self.owner.person)
-        ticket_promo_data = event_fixtures.ticket_promo_fixture(ticket_type.id)
+        ticket_promo_data = event_fixtures.ticket_promo_fixture(str(ticket_type.id))
 
         res = self.client.post(
             "/events/ticket/promo/", data=ticket_promo_data, format="json"

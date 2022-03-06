@@ -22,9 +22,11 @@ class PartnerTestCase(TestCase):
                 self.ticketing_agent.person
             )
         }
-        self.authed_client = APIClient(**auth_header)
-        self.ta_client = APIClient(**ta_auth_header)
-        self.unauthed_client = APIClient()
+        self.authed_client = APIClient(False, **auth_header)
+        self.ta_client = APIClient(False, **ta_auth_header)
+        self.unauthed_client = APIClient(
+            False,
+        )
 
     def tearDown(self) -> None:
         self.owner.person.delete()

@@ -5,20 +5,26 @@ from django.db import models
 
 from core.models import BaseModel
 from partner.models import Partner, Person
-from payments.constants import PaymentStates
+from payments.constants import PaymentProviders, PaymentStates
 
 
 class Payment(BaseModel):
-    made_at = models.DateTimeField(null=True, blank=True, auto_now=True)
-    amount = models.IntegerField(null=False, blank=False)
+    amount = models.FloatField(null=False, blank=False)
     person = models.ForeignKey(
         Person, on_delete=models.DO_NOTHING, null=False, blank=False
     )
+    made_through = models.CharField(
+        max_length=255, null=False, blank=False, default=PaymentProviders
+    )
     # mapping from payment provider ids to internal relations
-    transaction_id = models.CharField(max_length=256, null=False, blank=False)
+    transaction_id = models.CharField(max_length=256, null=True, blank=True)
+    state = models.CharField(
+        max_length=255, null=False, blank=False, default=PaymentStates.PENDIGN.value
+    )
+    verified = models.BooleanField(null=False, blank=False, default=False)
 
     def __str__(self) -> str:
-        return f"{self.person.name} paid " f"{self.amount} at {self.made_at}"
+        return f"{self.person.name} paid " f"{self.amount} at {self.created_at}"
 
 
 class AbstractModelMeta(abc.ABCMeta, type(models.Model)):  # type: ignore

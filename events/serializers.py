@@ -59,14 +59,14 @@ class TickeTypeReadSerializer(InDBBaseSerializer, TicketTypeBaseSerializer):
 class EventPromotionBaseSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=256, required=False)
     event_id = serializers.CharField(max_length=255, required=False)
-    promotion_rate = serializers.IntegerField(required=False)
+    promotion_rate = serializers.FloatField(required=False)
     expiry = serializers.DateField(required=False)
 
 
 class EventPromotionSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=256)
     event_id = serializers.CharField(max_length=255)
-    promotion_rate = serializers.IntegerField()
+    promotion_rate = serializers.FloatField()
     expiry = serializers.DateField()
     use_limit = serializers.IntegerField()
 
@@ -86,13 +86,13 @@ class EventPromotionReadSerializer(InDBBaseSerializer, EventPromotionSerializer)
 class TicketTypePromotionSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=256)
     ticket_id = serializers.CharField(max_length=255)
-    promotion_rate = serializers.IntegerField()
+    promotion_rate = serializers.FloatField()
     expiry = serializers.DateField()
 
 
 class TicketTypePromotionBaseSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=256, required=False)
-    promotion_rate = serializers.IntegerField(required=False)
+    promotion_rate = serializers.FloatField(required=False)
     expiry = serializers.DateField(required=False)
 
 

@@ -115,6 +115,6 @@ def get_user_from_access_token(token: str) -> Person:
     if not user:
         raise HttpErrorException(
             status_code=404,
-            code=ErrorCodes.INVALID_CREDENTIALS,
+            code=ErrorCodes.UNPROCESSABLE_TOKEN,
         )
     return user
