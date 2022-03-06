@@ -7,7 +7,7 @@ from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException
 from partner.constants import PersonType
 from partner.models import PartnerPerson
-from partner.utils import decode_access_token
+from partner.utils import decode_access_token, get_user_from_access_token
 
 ACCESS_DENIED_EXCEPTION = HttpErrorException(
     status_code=403,
@@ -106,3 +106,16 @@ class CustomerPermissions(BasePermission):
 
     def has_permission(self, request: Request, view: Any) -> bool:
         return check_permissions(request=request, person_type=PersonType.CUSTOMER)
+
+
+class LoggedInPermission(BasePermission):
+    message = "You need to be authenticated to perform this action"
+
+    def has_permission(self, request: Request, view: Any) -> bool:
+        token_key = "Authorization"
+        if token_key not in request.META:
+            raise ACCESS_DENIED_EXCEPTION
+
+        user = get_user_from_access_token(request.META[token_key])
+
+        return user is not None

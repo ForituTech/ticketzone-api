@@ -6,3 +6,8 @@ class PaymentStates(Enum):
     PAID = "PAID"
     UNDERPAID = "UNDERPAID"
     OVERPAID = "OVERPAID"
+
+
+class PaymentProviders(Enum):
+    MPESA = "MPESA"
+    BANK = "BANK"

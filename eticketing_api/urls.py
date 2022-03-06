@@ -11,6 +11,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("events/", include("events.urls")),
     path("partner/", include("partner.urls")),
+    path("payments/", include("payments.urls")),
     path(
         "openapi",
         get_schema_view(
