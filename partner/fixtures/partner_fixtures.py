@@ -15,7 +15,7 @@ def person_fixture() -> dict:
     return {
         "name": "Nelson Mongare",
         "email": "nelsonmongare@protonmail.com",
-        "phone_number": random_phone_number(),
+        "phone_number": f"+{random_phone_number()}",
         "hashed_password": (
             "$2b$12$IjyvmhueX4ebK0WOElWvJODwy9zWfqSZDhul/BF8l7cVGahv/WYo6"
         ),
