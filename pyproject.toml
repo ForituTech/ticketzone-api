@@ -16,7 +16,7 @@ Pillow = "^9.0.0"
 django-stubs = "^1.9.0"
 djangorestframework-stubs = "^1.4.0"
 pydantic = "^1.9.0"
-drf-yasg = "^1.20.0"
+drf-yasg = {extras = ["validation"], version = "^1.20.0"}
 flake8 = ">=3.7.9"
 python-jose = "^3.3.0"
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}

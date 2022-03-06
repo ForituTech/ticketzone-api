@@ -1,6 +1,7 @@
 from http import HTTPStatus
 from typing import Union
 
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.request import Request
@@ -11,19 +12,25 @@ from core.exceptions import HttpErrorException
 from core.views import AbstractPermissionedView
 from partner.permissions import PartnerOwnerPermissions, check_self
 from partner.serializers import (
+    PartnerBaseSerializer,
+    PartnerPersonBaseSerializer,
     PartnerPersonCreateSerializer,
     PartnerPersonReadSerializer,
     PartnerPersonUpdateSerializer,
     PartnerReadSerializer,
     PartnerUpdateSerializer,
+    PersonBaseSerializer,
     PersonCreateSerializer,
     PersonReadSerializer,
+    PersonSerializer,
     PersonUpdateSerializer,
+    TokenSerializer,
 )
 from partner.services import partner_person_service, partner_service, person_service
 from partner.utils import create_access_token, create_access_token_lite, verify_password
 
 
+@swagger_auto_schema(method="post", responses={200: TokenSerializer})
 @api_view(["POST"])
 def login(request: Request) -> Response:
     token_key = "Authorization"
@@ -45,6 +52,7 @@ def login(request: Request) -> Response:
 
 
 class PersonViewSet(AbstractPermissionedView):
+    @swagger_auto_schema(responses={200: PersonReadSerializer})
     def retrieve(self, request: Request, pk: Union[str, int]) -> Response:
         check_self(request=request, pk=pk)
         person = person_service.get(pk=pk)
@@ -54,6 +62,9 @@ class PersonViewSet(AbstractPermissionedView):
             )
         return Response(PersonReadSerializer(person).data)
 
+    @swagger_auto_schema(
+        request_body=PersonSerializer, responses={200: PersonReadSerializer}
+    )
     def create(self, request: Request) -> Response:
         token_key = "Authorization"
         person = person_service.create(
@@ -63,6 +74,9 @@ class PersonViewSet(AbstractPermissionedView):
         auth_header = {token_key: request.session[token_key]}
         return Response(PersonReadSerializer(person).data, headers=auth_header)
 
+    @swagger_auto_schema(
+        request_body=PersonBaseSerializer, responses={200: PersonReadSerializer}
+    )
     def update(self, request: Request, pk: Union[str, int]) -> Response:
         check_self(request=request, pk=pk)
         person = person_service.update(
@@ -78,6 +92,7 @@ class PartnerViewSet(AbstractPermissionedView):
         "update": [PartnerOwnerPermissions],
     }
 
+    @swagger_auto_schema(responses={200: PartnerReadSerializer})
     def retrieve(self, request: Request, pk: Union[str, int]) -> Response:
         partner = partner_service.get(pk=pk)
         if not partner:
@@ -87,6 +102,9 @@ class PartnerViewSet(AbstractPermissionedView):
         check_self(request=request, pk=str(partner.owner.id))
         return Response(PartnerReadSerializer(partner).data)
 
+    @swagger_auto_schema(
+        request_body=PartnerBaseSerializer, responses={200: PartnerReadSerializer}
+    )
     def update(self, request: Request, pk: Union[str, int]) -> Response:
         partner = partner_service.get(pk=pk)
         if not partner:
@@ -108,17 +126,26 @@ class PartnerPersonViewset(AbstractPermissionedView):
         "update": [PartnerOwnerPermissions],
     }
 
+    @swagger_auto_schema(responses={200: PartnerPersonReadSerializer})
     def retrieve(self, request: Request, pk: Union[str, int]) -> Response:
         return Response(
             PartnerPersonReadSerializer(partner_person_service.get(pk=pk)).data
         )
 
+    @swagger_auto_schema(
+        request_body=PartnerPersonBaseSerializer,
+        responses={200: PartnerPersonReadSerializer},
+    )
     def create(self, request: Request) -> Response:
         partner_person = partner_person_service.create(
             obj_data=request.data, serializer=PartnerPersonCreateSerializer
         )
         return Response(PartnerPersonReadSerializer(partner_person).data)
 
+    @swagger_auto_schema(
+        request_body=PartnerPersonBaseSerializer,
+        responses={200: PartnerPersonReadSerializer},
+    )
     def update(self, request: Request, pk: Union[str, int]) -> Response:
         partner_person = partner_person_service.update(
             obj_data=request.data, serializer=PartnerPersonUpdateSerializer, obj_id=pk

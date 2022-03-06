@@ -1,3 +1,4 @@
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -8,7 +9,11 @@ from partner.permissions import (
     PartnerMembershipPermissions,
     check_self,
 )
-from payments.serilaizers import PaymentCreateSerializer, PaymentReadSerializer
+from payments.serilaizers import (
+    PaymentCreateSerializer,
+    PaymentReadSerializer,
+    PaymentSerializer,
+)
 from payments.services import payment_service
 
 paginator = PageNumberPagination()
@@ -22,6 +27,9 @@ class PaymentsViewSet(AbstractPermissionedView):
         "update": [PartnerMembershipPermissions],
     }
 
+    @swagger_auto_schema(
+        request_body=PaymentSerializer, responses={200: PaymentReadSerializer}
+    )
     def create(self, request: Request) -> Response:
         payment = payment_service.create(
             obj_data=request.data, serializer=PaymentCreateSerializer
