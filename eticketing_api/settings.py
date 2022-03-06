@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "payments",
     "tickets",
     "partner",
+    "drf_yasg",
 ]
 
 MIDDLEWARE = [

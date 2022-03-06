@@ -1,5 +1,6 @@
 from typing import Union
 
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.pagination import PageNumberPagination
@@ -10,16 +11,23 @@ from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException, ObjectNotFoundException
 from core.views import AbstractPermissionedView
 from events.serializers import (
+    EventBaseSerializer,
+    EventPromotionBaseSerializer,
     EventPromotionCreateSerializer,
     EventPromotionReadSerializer,
+    EventPromotionSerializer,
     EventPromotionUpdateSerializer,
     EventReadSerializer,
     EventSerializer,
     EventUpdateSerializer,
+    TicketTypeBaseSerializer,
     TicketTypeCreateSerializer,
+    TicketTypePromotionBaseSerializer,
     TicketTypePromotionCreateSerializer,
     TicketTypePromotionReadSerializer,
+    TicketTypePromotionSerializer,
     TicketTypePromotionUpdateSerializer,
+    TicketTypeSerializer,
     TicketTypeUpdateSerializer,
     TickeTypeReadSerializer,
 )
@@ -40,6 +48,7 @@ paginator = PageNumberPagination()
 paginator.page_size = 15
 
 
+@swagger_auto_schema(method="get", responses={200: EventReadSerializer(many=True)})
 @api_view(["GET"])
 def search_events(request: Request, search_term: str) -> Response:
     events = event_service.search(search_term=search_term)
@@ -56,6 +65,7 @@ class EventViewset(AbstractPermissionedView):
         "update": [PartnerOwnerPermissions],
     }
 
+    @swagger_auto_schema(responses={200: EventReadSerializer(many=True)})
     def list(self, request: Request) -> Response:
         filters = request.query_params.dict()
         events = event_service.get_filtered(
@@ -66,6 +76,7 @@ class EventViewset(AbstractPermissionedView):
             EventReadSerializer(paginated_events, many=True).data
         )
 
+    @swagger_auto_schema(responses={200: EventReadSerializer()})
     def retrieve(self, request: Request, pk: Union[str, int]) -> Response:
         event = event_service.get(pk=pk)
         if not event:
@@ -74,6 +85,9 @@ class EventViewset(AbstractPermissionedView):
             )
         return Response(EventReadSerializer(event).data)
 
+    @swagger_auto_schema(
+        request_body=EventBaseSerializer, responses={200: EventReadSerializer}
+    )
     def create(self, request: Request) -> Response:
         event = event_service.create(obj_data=request.data, serializer=EventSerializer)
         # TODO: check_self before event creation
@@ -84,6 +98,9 @@ class EventViewset(AbstractPermissionedView):
             raise exc
         return Response(EventReadSerializer(event).data)
 
+    @swagger_auto_schema(
+        request_body=EventBaseSerializer, responses={200: EventReadSerializer}
+    )
     def update(self, request: Request, pk: Union[str, int]) -> Response:
         event = event_service.get(pk=pk)
         if not event:
@@ -102,6 +119,7 @@ class TicketTypeViewSet(AbstractPermissionedView):
         "update": [PartnerMembershipPermissions],
     }
 
+    @swagger_auto_schema(responses={200: TickeTypeReadSerializer(many=True)})
     def list(self, request: Request) -> Response:
         filters = request.query_params.dict()
         if not filters or "event_id" not in filters:
@@ -117,6 +135,9 @@ class TicketTypeViewSet(AbstractPermissionedView):
             TickeTypeReadSerializer(paginated_tickets, many=True).data
         )
 
+    @swagger_auto_schema(
+        request_body=TicketTypeSerializer, responses={200: TickeTypeReadSerializer}
+    )
     def create(self, request: Request) -> Response:
         ticket_type = ticket_type_service.create(
             obj_data=request.data, serializer=TicketTypeCreateSerializer
@@ -129,6 +150,9 @@ class TicketTypeViewSet(AbstractPermissionedView):
             raise exc
         return Response(TickeTypeReadSerializer(ticket_type).data)
 
+    @swagger_auto_schema(
+        request_body=TicketTypeBaseSerializer, responses={200: TickeTypeReadSerializer}
+    )
     def update(self, request: Request, pk: Union[str, int]) -> Response:
         ticket_type = ticket_type_service.update(
             obj_data=request.data, serializer=TicketTypeUpdateSerializer, obj_id=pk
@@ -147,6 +171,10 @@ class TicketTypePromotionViewset(AbstractPermissionedView):
         "list": [PartnerOwnerPermissions],
     }
 
+    @swagger_auto_schema(
+        request_body=TicketTypePromotionSerializer,
+        responses={200: TicketTypePromotionReadSerializer},
+    )
     def create(self, request: Request) -> Response:
         ticket_promo = ticket_type_promo_service.create(
             obj_data=request.data,
@@ -159,6 +187,10 @@ class TicketTypePromotionViewset(AbstractPermissionedView):
             raise exc
         return Response(TicketTypePromotionReadSerializer(ticket_promo).data)
 
+    @swagger_auto_schema(
+        request_body=TicketTypePromotionBaseSerializer,
+        responses={200: TicketTypePromotionReadSerializer},
+    )
     def update(self, request: Request, pk: Union[str, int]) -> Response:
         ticket_promo = ticket_type_promo_service.get(pk=pk)
         if not ticket_promo:
@@ -171,6 +203,7 @@ class TicketTypePromotionViewset(AbstractPermissionedView):
         )
         return Response(TicketTypePromotionReadSerializer(ticket_promo).data)
 
+    @swagger_auto_schema(responses={200: TicketTypePromotionReadSerializer(many=True)})
     def list(self, request: Request) -> Response:
         filters = request.query_params.dict()
         if not filters:
@@ -193,6 +226,10 @@ class EventPromotionViewset(AbstractPermissionedView):
         "list": [PartnerOwnerPermissions],
     }
 
+    @swagger_auto_schema(
+        request_body=EventPromotionSerializer,
+        responses={200: EventPromotionReadSerializer},
+    )
     def create(self, request: Request) -> Response:
         event_promo = event_promo_service.create(
             obj_data=request.data,
@@ -205,6 +242,10 @@ class EventPromotionViewset(AbstractPermissionedView):
             raise exc
         return Response(EventPromotionReadSerializer(event_promo).data)
 
+    @swagger_auto_schema(
+        request_body=EventPromotionBaseSerializer,
+        responses={200: EventPromotionReadSerializer},
+    )
     def update(self, request: Request, pk: Union[str, int]) -> Response:
         event_promo = event_promo_service.get(pk=pk)
         if not event_promo:
@@ -215,6 +256,7 @@ class EventPromotionViewset(AbstractPermissionedView):
         )
         return Response(EventPromotionReadSerializer(event_promo).data)
 
+    @swagger_auto_schema(responses={200: EventPromotionReadSerializer(many=True)})
     def list(self, request: Request) -> Response:
         filters = request.query_params.dict()
         if not filters:

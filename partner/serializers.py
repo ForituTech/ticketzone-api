@@ -24,7 +24,7 @@ class PersonBaseSerializer(serializers.Serializer):
         return phone
 
 
-class PersonSerializer(BaseSerializer):
+class PersonSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=256)
     email = serializers.CharField(max_length=255)
     phone_number = serializers.CharField(max_length=30)
@@ -44,7 +44,7 @@ class PersonReadSerializer(InDBBaseSerializer, PersonBaseSerializer):
     pass
 
 
-class PersonCreateSerializer(PersonSerializer):
+class PersonCreateSerializer(BaseSerializer, PersonSerializer):
     hashed_password = serializers.CharField()
 
 
@@ -107,3 +107,7 @@ class PartnerPersonSerializer(BaseSerializer, PartnerPersonBaseSerializer):
 class PartnerPersonReadSerializer(InDBBaseSerializer, PartnerPersonBaseSerializer):
     person_id = serializers.CharField(max_length=255)
     partner_id = serializers.CharField(max_length=255)
+
+
+class TokenSerializer(serializers.Serializer):
+    token = serializers.CharField(max_length=255)

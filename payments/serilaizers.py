@@ -9,13 +9,13 @@ class PaymentBaseSerializer(serializers.Serializer):
     made_through = serializers.CharField(max_length=255, required=False)
 
 
-class PaymentSerializer(BaseSerializer):
+class PaymentSerializer(serializers.Serializer):
     amount = serializers.FloatField()
     person_id = serializers.CharField(max_length=255)
     made_through = serializers.CharField(max_length=255)
 
 
-class PaymentCreateSerializer(PaymentSerializer):
+class PaymentCreateSerializer(BaseSerializer, PaymentSerializer):
     pass
 
 
