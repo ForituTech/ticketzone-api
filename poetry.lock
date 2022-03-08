@@ -798,8 +798,8 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 
 [metadata]
 lock-version = "1.1"
-python-versions = "^3.9.9"
-content-hash = "208430beabd131f3320a1c6cb3fb68901a612ceaa952cc1d9084f2dc49472254"
+python-versions = "^3.9"
+content-hash = "e02770356b721a12dea30bbd03b1038d3f92806ccbe19adc743e8f0a7e441f58"
 
 [metadata.files]
 asgiref = [
