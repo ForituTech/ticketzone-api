@@ -1,1 +1,1 @@
-web: gunicorn eticketing-api.wsgi
+web: gunicorn eticketing_api.wsgi
