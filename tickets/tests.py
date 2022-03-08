@@ -1,1 +1,150 @@
-# Create your tests here.
+from django.test import TestCase
+from rest_framework.test import APIClient
+
+from events.fixtures import event_fixtures
+from partner.constants import PersonType
+from partner.fixtures import partner_fixtures
+from partner.fixtures.partner_fixtures import create_auth_token
+from partner.utils import create_access_token_lite
+from payments.fixtures import payment_fixtures
+from tickets.fixtures import ticket_fixtures
+from tickets.models import Ticket
+from tickets.utils import (
+    compute_ticket_hash,
+    generate_ticket_pdf,
+    generate_ticket_qr,
+    get_ticket_hash_from_qr,
+)
+
+
+class TicketTestCase(TestCase):
+    def setUp(self) -> None:
+        self.owner = partner_fixtures.create_partner_person(
+            person_type=PersonType.OWNER
+        )
+        self.auth_header = {"Authorization": create_auth_token(self.owner.person)}
+        self.client = APIClient(enforce_csrf_checks=False, **self.auth_header)
+        # Only logged_in, no partnership
+        self.person = partner_fixtures.create_person_obj()
+        self.li_authed_header = {
+            "Authorization": create_access_token_lite(user=self.person)
+        }
+        self.li_client = APIClient(enforce_csrf_checks=False, **self.li_authed_header)
+
+    def test_create_ticket(self) -> None:
+        event = event_fixtures.create_event_object(self.person)
+        ticket_type = event_fixtures.create_ticket_type_obj(event=event)
+        payment = payment_fixtures.create_payment_object(self.person)
+
+        ticket_data = ticket_fixtures.ticket_fixture(
+            ticket_type_id=str(ticket_type.id), payment_id=str(payment.id)
+        )
+
+        res = self.li_client.post("/tickets/", data=ticket_data, format="json")
+        assert res.status_code == 200
+        returned_ticket = res.json()
+        assert returned_ticket["ticket_type_id"] == str(ticket_type.id)
+        assert returned_ticket["payment_id"] == str(payment.id)
+
+        ticket_from_db: Ticket = Ticket.objects.get(pk=returned_ticket["id"])
+        assert ticket_from_db.hash
+        assert ticket_from_db.hash == compute_ticket_hash(ticket_from_db)
+
+    def test_create_ticket__not_self(self) -> None:
+        ticket_data = ticket_fixtures.ticket_fixture()
+
+        res = self.li_client.post("/tickets/", data=ticket_data, format="json")
+
+        assert res.status_code == 403
+
+    def test_ticket_list(self) -> None:
+        event = event_fixtures.create_event_object(self.owner.person)
+        ticket_type = event_fixtures.create_ticket_type_obj(event=event)
+        payment = payment_fixtures.create_payment_object(self.person)
+        ticket_fixtures.create_ticket_obj(ticket_type, payment)
+        ticket_fixtures.create_ticket_obj()
+
+        res = self.client.get("/tickets/")
+
+        assert res.status_code == 200
+        assert res.json()["count"] == 1
+
+    def test_ticket_list__non_owner(self) -> None:
+        event = event_fixtures.create_event_object(self.person)
+        ticket_type = event_fixtures.create_ticket_type_obj(event=event)
+        payment = payment_fixtures.create_payment_object(self.person)
+        ticket_fixtures.create_ticket_obj(ticket_type, payment)
+
+        res = self.li_client.get("/tickets/")
+
+        assert res.status_code == 403
+
+    def test_ticket_read(self) -> None:
+        event = event_fixtures.create_event_object(self.person)
+        ticket_type = event_fixtures.create_ticket_type_obj(event=event)
+        payment = payment_fixtures.create_payment_object(self.person)
+        ticket = ticket_fixtures.create_ticket_obj(ticket_type, payment)
+        ticket.hash = compute_ticket_hash(ticket)
+        ticket.save()
+
+        res = self.client.get(f"/tickets/{ticket.hash}/")
+
+        assert res.status_code == 200
+        assert res.json()["id"] == str(ticket.id)
+
+    def test_ticket_read__invalid_hash(self) -> None:
+        res = self.client.get(f"/tickets/{123}/")
+
+        assert res.status_code == 404
+        assert "UNRESOLVABLE_HASH" in res.json()["detail"]
+
+    def test_ticket_update(self) -> None:
+        event = event_fixtures.create_event_object(self.person)
+        ticket_type = event_fixtures.create_ticket_type_obj(event=event)
+        payment = payment_fixtures.create_payment_object(self.person)
+        ticket = ticket_fixtures.create_ticket_obj(ticket_type, payment)
+        ticket.hash = compute_ticket_hash(ticket)
+        ticket.save()
+        ticket.payment.state = "PAID"
+        ticket.payment.save()
+
+        update_data = {"redeemed": True}
+        res = self.client.put(f"/tickets/{ticket.id}/", data=update_data, format="json")
+
+        assert res.status_code == 200
+        assert res.json()["redeemed"]
+
+    def test_ticket_update__unpaid(self) -> None:
+        event = event_fixtures.create_event_object(self.person)
+        ticket_type = event_fixtures.create_ticket_type_obj(event=event)
+        payment = payment_fixtures.create_payment_object(self.person)
+        ticket = ticket_fixtures.create_ticket_obj(ticket_type, payment)
+        ticket.hash = compute_ticket_hash(ticket)
+        ticket.save()
+
+        update_data = {"redeemed": True}
+        res = self.client.put(f"/tickets/{ticket.id}/", data=update_data, format="json")
+
+        assert res.status_code == 403
+        assert "UNPAID" in res.json()["detail"]
+
+    def test_ticket_qr_code_gen(self) -> None:
+        event = event_fixtures.create_event_object(self.person)
+        ticket_type = event_fixtures.create_ticket_type_obj(event=event)
+        payment = payment_fixtures.create_payment_object(self.person)
+        ticket = ticket_fixtures.create_ticket_obj(ticket_type, payment)
+        ticket.hash = compute_ticket_hash(ticket)
+        ticket.save()
+
+        image_str = generate_ticket_qr(ticket)
+        image_hash = get_ticket_hash_from_qr(image_str)
+
+        assert image_hash == ticket.hash
+
+    def test_generate_ticket_pdf(self) -> None:
+        event = event_fixtures.create_event_object(self.person)
+        ticket_type = event_fixtures.create_ticket_type_obj(event=event)
+        payment = payment_fixtures.create_payment_object(self.person)
+        ticket = ticket_fixtures.create_ticket_obj(ticket_type, payment)
+
+        generate_ticket_pdf(ticket)

@@ -16,6 +16,7 @@ router.register(
 
 urlpatterns = [
     path("search/<str:search_term>/", view=views.search_events, name="event_search"),
+    path("redeem/code/<str:code>/", view=views.redeem_promo_code, name="reedeem_code"),
 ]
 
 urlpatterns += router.urls

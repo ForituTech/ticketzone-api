@@ -95,6 +95,7 @@ jobs:
       - name: Install dependencies
         run: |
           poetry install --no-root
+          sudo apt-get install wkhtmltopdf
       - name: Run Tests
         if: steps.changed-files.outputs.any_changed == 'true'
         run: |

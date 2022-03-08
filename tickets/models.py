@@ -24,6 +24,7 @@ class Ticket(BaseModel):
         default=False,
         verbose_name="Has the ticket been redeemed",
     )
+    hash = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self) -> str:
         return (

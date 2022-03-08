@@ -1,8 +1,10 @@
+import json
+from http import HTTPStatus
 from typing import Union
 
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -20,6 +22,7 @@ from events.serializers import (
     EventReadSerializer,
     EventSerializer,
     EventUpdateSerializer,
+    PromotionSerializer,
     TicketTypeBaseSerializer,
     TicketTypeCreateSerializer,
     TicketTypePromotionBaseSerializer,
@@ -38,6 +41,7 @@ from events.services import (
     ticket_type_service,
 )
 from partner.permissions import (
+    LoggedInPermission,
     PartnerMembershipPermissions,
     PartnerOwnerPermissions,
     check_self,
@@ -56,6 +60,40 @@ def search_events(request: Request, search_term: str) -> Response:
     return paginator.get_paginated_response(
         EventReadSerializer(paginated_events, many=True).data
     )
+
+
+@swagger_auto_schema(method="get", responses={200: PromotionSerializer(many=True)})
+@api_view(["GET"])
+@permission_classes([LoggedInPermission])
+def redeem_promo_code(request: Request, code: str) -> Response:
+    filters = {"name": code}
+    ticket_promos = ticket_type_promo_service.get_filtered(
+        paginator=paginator, request=request, filters=filters
+    )
+    event_promos = event_promo_service.get_filtered(
+        paginator=paginator, request=request, filters=filters
+    )
+    if not len(ticket_promos) and not len(event_promos):
+        raise HttpErrorException(
+            status_code=HTTPStatus.NOT_FOUND,
+            code=ErrorCodes.PROMO_NOT_FOUND,
+        )
+    targets = [
+        {"rate": ticket_promo.promotion_rate, "target_id": str(ticket_promo.ticket.id)}
+        for ticket_promo in ticket_promos
+        if ticket_type_promo_service.redeem(ticket_promo)
+    ]
+    targets.extend(
+        [
+            {
+                "rate": event_promo.promotion_rate,
+                "target_id": str(event_promo.event.id),
+            }
+            for event_promo in event_promos
+            if event_promo_service.redeem(event_promo)
+        ]
+    )
+    return Response(json.dumps(targets))
 
 
 class EventViewset(AbstractPermissionedView):
@@ -221,8 +259,8 @@ class TicketTypePromotionViewset(AbstractPermissionedView):
 class EventPromotionViewset(AbstractPermissionedView):
 
     permissions_by_action = {
-        "create": [PartnerOwnerPermissions, PartnerMembershipPermissions],
-        "update": [PartnerOwnerPermissions, PartnerMembershipPermissions],
+        "create": [PartnerMembershipPermissions],
+        "update": [PartnerMembershipPermissions],
         "list": [PartnerOwnerPermissions],
     }
 

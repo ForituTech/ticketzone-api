@@ -18,6 +18,7 @@ def event_fixture(partner_id: Union[str, int] = None) -> dict:
         else str(partner_fixtures.create_partner_obj().id),
         "is_public": False,
         "event_state": "PR",
+        "time": (datetime.now() + timedelta(hours=4)).strftime("%H:%M:%S"),
     }
 
 

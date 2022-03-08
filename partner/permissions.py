@@ -38,6 +38,19 @@ def check_self(request: Request, pk: Union[str, int]) -> bool:
     return True
 
 
+def check_self_no_partnership(request: Request, pk: Union[str, int]) -> bool:
+    token_key = "Authorization"
+    if token_key not in request.META:
+        raise ACCESS_DENIED_EXCEPTION
+
+    user = get_user_from_access_token(request.META[token_key])
+
+    if str(user.id) != pk:
+        raise NON_SELF_EXCEPTION
+
+    return True
+
+
 def get_request_user_id(request: Request) -> str:
     token_key = "Authorization"
     if token_key not in request.META:

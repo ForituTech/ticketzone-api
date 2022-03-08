@@ -24,7 +24,7 @@ class PersonService(
     def on_pre_create(self, obj_in: Dict[str, Any]) -> None:
         obj_in["hashed_password"] = hash_password(obj_in["hashed_password"])
 
-    def on_pre_update(self, obj_in: PersonUpdateSerializer) -> None:
+    def on_pre_update(self, obj_in: PersonUpdateSerializer, obj: Person) -> None:
         obj_in.hashed_password = hash_password(obj_in.hashed_password)  # type: ignore
 
     def get_by_phonenumber(self, request: Request) -> Tuple[Person, UserSerializer]:
