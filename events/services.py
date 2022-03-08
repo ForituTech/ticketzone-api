@@ -1,4 +1,5 @@
 import uuid
+from datetime import date
 from typing import Any, Dict, List
 
 from django.db.models.query import QuerySet
@@ -93,6 +94,15 @@ class EventPromotionService(
         except KeyError:
             raise ObjectInvalidException("EventPromotion")
 
+    def redeem(self, promo: EventPromotion) -> bool:
+        if not promo.use_limit:
+            return False
+        if promo.expiry < date.today():
+            return False
+        promo.use_limit -= 1
+        promo.save()
+        return True
+
 
 event_promo_service = EventPromotionService(EventPromotion)
 
@@ -111,6 +121,15 @@ class TicketTypePromotionService(
             raise ObjectNotFoundException("TicketType", pk=str(obj_in["ticket_id"]))
         except KeyError:
             raise ObjectInvalidException("TicketTypePromotion")
+
+    def redeem(self, promo: TicketPromotion) -> bool:
+        if not promo.use_limit:
+            return False
+        if promo.expiry < date.today():
+            return False
+        promo.use_limit -= 1
+        promo.save()
+        return True
 
 
 ticket_type_promo_service = TicketTypePromotionService(TicketPromotion)

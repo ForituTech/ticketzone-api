@@ -23,3 +23,8 @@ class ErrorCodes(enum.Enum):
     ACCESS_ONLY_FOR_SELF = "This action can only be performed on your own data"
     INVALID_PARTNER_ID = "A partner with the given ID does not exist"
     TARGET_MODEL_HAS_NO_SEARCH_VECTOR = "The target model does not have a search vector"
+    MULTIPLE_TICKETS_ONE_HASH = "Can't resolve target ticket from hash value"
+    INVALID_TICKET_ID = "A ticket with the given ID was not found"
+    UNPAID_FOR_TICKET = "A ticket with an unverified payment cannot be redeemed"
+    UNRESOLVABLE_HASH = "THe provided has doesn't corespond to any ticket"
+    PROMO_NOT_FOUND = "The promotion code was not found"

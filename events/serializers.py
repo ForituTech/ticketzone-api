@@ -112,3 +112,8 @@ class TicketTypePromotionReadSerializer(
     InDBBaseSerializer, TicketTypePromotionSerializer
 ):
     pass
+
+
+class PromotionSerializer(serializers.Serializer):
+    rate = serializers.FloatField()
+    target_id = serializers.CharField(max_length=255)

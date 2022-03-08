@@ -305,3 +305,12 @@ class EventTestCase(TestCase):
         )
 
         assert res.status_code == 403
+
+    def test_code_redemption(self) -> None:
+        ticket_type = event_fixtures.create_ticket_type_obj(owner=self.owner.person)
+        ticket_promo = event_fixtures.create_ticket_promo_obj(ticket_type)
+
+        res = self.client.get(f"/events/redeem/code/{ticket_promo.name}/")
+
+        assert res.status_code == 200
+        assert eval(res.json())[0]["rate"] == ticket_promo.promotion_rate

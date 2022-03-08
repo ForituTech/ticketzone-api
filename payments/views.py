@@ -4,11 +4,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from core.views import AbstractPermissionedView
-from partner.permissions import (
-    LoggedInPermission,
-    PartnerMembershipPermissions,
-    check_self,
-)
+from partner.permissions import LoggedInPermission, check_self
 from payments.serilaizers import (
     PaymentCreateSerializer,
     PaymentReadSerializer,
@@ -24,7 +20,6 @@ class PaymentsViewSet(AbstractPermissionedView):
 
     permissions_by_action = {
         "create": [LoggedInPermission],
-        "update": [PartnerMembershipPermissions],
     }
 
     @swagger_auto_schema(

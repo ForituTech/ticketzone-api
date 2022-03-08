@@ -113,14 +113,20 @@ def decode_access_token(token: str) -> Dict[str, Any]:
 
 
 def get_user_from_access_token(token: str) -> Person:
-    payload = decode_access_token(token)
-    user_id = payload.get("user_id")
-    user = Person.objects.get(pk=user_id)
-    if not user:
-        raise HttpErrorException(
-            status_code=404,
-            code=ErrorCodes.UNPROCESSABLE_TOKEN,
-        )
+    broken_token_exception = HttpErrorException(
+        status_code=404,
+        code=ErrorCodes.UNPROCESSABLE_TOKEN,
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("user_id", None)
+        if not user_id:
+            raise broken_token_exception
+        user = Person.objects.get(pk=user_id)
+        if not user:
+            raise broken_token_exception
+    except JWTError:
+        raise broken_token_exception
     return user
 
 
