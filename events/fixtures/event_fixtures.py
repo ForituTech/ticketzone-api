@@ -1,9 +1,25 @@
 from datetime import date, datetime, timedelta
-from typing import Optional, Union
+from typing import Dict, Optional, Union
 
-from events.models import Event, EventPromotion, TicketPromotion, TicketType
+from events.models import (
+    Event,
+    EventCategory,
+    EventPromotion,
+    TicketPromotion,
+    TicketType,
+)
 from partner.fixtures import partner_fixtures
 from partner.models import Person
+
+
+def event_category_fixture() -> Dict[str, str]:
+    return {
+        "name": "musical",
+    }
+
+
+def create_event_category_obj() -> EventCategory:
+    return EventCategory.objects.create(**event_category_fixture())
 
 
 def event_fixture(partner_id: Union[str, int] = None) -> dict:

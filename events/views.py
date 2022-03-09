@@ -13,6 +13,7 @@ from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException, ObjectNotFoundException
 from core.views import AbstractPermissionedView
 from events.serializers import (
+    CategorySerializer,
     EventBaseSerializer,
     EventPromotionBaseSerializer,
     EventPromotionCreateSerializer,
@@ -35,6 +36,7 @@ from events.serializers import (
     TickeTypeReadSerializer,
 )
 from events.services import (
+    category_service,
     event_promo_service,
     event_service,
     ticket_type_promo_service,
@@ -94,6 +96,15 @@ def redeem_promo_code(request: Request, code: str) -> Response:
         ]
     )
     return Response(json.dumps(targets))
+
+
+@swagger_auto_schema(method="get", responses={200: CategorySerializer(many=True)})
+@api_view(["GET"])
+def list_categories(request: Request) -> Response:
+    categories = category_service.get_filtered(
+        paginator=paginator, request=request, filters=None
+    )
+    return Response(CategorySerializer(categories, many=True).data)
 
 
 class EventViewset(AbstractPermissionedView):
