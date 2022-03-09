@@ -1,10 +1,12 @@
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, List, Tuple
 
+from django.db.models.query import QuerySet
 from rest_framework.request import Request
 
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException
 from core.services import CRUDService
+from events.models import Event
 from partner.models import Partner, PartnerBankingInfo, PartnerPerson, Person
 from partner.serializers import (
     PartnerPersonCreateSerializer,
@@ -16,6 +18,7 @@ from partner.serializers import (
     UserSerializer,
 )
 from partner.utils import hash_password
+from tickets.models import Ticket
 
 
 class PersonService(
@@ -54,6 +57,31 @@ class PartnerService(CRUDService[Partner, PartnerSerializer, PartnerUpdateSerial
         )
         obj_data["banking_info_id"] = str(obj.banking_info.id)
         del obj_data["banking_info"]
+
+    def get_total_sales(self, partner_id: str) -> float:
+        filters = {
+            "ticket_type__event__partner_id": partner_id,
+        }
+        tickets: QuerySet[Ticket] = Ticket.objects.filter(**filters)
+        sales_total = 0.0
+        for ticket in tickets:
+            sales_total += ticket.payment.amount
+        return sales_total
+
+    def get_ranked_events_by_sales(self, partner_id: str) -> List[Event]:
+        filters = {
+            "partner_id": partner_id,
+        }
+        return sorted(
+            Event.objects.filter(**filters), key=lambda event: (-1 * event.sales)
+        )
+
+    def get_total_redemtion_rate(self, partner_id: str) -> float:
+        filters = {
+            "partner_id": partner_id,
+        }
+        events: QuerySet[Event] = Event.objects.filter(**filters)
+        return sum([event.redemtion_rate for event in events]) / len(events)
 
 
 partner_service = PartnerService(Partner)

@@ -31,6 +31,6 @@ def create_ticket_obj(
         if payment
         else str(payment_fixtures.create_payment_object().id),
     )
-    ticket = Ticket.objects.create(**ticket_data)
+    ticket: Ticket = Ticket.objects.create(**ticket_data)
     ticket.save()
     return ticket

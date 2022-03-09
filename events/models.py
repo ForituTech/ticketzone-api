@@ -2,10 +2,12 @@ from datetime import datetime, timedelta
 from typing import List
 
 from django.db import models
+from django.db.models.query import QuerySet
 
 from core.models import BaseModel
 from events.constants import EventState
 from partner.models import Partner
+from payments.models import Payment
 
 
 class EventCategory(BaseModel):
@@ -60,6 +62,28 @@ class Event(BaseModel):
             "description",
         ]
 
+    @property
+    def sales(self) -> float:
+        filters = {"ticket_type__event_id": self.id}
+        tickets: QuerySet[Ticket] = Ticket.objects.filter(**filters)
+        total_sales = 0.0
+        for ticket in tickets:
+            total_sales += ticket.payment.amount
+        return total_sales
+
+    @property
+    def redemtion_rate(self) -> float:
+        filters = {
+            "ticket_type__event_id": self.id,
+        }
+        filters_redeemed = {
+            "ticket_type__event_id": self.id,
+            "redeemed": True,
+        }
+        tickets: QuerySet[Ticket] = Ticket.objects.filter(**filters)
+        tickets_redeemed: QuerySet[Ticket] = Ticket.objects.filter(**filters_redeemed)
+        return len(tickets_redeemed) / len(tickets)
+
 
 class TicketType(BaseModel):
     name = models.CharField(max_length=256, null=False, blank=False)
@@ -84,6 +108,17 @@ class TicketType(BaseModel):
     def __str__(self) -> str:
         return "{0} - {1}".format(self.event.name, self.name)
 
+    @property
+    def sales(self) -> float:
+        filters = {
+            "ticket_type__id": self.id,
+        }
+        tickets: QuerySet[Ticket] = Ticket.objects.filter(**filters)
+        sales = 0.0
+        for ticket in tickets:
+            sales += ticket.payment.amount
+        return sales
+
 
 class EventPromotion(BaseModel):
     name = models.CharField(max_length=256, null=False, blank=False)
@@ -107,3 +142,32 @@ class TicketPromotion(BaseModel):
 
     def __str__(self) -> str:
         return self.name
+
+
+class Ticket(BaseModel):
+    ticket_type = models.ForeignKey(
+        TicketType, on_delete=models.CASCADE, null=False, blank=False
+    )
+    payment = models.ForeignKey(
+        Payment, on_delete=models.CASCADE, null=False, blank=False
+    )
+    sent = models.BooleanField(
+        null=False,
+        blank=False,
+        default=False,
+        verbose_name="Has the ticket been sent to the user",
+    )
+    redeemed = models.BooleanField(
+        null=False,
+        blank=False,
+        default=False,
+        verbose_name="Has the ticket been redeemed",
+    )
+    hash = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self) -> str:
+        return (
+            f"{self.payment.person.name}'s"
+            f"{self.ticket_type.event.name}"
+            f"{self.ticket_type.name} ticket"
+        )

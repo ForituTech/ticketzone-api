@@ -125,3 +125,11 @@ class CategorySerializer(InDBBaseSerializer, serializers.Serializer):
 
 class CategoryInnerSerializer(BaseSerializer, CategorySerializer):
     pass
+
+
+class EventWithSales(EventReadSerializer):
+    sales = serializers.FloatField()
+
+
+class TicketTypeWithSales(TickeTypeReadSerializer):
+    sales = serializers.FloatField()
