@@ -1,6 +1,6 @@
-*test*
-*fixture*
-*media*
-*github*
-*poetry*
-*pyproject*
+tests.py
+fixture/
+media/
+.github/
+*.lock
+*.toml
