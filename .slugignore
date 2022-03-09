@@ -1,6 +1,6 @@
-tests.py
-fixture/
-media/
-.github/
+*tests.py
+*fixture/
+/media
+/.github
 *.lock
 *.toml
