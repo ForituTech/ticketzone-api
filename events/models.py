@@ -8,6 +8,13 @@ from events.constants import EventState
 from partner.models import Partner
 
 
+class EventCategory(BaseModel):
+    name = models.CharField(max_length=255, null=False, blank=False)
+
+    def __str__(self) -> str:
+        return self.name
+
+
 class Event(BaseModel):
     name = models.CharField(
         max_length=256, null=False, blank=False, default="new-event"
@@ -23,6 +30,9 @@ class Event(BaseModel):
     )
     partner = models.ForeignKey(
         Partner, on_delete=models.CASCADE, null=False, blank=False
+    )
+    category = models.ForeignKey(
+        EventCategory, on_delete=models.SET_NULL, null=True, blank=True
     )
     is_public = models.BooleanField(
         null=False,

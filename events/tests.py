@@ -129,6 +129,16 @@ class EventTestCase(TestCase):
         assert res.status_code == 200
         assert res.json()["count"] == 0
 
+    def test_event_filter_by_category(self) -> None:
+        event = event_fixtures.create_event_object()
+        category = event_fixtures.create_event_category_obj()
+        event.category = category
+        event.save()
+        res = self.client.get(f"/events/events/?category={category.id}")
+
+        assert res.status_code == 200
+        assert res.json()["count"] == 1
+
     def test_event_filter(self) -> None:
         event = event_fixtures.create_event_object()
         res = self.client.get(f"/events/events/?event_date={event.event_date}")
@@ -314,3 +324,11 @@ class EventTestCase(TestCase):
 
         assert res.status_code == 200
         assert eval(res.json())[0]["rate"] == ticket_promo.promotion_rate
+
+    def test_list_categories(self) -> None:
+        event_fixtures.create_event_category_obj()
+
+        res = self.client.get("/events/categories/")
+
+        assert res.status_code == 200
+        assert len(res.json()) == 1

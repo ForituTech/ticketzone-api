@@ -117,3 +117,11 @@ class TicketTypePromotionReadSerializer(
 class PromotionSerializer(serializers.Serializer):
     rate = serializers.FloatField()
     target_id = serializers.CharField(max_length=255)
+
+
+class CategorySerializer(InDBBaseSerializer, serializers.Serializer):
+    name = serializers.CharField(max_length=255)
+
+
+class CategoryInnerSerializer(BaseSerializer, CategorySerializer):
+    pass

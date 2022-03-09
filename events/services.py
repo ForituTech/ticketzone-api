@@ -12,8 +12,15 @@ from core.exceptions import (
     ObjectNotFoundException,
 )
 from core.services import CRUDService
-from events.models import Event, EventPromotion, TicketPromotion, TicketType
+from events.models import (
+    Event,
+    EventCategory,
+    EventPromotion,
+    TicketPromotion,
+    TicketType,
+)
 from events.serializers import (
+    CategoryInnerSerializer,
     EventPromotionCreateSerializer,
     EventPromotionUpdateSerializer,
     EventSerializer,
@@ -133,3 +140,12 @@ class TicketTypePromotionService(
 
 
 ticket_type_promo_service = TicketTypePromotionService(TicketPromotion)
+
+
+class CategoryService(
+    CRUDService[EventCategory, CategoryInnerSerializer, CategoryInnerSerializer]
+):
+    pass
+
+
+category_service = CategoryService(EventCategory)
