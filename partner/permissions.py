@@ -61,6 +61,16 @@ def get_request_user_id(request: Request) -> str:
     return user_data["user_id"]
 
 
+def get_request_partner_id(request: Request) -> str:
+    token_key = "Authorization"
+    if token_key not in request.META:
+        raise ACCESS_DENIED_EXCEPTION
+
+    user_data = decode_access_token(request.META[token_key])
+
+    return user_data["partner"]
+
+
 def check_permissions(request: Request, person_type: PersonType) -> bool:
     token_key = "Authorization"
     if token_key not in request.META:

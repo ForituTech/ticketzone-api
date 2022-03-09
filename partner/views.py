@@ -3,14 +3,22 @@ from typing import Union
 
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException
 from core.views import AbstractPermissionedView
-from partner.permissions import PartnerOwnerPermissions, check_self
+from events.serializers import EventWithSales, TicketTypeWithSales
+from events.services import ticket_type_service
+from partner.permissions import (
+    PartnerMembershipPermissions,
+    PartnerOwnerPermissions,
+    check_self,
+    get_request_partner_id,
+)
 from partner.serializers import (
     PartnerBaseSerializer,
     PartnerPersonBaseSerializer,
@@ -24,10 +32,15 @@ from partner.serializers import (
     PersonReadSerializer,
     PersonSerializer,
     PersonUpdateSerializer,
+    RedemtionRateSerializer,
+    SalesSerializer,
     TokenSerializer,
 )
 from partner.services import partner_person_service, partner_service, person_service
 from partner.utils import create_access_token, create_access_token_lite, verify_password
+
+paginator = PageNumberPagination()
+paginator.page_size = 15
 
 
 @swagger_auto_schema(method="post", responses={200: TokenSerializer})
@@ -49,6 +62,46 @@ def login(request: Request) -> Response:
         )
     else:
         raise HttpErrorException(status_code=404, code=ErrorCodes.INVALID_CREDENTIALS)
+
+
+@swagger_auto_schema(method="get", responses={200: SalesSerializer})
+@api_view(["GET"])
+@permission_classes([PartnerMembershipPermissions])
+def partner_sales(request: Request) -> Response:
+    partner_id = get_request_partner_id(request)
+    sales = partner_service.get_total_sales(partner_id)
+    sales_dict = {"sales": sales}
+    return Response(SalesSerializer(sales_dict).data)
+
+
+@swagger_auto_schema(method="get", responses={200: RedemtionRateSerializer})
+@api_view(["GET"])
+@permission_classes([PartnerMembershipPermissions])
+def partner_redemtion_rate(request: Request) -> Response:
+    partner_id = get_request_partner_id(request)
+    rate = partner_service.get_total_redemtion_rate(partner_id)
+    rate_dict = {"rate": rate}
+    return Response(RedemtionRateSerializer(rate_dict).data)
+
+
+@swagger_auto_schema(method="get", responses={200: EventWithSales(many=True)})
+@api_view(["GET"])
+@permission_classes([PartnerMembershipPermissions])
+def partner_ranked_events(request: Request) -> Response:
+    partner_id = get_request_partner_id(request)
+    events = partner_service.get_ranked_events_by_sales(partner_id)
+    return Response(EventWithSales(events, many=True).data)
+
+
+@swagger_auto_schema(method="get", responses={200: TicketTypeWithSales(many=True)})
+@api_view(["GET"])
+@permission_classes([PartnerMembershipPermissions])
+def partner_event_ticket_with_sales(request: Request, event_id: str) -> Response:
+    filters = {"event_id": event_id}
+    ticket_types = ticket_type_service.get_filtered(
+        paginator=paginator, request=request, filters=filters
+    )
+    return Response(TicketTypeWithSales(ticket_types, many=True).data)
 
 
 class PersonViewSet(AbstractPermissionedView):

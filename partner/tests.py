@@ -1,9 +1,12 @@
 from django.test import TestCase
 from rest_framework.test import APIClient
 
+from events.fixtures import event_fixtures
 from partner.constants import PersonType
 from partner.fixtures import partner_fixtures
 from partner.utils import verify_password
+from payments.fixtures import payment_fixtures
+from tickets.fixtures import ticket_fixtures
 
 
 class PartnerTestCase(TestCase):
@@ -27,9 +30,6 @@ class PartnerTestCase(TestCase):
         self.unauthed_client = APIClient(
             False,
         )
-
-    def tearDown(self) -> None:
-        self.owner.person.delete()
 
     def test_login__authed(self) -> None:
         login_credentials = {
@@ -251,3 +251,53 @@ class PartnerTestCase(TestCase):
         self.owner.save()
 
         assert res.status_code == 403
+
+    def test_partner_sales(self) -> None:
+        event = event_fixtures.create_event_object(owner=self.owner.person)
+        ticket_type = event_fixtures.create_ticket_type_obj(event=event)
+        payment = payment_fixtures.create_payment_object(self.owner.person)
+        ticket_fixtures.create_ticket_obj(ticket_type, payment)
+
+        res = self.authed_client.get("/partner/sales/")
+
+        assert res.status_code == 200
+        assert "sales" in res.json()
+
+    def test_partner_redemtion_rate(self) -> None:
+        event = event_fixtures.create_event_object(owner=self.owner.person)
+        ticket_type = event_fixtures.create_ticket_type_obj(event=event)
+        payment = payment_fixtures.create_payment_object(self.owner.person)
+        ticket = ticket_fixtures.create_ticket_obj(ticket_type, payment)
+        ticket.redeemed = True
+        ticket.save()
+        ticket_fixtures.create_ticket_obj(ticket_type, payment)
+
+        res = self.authed_client.get("/partner/events/redemtion-rate/")
+
+        assert res.status_code == 200
+        assert "rate" in res.json()
+
+    def test_partner_events_ranked(self) -> None:
+        event = event_fixtures.create_event_object(owner=self.owner.person)
+        ticket_type = event_fixtures.create_ticket_type_obj(event=event)
+        payment = payment_fixtures.create_payment_object(self.owner.person)
+        ticket_fixtures.create_ticket_obj(ticket_type, payment)
+        ticket_fixtures.create_ticket_obj(ticket_type, payment)
+
+        event_fixtures.create_event_object(owner=self.owner.person)
+
+        res = self.authed_client.get("/partner/events/ranked/")
+
+        assert res.status_code == 200
+        assert res.json()[0]["id"] == str(event.id)
+
+    def test_list_ticket_types_with_sales(self) -> None:
+        event = event_fixtures.create_event_object(owner=self.owner.person)
+        ticket_type = event_fixtures.create_ticket_type_obj(event=event)
+        payment = payment_fixtures.create_payment_object(self.owner.person)
+        ticket_fixtures.create_ticket_obj(ticket_type, payment)
+
+        res = self.authed_client.get(f"/partner/events/tickets/{event.id}/")
+
+        assert res.status_code == 200
+        assert "sales" in res.json()[0]

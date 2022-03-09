@@ -111,3 +111,11 @@ class PartnerPersonReadSerializer(InDBBaseSerializer, PartnerPersonBaseSerialize
 
 class TokenSerializer(serializers.Serializer):
     token = serializers.CharField(max_length=255)
+
+
+class SalesSerializer(serializers.Serializer):
+    sales = serializers.FloatField()
+
+
+class RedemtionRateSerializer(serializers.Serializer):
+    rate = serializers.FloatField()
