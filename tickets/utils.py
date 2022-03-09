@@ -1,10 +1,10 @@
 import base64
 import hashlib
+import os
 from datetime import datetime
 from io import BytesIO
 from typing import Union
 
-import cv2
 import numpy as np
 import pdfkit
 import qrcode
@@ -13,6 +13,9 @@ from django.template.loader import render_to_string
 from events.models import Event
 from partner.models import Person
 from tickets.models import Ticket
+
+if os.environ.get("ENV") == "dev" or os.environ.get("GITHUB_WORKFLOW"):
+    import cv2  # noqa
 
 
 def compute_ticket_hash(ticket: Ticket) -> str:
@@ -43,12 +46,15 @@ def generate_ticket_qr(ticket: Ticket) -> str:
 
 
 def get_ticket_hash_from_qr(image_str: str) -> str:
-    img_decoded: Union[str, bytes] = base64.b64decode(image_str)
-    nparr = np.fromstring(img_decoded, np.uint8)  # type: ignore
-    image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    qr_detector = cv2.QRCodeDetector()
-    decoded_text, _, _ = qr_detector.detectAndDecode(image)
-    return decoded_text
+    if os.environ.get("ENV") == "dev" or os.environ.get("GITHUB_WORKFLOW"):
+        img_decoded: Union[str, bytes] = base64.b64decode(image_str)
+        nparr = np.fromstring(img_decoded, np.uint8)  # type: ignore
+        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        qr_detector = cv2.QRCodeDetector()
+        decoded_text, _, _ = qr_detector.detectAndDecode(image)
+        return decoded_text
+    else:
+        raise EnvironmentError("Ticket hashes can only be decoded on dev")
 
 
 def generate_ticket_pdf(ticket: Ticket) -> None:

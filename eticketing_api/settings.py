@@ -80,7 +80,7 @@ WSGI_APPLICATION = "eticketing_api.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
-if os.environ.get("ENV") == "local":
+if os.environ.get("ENV") == "dev":
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql_psycopg2",
@@ -188,3 +188,9 @@ TEMPLATE_LOADERS = (
     "django.template.loaders.app_directories.Loader",
     "django.template.loaders.filesystem.Loader",
 )
+
+# Parse database configuration from $DATABASE_URL
+import dj_database_url
+
+prod_db = dj_database_url.config(conn_max_age=500)
+DATABASES["default"].update(prod_db)
