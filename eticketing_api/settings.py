@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     "tickets",
     "partner",
     "drf_yasg",
+    "django_celery_results",
+    "notifications",
 ]
 
 MIDDLEWARE = [
@@ -194,3 +196,21 @@ import dj_database_url
 
 prod_db = dj_database_url.config(conn_max_age=500)
 DATABASES["default"].update(prod_db)
+
+# Celery
+CELERY_RESULT_BACKEND = "django-db"
+
+# EMail
+EMAIL_USE_TLS = True
+EMAIL_HOST = "smtp.mail.yahoo.com"
+EMAIL_PORT = 995
+EMAIL_HOST_USER = "me@gmail.com"
+EMAIL_HOST_PASSWORD = "password"
+DEFAULT_FROM_EMAIL = "tickets@kibali.com"
+
+
+PUSHER_INSTANCE_ID = "test"
+PUSHER_SECRET_KEY = "test"
+
+AFRICAS_TALKING_USERNAME = "test"
+AFRICAS_TALKING_KEY = "test"
