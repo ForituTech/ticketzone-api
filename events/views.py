@@ -11,6 +11,7 @@ from rest_framework.response import Response
 
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException, ObjectNotFoundException
+from core.serializers import VerifyActionSerializer
 from core.views import AbstractPermissionedView
 from events.serializers import (
     CategorySerializer,
@@ -24,6 +25,8 @@ from events.serializers import (
     EventSerializer,
     EventUpdateSerializer,
     PromotionSerializer,
+    PromoVerifyInnerSerializer,
+    PromoVerifySerializer,
     TicketTypeBaseSerializer,
     TicketTypeCreateSerializer,
     TicketTypePromotionBaseSerializer,
@@ -49,6 +52,7 @@ from partner.permissions import (
     check_self,
     get_request_user_id,
 )
+from partner.utils import get_user_from_access_token
 
 paginator = PageNumberPagination()
 paginator.page_size = 15
@@ -64,11 +68,16 @@ def search_events(request: Request, search_term: str) -> Response:
     )
 
 
-@swagger_auto_schema(method="get", responses={200: PromotionSerializer(many=True)})
-@api_view(["GET"])
+@swagger_auto_schema(
+    method="post",
+    request_body=PromoVerifySerializer,
+    responses={200: PromotionSerializer(many=True)},
+)
+@api_view(["POST"])
 @permission_classes([LoggedInPermission])
 def redeem_promo_code(request: Request, code: str) -> Response:
     filters = {"name": code}
+    target_ids = PromoVerifyInnerSerializer(request.data).data["target_ids"]
     ticket_promos = ticket_type_promo_service.get_filtered(
         paginator=paginator, request=request, filters=filters
     )
@@ -83,7 +92,8 @@ def redeem_promo_code(request: Request, code: str) -> Response:
     targets = [
         {"rate": ticket_promo.promotion_rate, "target_id": str(ticket_promo.ticket.id)}
         for ticket_promo in ticket_promos
-        if ticket_type_promo_service.redeem(ticket_promo)
+        if str(ticket_promo.ticket.id) in target_ids
+        and ticket_type_promo_service.redeem(ticket_promo)
     ]
     targets.extend(
         [
@@ -92,7 +102,8 @@ def redeem_promo_code(request: Request, code: str) -> Response:
                 "target_id": str(event_promo.event.id),
             }
             for event_promo in event_promos
-            if event_promo_service.redeem(event_promo)
+            if str(event_promo.event.id) in target_ids
+            and event_promo_service.redeem(event_promo)
         ]
     )
     return Response(json.dumps(targets))
@@ -105,6 +116,15 @@ def list_categories(request: Request) -> Response:
         paginator=paginator, request=request, filters=None
     )
     return Response(CategorySerializer(categories, many=True).data)
+
+
+@swagger_auto_schema(method="post", responses={200: VerifyActionSerializer(many=True)})
+@api_view(["POST"])
+def event_reminder_optin(request: Request, event_id: str) -> Response:
+    token_key = "Authorization"
+    person_id = get_user_from_access_token(request.META[token_key]).id
+    event_service.create_reminder_optin(str(person_id), event_id)
+    return Response({"done": True})
 
 
 class EventViewset(AbstractPermissionedView):

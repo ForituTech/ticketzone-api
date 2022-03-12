@@ -1,4 +1,5 @@
 from random import randint
+from typing import Any, Dict
 
 from django.test import TestCase
 from rest_framework import status
@@ -320,10 +321,34 @@ class EventTestCase(TestCase):
         ticket_type = event_fixtures.create_ticket_type_obj(owner=self.owner.person)
         ticket_promo = event_fixtures.create_ticket_promo_obj(ticket_type)
 
-        res = self.client.get(f"/events/redeem/code/{ticket_promo.name}/")
+        data = {
+            "target_ids": [str(ticket_type.id)],
+        }
+
+        res = self.client.post(
+            f"/events/redeem/code/{ticket_promo.name}/", data=data, format="json"
+        )
 
         assert res.status_code == 200
         assert eval(res.json())[0]["rate"] == ticket_promo.promotion_rate
+
+    def test_code_redemption__no_pre_targeting(self) -> None:
+        ticket_type = event_fixtures.create_ticket_type_obj(owner=self.owner.person)
+        ticket_promo = event_fixtures.create_ticket_promo_obj(ticket_type)
+        pre_use_limit_value = ticket_promo.use_limit
+
+        data: Dict[str, Any] = {
+            "target_ids": [],
+        }
+
+        res = self.client.post(
+            f"/events/redeem/code/{ticket_promo.name}/", data=data, format="json"
+        )
+
+        assert res.status_code == 200
+        ticket_promo.refresh_from_db()
+        assert ticket_promo.use_limit == pre_use_limit_value
+        assert not eval(res.json())
 
     def test_list_categories(self) -> None:
         event_fixtures.create_event_category_obj()
@@ -332,3 +357,11 @@ class EventTestCase(TestCase):
 
         assert res.status_code == 200
         assert len(res.json()) == 1
+
+    def test_reminder_optin(self) -> None:
+        event = event_fixtures.create_event_object()
+
+        res = self.client.post(f"/events/reminder/optin/{event.id}/")
+
+        assert res.status_code == 200
+        assert res.json()["done"]

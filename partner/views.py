@@ -10,10 +10,12 @@ from rest_framework.response import Response
 
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException
+from core.serializers import VerifyActionSerializer
 from core.views import AbstractPermissionedView
 from events.serializers import EventWithSales, TicketTypeWithSales
 from events.services import ticket_type_service
 from partner.permissions import (
+    LoggedInPermission,
     PartnerMembershipPermissions,
     PartnerOwnerPermissions,
     check_self,
@@ -37,7 +39,12 @@ from partner.serializers import (
     TokenSerializer,
 )
 from partner.services import partner_person_service, partner_service, person_service
-from partner.utils import create_access_token, create_access_token_lite, verify_password
+from partner.utils import (
+    create_access_token,
+    create_access_token_lite,
+    get_user_from_access_token,
+    verify_password,
+)
 
 paginator = PageNumberPagination()
 paginator.page_size = 15
@@ -102,6 +109,16 @@ def partner_event_ticket_with_sales(request: Request, event_id: str) -> Response
         paginator=paginator, request=request, filters=filters
     )
     return Response(TicketTypeWithSales(ticket_types, many=True).data)
+
+
+@swagger_auto_schema(method="post", responses={200: VerifyActionSerializer()})
+@api_view(["POST"])
+@permission_classes([LoggedInPermission])
+def partner_promo_optin(request: Request, partner_id: str) -> Response:
+    token_key = "Authorization"
+    person_id = get_user_from_access_token(request.META[token_key]).id
+    partner_service.add_promo_opt_in(partner_id, str(person_id))
+    return Response({"done": True})
 
 
 class PersonViewSet(AbstractPermissionedView):

@@ -16,6 +16,7 @@ from events.models import (
     Event,
     EventCategory,
     EventPromotion,
+    ReminderOptIn,
     TicketPromotion,
     TicketType,
 )
@@ -30,7 +31,7 @@ from events.serializers import (
     TicketTypePromotionUpdateSerializer,
     TicketTypeUpdateSerializer,
 )
-from partner.models import Partner
+from partner.models import Partner, Person
 
 
 class EventService(CRUDService[Event, EventSerializer, EventUpdateSerializer]):
@@ -49,6 +50,20 @@ class EventService(CRUDService[Event, EventSerializer, EventUpdateSerializer]):
         self, event_id: uuid.UUID, **filters: Dict[str, Any]
     ) -> QuerySet[TicketType]:
         return TicketType.objects.filter(event=event_id).filter(**filters)
+
+    def create_reminder_optin(self, person_id: str, event_id: str) -> None:
+        try:
+            Event.objects.get(id=event_id)
+        except Partner.DoesNotExist:
+            raise ObjectNotFoundException("Event", event_id)
+        try:
+            Person.objects.get(id=person_id)
+        except Person.DoesNotExist:
+            raise ObjectNotFoundException("Person", person_id)
+        ReminderOptIn.objects.create(
+            person_id=person_id,
+            event_id=event_id,
+        )
 
     # def get_event_promotions()
 
