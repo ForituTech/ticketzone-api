@@ -114,6 +114,14 @@ class TicketTypePromotionReadSerializer(
     pass
 
 
+class PromoVerifySerializer(BaseSerializer):
+    target_ids = serializers.ListField(child=serializers.CharField(max_length=255))
+
+
+class PromoVerifyInnerSerializer(serializers.Serializer):
+    target_ids = serializers.ListField(child=serializers.CharField(max_length=255))
+
+
 class PromotionSerializer(serializers.Serializer):
     rate = serializers.FloatField()
     target_id = serializers.CharField(max_length=255)

@@ -301,3 +301,11 @@ class PartnerTestCase(TestCase):
 
         assert res.status_code == 200
         assert "sales" in res.json()[0]
+
+    def test_partner_promo_optin(self) -> None:
+        partner = partner_fixtures.create_partner_obj()
+
+        res = self.authed_client.post(f"/partner/promo/optin/{partner.id}/")
+
+        assert res.status_code == 200
+        assert res.json()["done"]

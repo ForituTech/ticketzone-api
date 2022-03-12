@@ -18,6 +18,11 @@ urlpatterns = [
     path("search/<str:search_term>/", view=views.search_events, name="event_search"),
     path("redeem/code/<str:code>/", view=views.redeem_promo_code, name="reedeem_code"),
     path("categories/", views.list_categories, name="categoreis"),
+    path(
+        "reminder/optin/<str:event_id>/",
+        view=views.event_reminder_optin,
+        name="event-reminder-optin",
+    ),
 ]
 
 urlpatterns += router.urls

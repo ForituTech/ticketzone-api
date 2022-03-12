@@ -24,6 +24,11 @@ urlpatterns = [
         view=views.partner_event_ticket_with_sales,
         name="expanded-tickets",
     ),
+    path(
+        "promo/optin/<str:partner_id>/",
+        view=views.partner_promo_optin,
+        name="partner-promo-optin",
+    ),
 ]
 
 urlpatterns += router.urls

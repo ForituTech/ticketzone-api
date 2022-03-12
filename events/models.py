@@ -6,7 +6,7 @@ from django.db.models.query import QuerySet
 
 from core.models import BaseModel
 from events.constants import EventState
-from partner.models import Partner
+from partner.models import Partner, Person
 from payments.models import Payment
 
 
@@ -171,3 +171,19 @@ class Ticket(BaseModel):
             f"{self.ticket_type.event.name}"
             f"{self.ticket_type.name} ticket"
         )
+
+
+class PromoOptIn(models.Model):
+    person = models.ForeignKey(
+        Person, on_delete=models.CASCADE, null=False, blank=False
+    )
+    partner = models.ForeignKey(
+        Partner, on_delete=models.CASCADE, null=False, blank=False
+    )
+
+
+class ReminderOptIn(models.Model):
+    person = models.ForeignKey(
+        Person, on_delete=models.CASCADE, null=False, blank=False
+    )
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, null=False, blank=False)

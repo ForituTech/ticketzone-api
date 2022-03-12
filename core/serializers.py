@@ -19,3 +19,7 @@ class InDBBaseSerializer(serializers.Serializer):
     id = serializers.CharField(max_length=255)
     created_at = serializers.CharField(max_length=255)
     updated_at = serializers.CharField(max_length=255)
+
+
+class VerifyActionSerializer(serializers.Serializer):
+    done = serializers.BooleanField(default=False)

@@ -4,9 +4,9 @@ from django.db.models.query import QuerySet
 from rest_framework.request import Request
 
 from core.error_codes import ErrorCodes
-from core.exceptions import HttpErrorException
+from core.exceptions import HttpErrorException, ObjectNotFoundException
 from core.services import CRUDService
-from events.models import Event
+from events.models import Event, PromoOptIn
 from partner.models import Partner, PartnerBankingInfo, PartnerPerson, Person
 from partner.serializers import (
     PartnerPersonCreateSerializer,
@@ -82,6 +82,20 @@ class PartnerService(CRUDService[Partner, PartnerSerializer, PartnerUpdateSerial
         }
         events: QuerySet[Event] = Event.objects.filter(**filters)
         return sum([event.redemtion_rate for event in events]) / len(events)
+
+    def add_promo_opt_in(self, partner_id: str, person_id: str) -> None:
+        try:
+            Partner.objects.get(id=partner_id)
+        except Partner.DoesNotExist:
+            raise ObjectNotFoundException("Partner", partner_id)
+        try:
+            Person.objects.get(id=person_id)
+        except Person.DoesNotExist:
+            raise ObjectNotFoundException("Person", person_id)
+        PromoOptIn.objects.create(
+            partner_id=partner_id,
+            person_id=person_id,
+        )
 
 
 partner_service = PartnerService(Partner)
