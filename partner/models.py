@@ -36,6 +36,7 @@ class Partner(BaseModel):
     banking_info = models.ForeignKey(
         PartnerBankingInfo, on_delete=models.CASCADE, null=False, blank=False
     )
+    comission_rate = models.FloatField(null=False, blank=False, default=3.0)
 
     def __str__(self) -> str:
         return self.name

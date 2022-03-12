@@ -75,4 +75,4 @@ def generate_ticket_pdf(ticket: Ticket) -> None:
         },
     )
 
-    pdfkit.from_string(ticket_html, "ticket.pdf")
+    pdfkit.from_string(ticket_html)
