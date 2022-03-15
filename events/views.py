@@ -26,7 +26,6 @@ from events.serializers import (
     EventUpdateSerializer,
     PromotionSerializer,
     PromoVerifyInnerSerializer,
-    PromoVerifySerializer,
     TicketTypeBaseSerializer,
     TicketTypeCreateSerializer,
     TicketTypePromotionBaseSerializer,
@@ -70,7 +69,7 @@ def search_events(request: Request, search_term: str) -> Response:
 
 @swagger_auto_schema(
     method="post",
-    request_body=PromoVerifySerializer,
+    request_body=PromoVerifyInnerSerializer,
     responses={200: PromotionSerializer(many=True)},
 )
 @api_view(["POST"])
