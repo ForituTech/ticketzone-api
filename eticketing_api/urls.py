@@ -24,7 +24,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     re_path(
-        r"^docs/$",
+        r"$",
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
     ),
