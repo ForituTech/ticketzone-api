@@ -102,13 +102,14 @@ class PartnerPromotion(BaseModel):
         choices=PartnerPromotionPeriod.choices,
         null=False,
         blank=False,
-        default=PartnerPromotionPeriod.MONTHLY,
+        default=PartnerPromotionPeriod.FIXED,
     )
     message = models.TextField(null=False, blank=False, max_length=10240)
     # channel = models.CharField()
     starts_on = models.DateField(null=False, blank=False, auto_now_add=True)
     last_run = models.DateField(null=False, blank=False, auto_now_add=True)
     stops_on = models.DateField(null=False, blank=False, auto_now_add=True)
+    verified = models.BooleanField(null=False, blank=False, default=False)
 
     @property
     def next_run(self) -> Optional[Any]:

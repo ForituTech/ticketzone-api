@@ -51,7 +51,7 @@ def send_out_reminders() -> None:
 
 @shared_task(name="send_out_promos")
 def send_out_promos() -> None:
-    promos_: QuerySet[PartnerPromotion] = PartnerPromotion.objects.all()
+    promos_: QuerySet[PartnerPromotion] = PartnerPromotion.objects.filter(verified=True)
     promos: Sequence[PartnerPromotion] = [
         promo for promo in promos_ if promo.next_run == date.today()
     ]

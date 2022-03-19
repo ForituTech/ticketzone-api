@@ -27,7 +27,14 @@ from partner.serializers import (
     PartnerPersonCreateSerializer,
     PartnerPersonReadSerializer,
     PartnerPersonUpdateSerializer,
+    PartnerPromoBaseSerializer,
+    PartnerPromoCreateSerializer,
+    PartnerPromoReadSerializer,
+    PartnerPromoSerializer,
+    PartnerPromoUpdateSerializer,
     PartnerReadSerializer,
+    PartnerSMSPackageCreateSerializer,
+    PartnerSMSPackageReadSerializer,
     PartnerUpdateSerializer,
     PersonBaseSerializer,
     PersonCreateSerializer,
@@ -38,7 +45,13 @@ from partner.serializers import (
     SalesSerializer,
     TokenSerializer,
 )
-from partner.services import partner_person_service, partner_service, person_service
+from partner.services import (
+    partner_person_service,
+    partner_promo_service,
+    partner_service,
+    partner_sms_service,
+    person_service,
+)
 from partner.utils import (
     create_access_token,
     create_access_token_lite,
@@ -221,3 +234,95 @@ class PartnerPersonViewset(AbstractPermissionedView):
             obj_data=request.data, serializer=PartnerPersonUpdateSerializer, obj_id=pk
         )
         return Response(PartnerPersonReadSerializer(partner_person).data)
+
+
+class PartnerSMSPackageViewset(AbstractPermissionedView):
+
+    permissions_by_action = {
+        "retrieve": [PartnerMembershipPermissions],
+        "create": [PartnerMembershipPermissions],
+    }
+
+    @swagger_auto_schema(
+        responses={200: PartnerSMSPackageReadSerializer},
+    )
+    def create(self, request: Request) -> Response:
+        data = {"partner_id": get_request_partner_id(request)}
+        partner_sms = partner_sms_service.create(
+            obj_data=data, serializer=PartnerSMSPackageCreateSerializer
+        )
+        return Response(PartnerSMSPackageReadSerializer(partner_sms).data)
+
+    @swagger_auto_schema(responses={200: PartnerSMSPackageReadSerializer})
+    def retrieve(self, request: Request, pk: Union[str, int]) -> Response:
+        partner_id = get_request_partner_id(request)
+        partner_sms = partner_sms_service.get(pk=pk, partner_id=partner_id)
+        return Response(PartnerSMSPackageReadSerializer(partner_sms).data)
+
+
+class PartnerPromotionViewset(AbstractPermissionedView):
+
+    permissions_by_action = {
+        "retrieve": [PartnerMembershipPermissions],
+        "create": [PartnerMembershipPermissions],
+        "list": [PartnerMembershipPermissions],
+        "update": [PartnerMembershipPermissions],
+    }
+
+    @swagger_auto_schema(
+        responses={200: PartnerPromoReadSerializer},
+    )
+    def retrieve(self, request: Request, pk: Union[str, int]) -> Response:
+        partner_id = get_request_partner_id(request)
+        partner_promo = partner_promo_service.get(pk=pk, partner_id=partner_id)
+        if not partner_promo:
+            raise HttpErrorException(
+                status_code=HTTPStatus.NOT_FOUND, code=ErrorCodes.PROMO_NOT_FOUND
+            )
+        return Response(PartnerPromoReadSerializer(partner_promo).data)
+
+    @swagger_auto_schema(
+        request_body=PartnerPromoSerializer,
+        responses={200: PartnerPromoReadSerializer},
+    )
+    def create(self, request: Request) -> Response:
+        request.data["partner_id"] = get_request_partner_id(request)
+        partner_promo = partner_promo_service.create(
+            obj_data=request.data, serializer=PartnerPromoCreateSerializer
+        )
+        return Response(PartnerPromoReadSerializer(partner_promo).data)
+
+    @swagger_auto_schema(
+        responses={200: PartnerPromoReadSerializer(many=True)},
+    )
+    def list(self, request: Request) -> Response:
+        filters = request.query_params.dict()
+        filters.update(
+            {
+                "partner_id": get_request_partner_id(request),
+            }
+        )
+        promos = partner_promo_service.get_filtered(
+            paginator=paginator, request=request, filters=filters
+        )
+        paginated_promos = paginator.paginate_queryset(promos, request)
+        return paginator.get_paginated_response(
+            PartnerPromoReadSerializer(paginated_promos, many=True).data
+        )
+
+    @swagger_auto_schema(
+        request_body=PartnerPromoBaseSerializer,
+        responses={200: PartnerPromoReadSerializer},
+    )
+    def update(self, request: Request, pk: Union[str, int]) -> Response:
+        partner_id = get_request_partner_id(request)
+        mapping = {"partner_id": partner_id}
+        promo = partner_promo_service.get(pk=pk, **mapping)
+        if not promo:
+            raise HttpErrorException(
+                status_code=HTTPStatus.NOT_FOUND, code=ErrorCodes.PROMO_NOT_FOUND
+            )
+        promo = partner_promo_service.update(
+            obj_data=request.data, serializer=PartnerPromoUpdateSerializer, obj_id=pk
+        )
+        return Response(PartnerPromoReadSerializer(promo).data)

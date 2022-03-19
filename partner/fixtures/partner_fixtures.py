@@ -168,6 +168,7 @@ def partner_promo_fixture(
     repeat: Optional[PartnerPromotionPeriod] = PartnerPromotionPeriod.FIXED,
     starts_on: date = date.today(),
     stops_on: date = date.today() + timedelta(days=1),
+    verified: bool = True,
 ) -> Dict:
     return {
         "name": random_string(),
@@ -176,6 +177,7 @@ def partner_promo_fixture(
         "message": random_string(),
         "starts_on": starts_on,
         "stops_on": stops_on,
+        "verified": verified,
     }
 
 
@@ -185,6 +187,7 @@ def create_partner_promo_obj(
     repeat: Optional[PartnerPromotionPeriod] = PartnerPromotionPeriod.FIXED,
     starts_on: date = date.today(),
     stops_on: date = date.today() + timedelta(days=1),
+    verified: bool = True,
 ) -> PartnerPromotion:
     data = partner_promo_fixture(
         partner_id=str(partner.id) if partner else None,
@@ -192,6 +195,7 @@ def create_partner_promo_obj(
         repeat=repeat,
         starts_on=starts_on,
         stops_on=stops_on,
+        verified=verified,
     )
     return PartnerPromotion.objects.create(**data)
 
