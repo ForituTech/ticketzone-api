@@ -9,6 +9,8 @@ router.register(r"partner", viewset=views.PartnerViewSet, basename="partner")
 router.register(
     r"partnership/person", viewset=views.PartnerPersonViewset, basename="partner_person"
 )
+router.register(r"sms", viewset=views.PartnerSMSPackageViewset, basename="sms_package")
+router.register(r"promo", viewset=views.PartnerPromotionViewset, basename="promotion")
 
 urlpatterns = [
     path("login/", view=views.login, name="login"),

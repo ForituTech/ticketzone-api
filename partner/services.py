@@ -11,13 +11,19 @@ from partner.models import (
     Partner,
     PartnerBankingInfo,
     PartnerPerson,
+    PartnerPromotion,
+    PartnerSMS,
     Person,
     PromoOptIn,
 )
 from partner.serializers import (
     PartnerPersonCreateSerializer,
     PartnerPersonUpdateSerializer,
+    PartnerPromoCreateSerializer,
+    PartnerPromoUpdateSerializer,
     PartnerSerializer,
+    PartnerSMSPackageCreateSerializer,
+    PartnerSMSPackageUpdateSerializer,
     PartnerUpdateSerializer,
     PersonCreateSerializer,
     PersonUpdateSerializer,
@@ -122,3 +128,30 @@ class PartnerPersonService(
 
 
 partner_person_service = PartnerPersonService(PartnerPerson)
+
+
+class PartnerSMSPackageSerivce(
+    CRUDService[
+        PartnerSMS, PartnerSMSPackageCreateSerializer, PartnerSMSPackageUpdateSerializer
+    ]
+):
+    pass
+
+
+partner_sms_service = PartnerSMSPackageSerivce(PartnerSMS)
+
+
+class PartnerPromoService(
+    CRUDService[
+        PartnerPromotion, PartnerPromoCreateSerializer, PartnerPromoUpdateSerializer
+    ]
+):
+    def on_pre_update(
+        self, obj_in: PartnerPromoUpdateSerializer, obj: PartnerPromotion
+    ) -> None:
+        if obj_in.message:
+            obj.verified = False
+            obj.save()
+
+
+partner_promo_service = PartnerPromoService(PartnerPromotion)

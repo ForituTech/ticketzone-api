@@ -122,25 +122,21 @@ class RedemtionRateSerializer(serializers.Serializer):
 
 
 class PartnerSMSPackageBaseSerializer(serializers.Serializer):
-    partner_id = serializers.CharField(max_length=255, required=False)
-    per_sms_rate = serializers.FloatField(required=False)
-    sms_limit = serializers.IntegerField(required=False)
-    sms_used = serializers.IntegerField(required=False)
-    verified = serializers.BooleanField(required=False)
+    pass
 
 
-class PartnerSMSPackageSerializer(BaseSerializer):
+class PartnerSMSPackageSerializer(serializers.Serializer):
     partner_id = serializers.CharField(max_length=255)
-    per_sms_rate = serializers.FloatField()
-    sms_limit = serializers.IntegerField()
-    sms_used = serializers.IntegerField()
-    verified = serializers.BooleanField()
 
 
 class PartnerSMSPackageReadSerializer(
     InDBBaseSerializer, PartnerSMSPackageBaseSerializer
 ):
-    pass
+    partner_id = serializers.CharField(max_length=255)
+    per_sms_rate = serializers.FloatField()
+    sms_limit = serializers.IntegerField()
+    sms_used = serializers.IntegerField()
+    verified = serializers.BooleanField()
 
 
 class PartnerSMSPackageUpdateSerializer(
@@ -149,5 +145,32 @@ class PartnerSMSPackageUpdateSerializer(
     pass
 
 
-class PartnerSMSPackageCreateSerializer(PartnerSMSPackageSerializer):
+class PartnerSMSPackageCreateSerializer(BaseSerializer, PartnerSMSPackageSerializer):
+    pass
+
+
+class PartnerPromoBaseSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=255, required=False)
+    message = serializers.CharField(max_length=10240, required=False)
+
+
+class PartnerPromoSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=255)
+    partner_id = serializers.CharField(max_length=255)
+    message = serializers.CharField(max_length=10240)
+    starts_on = serializers.DateField()
+    stops_on = serializers.DateField()
+
+
+class PartnerPromoReadSerializer(InDBBaseSerializer, PartnerPromoSerializer):
+    repeat = serializers.CharField(max_length=255)
+    last_run = serializers.DateField()
+    verified = serializers.BooleanField()
+
+
+class PartnerPromoUpdateSerializer(PartnerPromoBaseSerializer, BaseSerializer):
+    pass
+
+
+class PartnerPromoCreateSerializer(BaseSerializer, PartnerPromoSerializer):
     pass

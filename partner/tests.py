@@ -5,6 +5,7 @@ from unittest import mock
 from django.test import TestCase
 from rest_framework.test import APIClient
 
+from core.utils import random_string
 from eticketing_api import settings
 from events.fixtures import event_fixtures
 from events.models import Person, Ticket
@@ -444,3 +445,86 @@ class PartnerTestCase(TestCase):
         send_out_promos()
 
         assert not mock_send_sms.called
+
+    @mock.patch("notifications.utils.send_sms.apply_async")
+    def test_send_out_promos__unverified_promo(self, mock_send_sms: Any) -> None:
+        partner = partner_fixtures.create_partner_obj()
+        partner_fixtures.create_partner_sms_obj(partner=partner)
+        promo = partner_fixtures.create_partner_promo_obj(partner=partner)
+        promo.last_run = date.today() - timedelta(weeks=2)
+        promo.verified = False
+        promo.save()
+        partner_fixtures.create_partner_promo_optin_obj(partner=partner)
+
+        send_out_promos()
+
+        assert not mock_send_sms.called
+
+    def test_partner_sms_package_create(self) -> None:
+        data = partner_fixtures.partner_sms_fixture(str(self.owner.partner_id), False)
+
+        res = self.authed_client.post("/partner/sms/", data=data, format="json")
+
+        assert res.status_code == 200
+        assert not res.json()["verified"]
+        assert not res.json()["sms_limit"]
+
+    def test_partner_sms_package_read(self) -> None:
+        sms = partner_fixtures.create_partner_sms_obj(partner=self.owner.partner)
+
+        res = self.authed_client.get(f"/partner/sms/{sms.id}/")
+
+        assert res.status_code == 200
+        assert res.json()["id"] == str(sms.id)
+
+    def test_create_promo(self) -> None:
+        data = partner_fixtures.partner_promo_fixture(
+            partner_id=str(self.owner.partner.id)
+        )
+
+        res = self.authed_client.post("/partner/promo/", data=data, format="json")
+
+        assert res.status_code == 200
+        assert res.json()["partner_id"] == str(self.owner.partner.id)
+
+    def test_update_promo(self) -> None:
+        promo = partner_fixtures.create_partner_promo_obj(partner=self.owner.partner)
+        update_data = {"message": random_string()}
+
+        res = self.authed_client.put(
+            f"/partner/promo/{str(promo.id)}/", data=update_data, format="json"
+        )
+
+        assert res.status_code == 200
+        assert res.json()["message"] == update_data["message"]
+
+        promo = partner_fixtures.create_partner_promo_obj()
+        update_data = {"message": random_string()}
+
+        res = self.authed_client.put(
+            f"/partner/promo/{str(promo.id)}/", data=update_data, format="json"
+        )
+        assert res.status_code == 404
+
+    def test_list_promo(self) -> None:
+        partner_fixtures.create_partner_promo_obj(partner=self.owner.partner)
+        partner_fixtures.create_partner_promo_obj()
+
+        res = self.authed_client.get("/partner/promo/")
+
+        assert res.status_code == 200
+        assert res.json()["count"] == 1
+
+    def test_read_promo(self) -> None:
+        promo = partner_fixtures.create_partner_promo_obj(partner=self.owner.partner)
+
+        res = self.authed_client.get(f"/partner/promo/{str(promo.id)}/")
+
+        assert res.status_code == 200
+        assert res.json()["id"] == str(promo.id)
+
+        promo = partner_fixtures.create_partner_promo_obj()
+
+        res = self.authed_client.get(f"/partner/promo/{str(promo.id)}/")
+
+        assert res.status_code == 404

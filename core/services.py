@@ -164,9 +164,9 @@ class ReadService(Generic[ModelType]):
     def __init__(self, model: Type[ModelType]):
         self.model = model
 
-    def get(self, *, pk: Any) -> Optional[ModelType]:
+    def get(self, *, pk: Any, **kwargs: Any) -> Optional[ModelType]:
         try:
-            obj = self.model.objects.get(pk=pk)
+            obj = self.model.objects.get(pk=pk, **kwargs)
         except self.model.DoesNotExist:
             return None
 
