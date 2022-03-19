@@ -17,6 +17,7 @@ env:
   POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
   POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
   POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+  BROKER_URL: ${{ secrets.BROKER_URL }}
 
 jobs:
   Typing-Lint-Checks:

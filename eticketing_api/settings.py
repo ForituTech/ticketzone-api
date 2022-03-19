@@ -199,6 +199,7 @@ DATABASES["default"].update(prod_db)
 
 # Celery
 CELERY_RESULT_BACKEND = "django-db"
+CELERY_BROKER_URL = os.environ["BROKER_URL"]
 
 # EMail
 EMAIL_USE_TLS = True
@@ -214,3 +215,8 @@ PUSHER_SECRET_KEY = "test"
 
 AFRICAS_TALKING_USERNAME = "test"
 AFRICAS_TALKING_KEY = "test"
+
+DEFAULT_TICKET_TEMPLATE = "tickets/templates/ticket.html"
+TICKET_EMAIL_TITLE = ""
+
+REMINDER_SMS = "Hi {} :), just reminding you that {} is in the next 24 hrs ! Wohoo!"

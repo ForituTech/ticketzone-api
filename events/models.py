@@ -1,4 +1,3 @@
-from datetime import datetime, timedelta
 from typing import List
 
 from django.db import models
@@ -25,11 +24,7 @@ class Event(BaseModel):
     event_date = models.DateField(null=False, blank=False, auto_now=False)
     event_location = models.CharField(max_length=1024, null=False, blank=False)
     description = models.CharField(max_length=1024, null=False, blank=False)
-    time = models.TimeField(
-        null=False,
-        blank=False,
-        default="{:%H:%M}".format(datetime.now() + timedelta(hours=3)),
-    )
+    time = models.TimeField(null=False, blank=False, auto_now_add=True)
     partner = models.ForeignKey(
         Partner, on_delete=models.CASCADE, null=False, blank=False
     )
@@ -149,7 +144,11 @@ class Ticket(BaseModel):
         TicketType, on_delete=models.CASCADE, null=False, blank=False
     )
     payment = models.ForeignKey(
-        Payment, on_delete=models.CASCADE, null=False, blank=False
+        Payment,
+        on_delete=models.CASCADE,
+        null=False,
+        blank=False,
+        related_name="tickets",
     )
     sent = models.BooleanField(
         null=False,
@@ -167,22 +166,13 @@ class Ticket(BaseModel):
 
     def __str__(self) -> str:
         return (
-            f"{self.payment.person.name}'s"
-            f"{self.ticket_type.event.name}"
+            f"{self.payment.person.name}'s "
+            f"{self.ticket_type.event.name} "
             f"{self.ticket_type.name} ticket"
         )
 
 
-class PromoOptIn(models.Model):
-    person = models.ForeignKey(
-        Person, on_delete=models.CASCADE, null=False, blank=False
-    )
-    partner = models.ForeignKey(
-        Partner, on_delete=models.CASCADE, null=False, blank=False
-    )
-
-
-class ReminderOptIn(models.Model):
+class ReminderOptIn(BaseModel):
     person = models.ForeignKey(
         Person, on_delete=models.CASCADE, null=False, blank=False
     )

@@ -1,7 +1,8 @@
 from typing import Optional
 
 from events.fixtures import event_fixtures
-from events.models import TicketType
+from events.models import Event, TicketType
+from partner.models import Person
 from payments.fixtures import payment_fixtures
 from payments.models import Payment
 from tickets.models import Ticket
@@ -21,15 +22,18 @@ def ticket_fixture(
 
 
 def create_ticket_obj(
-    ticket_type: Optional[TicketType] = None, payment: Optional[Payment] = None
+    ticket_type: Optional[TicketType] = None,
+    payment: Optional[Payment] = None,
+    event: Optional[Event] = None,
+    person: Optional[Person] = None,
 ) -> Ticket:
     ticket_data = ticket_fixture(
         ticket_type_id=str(ticket_type.id)
         if ticket_type
-        else str(event_fixtures.create_ticket_type_obj().id),
+        else str(event_fixtures.create_ticket_type_obj(event=event).id),
         payment_id=str(payment.id)
         if payment
-        else str(payment_fixtures.create_payment_object().id),
+        else str(payment_fixtures.create_payment_object(person=person).id),
     )
     ticket: Ticket = Ticket.objects.create(**ticket_data)
     ticket.save()
