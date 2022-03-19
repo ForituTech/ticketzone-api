@@ -45,7 +45,7 @@ class NotificationsTestCase(TestCase):
         mock_email_object = mock_email_service.return_value
         ticket: Ticket = ticket_fixtures.create_ticket_obj()
 
-        send_ticket_email(ticket.id)
+        send_ticket_email(str(ticket.id))
 
         mock_email_service.assert_called_with(
             subject=settings.TICKET_EMAIL_TITLE,
