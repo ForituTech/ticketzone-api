@@ -144,7 +144,11 @@ class Ticket(BaseModel):
         TicketType, on_delete=models.CASCADE, null=False, blank=False
     )
     payment = models.ForeignKey(
-        Payment, on_delete=models.CASCADE, null=False, blank=False
+        Payment,
+        on_delete=models.CASCADE,
+        null=False,
+        blank=False,
+        related_name="tickets",
     )
     sent = models.BooleanField(
         null=False,
@@ -162,22 +166,13 @@ class Ticket(BaseModel):
 
     def __str__(self) -> str:
         return (
-            f"{self.payment.person.name}'s"
-            f"{self.ticket_type.event.name}"
+            f"{self.payment.person.name}'s "
+            f"{self.ticket_type.event.name} "
             f"{self.ticket_type.name} ticket"
         )
 
 
-class PromoOptIn(models.Model):
-    person = models.ForeignKey(
-        Person, on_delete=models.CASCADE, null=False, blank=False
-    )
-    partner = models.ForeignKey(
-        Partner, on_delete=models.CASCADE, null=False, blank=False
-    )
-
-
-class ReminderOptIn(models.Model):
+class ReminderOptIn(BaseModel):
     person = models.ForeignKey(
         Person, on_delete=models.CASCADE, null=False, blank=False
     )

@@ -26,7 +26,7 @@ def event_fixture(partner_id: Union[str, int] = None) -> dict:
     return {
         "name": "new-event",
         "poster": "media/42_EluV6G9.jpg",
-        "event_date": (date.today() + timedelta(days=30)).strftime("%Y-%m-%d"),
+        "event_date": (date.today() + timedelta(days=1)).strftime("%Y-%m-%d"),
         "event_location": "Nairobi",
         "description": "A random event description",
         "partner_id": partner_id

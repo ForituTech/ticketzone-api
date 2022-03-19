@@ -7,3 +7,9 @@ class PersonType(models.TextChoices):
     TICKETING_AGENT = "TA", _("TICKETING_AGENT")
     CUSTOMER = "CR", _("CUSTOMER")
     OWNER = "OW", _("OWNER")
+
+
+class PartnerPromotionPeriod(models.TextChoices):
+    WEEKLY = "WK", _("WEEKLY")
+    MONTHLY = "MN", _("MONTHLY")
+    FIXED = "FX", _("FIXED")

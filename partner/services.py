@@ -6,8 +6,14 @@ from rest_framework.request import Request
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException, ObjectNotFoundException
 from core.services import CRUDService
-from events.models import Event, PromoOptIn
-from partner.models import Partner, PartnerBankingInfo, PartnerPerson, Person
+from events.models import Event
+from partner.models import (
+    Partner,
+    PartnerBankingInfo,
+    PartnerPerson,
+    Person,
+    PromoOptIn,
+)
 from partner.serializers import (
     PartnerPersonCreateSerializer,
     PartnerPersonUpdateSerializer,

@@ -119,3 +119,35 @@ class SalesSerializer(serializers.Serializer):
 
 class RedemtionRateSerializer(serializers.Serializer):
     rate = serializers.FloatField()
+
+
+class PartnerSMSPackageBaseSerializer(serializers.Serializer):
+    partner_id = serializers.CharField(max_length=255, required=False)
+    per_sms_rate = serializers.FloatField(required=False)
+    sms_limit = serializers.IntegerField(required=False)
+    sms_used = serializers.IntegerField(required=False)
+    verified = serializers.BooleanField(required=False)
+
+
+class PartnerSMSPackageSerializer(BaseSerializer):
+    partner_id = serializers.CharField(max_length=255)
+    per_sms_rate = serializers.FloatField()
+    sms_limit = serializers.IntegerField()
+    sms_used = serializers.IntegerField()
+    verified = serializers.BooleanField()
+
+
+class PartnerSMSPackageReadSerializer(
+    InDBBaseSerializer, PartnerSMSPackageBaseSerializer
+):
+    pass
+
+
+class PartnerSMSPackageUpdateSerializer(
+    BaseSerializer, PartnerSMSPackageBaseSerializer
+):
+    pass
+
+
+class PartnerSMSPackageCreateSerializer(PartnerSMSPackageSerializer):
+    pass

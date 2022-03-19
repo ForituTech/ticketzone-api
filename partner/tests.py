@@ -1,9 +1,16 @@
+from datetime import date, timedelta
+from typing import Any
+from unittest import mock
+
 from django.test import TestCase
 from rest_framework.test import APIClient
 
+from eticketing_api import settings
 from events.fixtures import event_fixtures
+from events.models import Person, Ticket
 from partner.constants import PersonType
 from partner.fixtures import partner_fixtures
+from partner.tasks import send_out_promos, send_out_reminders
 from partner.utils import verify_password
 from payments.fixtures import payment_fixtures
 from tickets.fixtures import ticket_fixtures
@@ -309,3 +316,131 @@ class PartnerTestCase(TestCase):
 
         assert res.status_code == 200
         assert res.json()["done"]
+
+    @mock.patch("notifications.utils.send_sms.apply_async")
+    def test_send_out_reminders(self, mock_send_sms: Any) -> None:
+        partner = partner_fixtures.create_partner_obj()
+        partner_fixtures.create_partner_sms_obj(partner=partner)
+        event = event_fixtures.create_event_object(owner=partner.owner)
+        person: Person = partner_fixtures.create_person_obj()
+        ticket: Ticket = ticket_fixtures.create_ticket_obj(event=event, person=person)
+        ticket_fixtures.create_ticket_obj(event=event, payment=ticket.payment)
+        partner_fixtures.create_reminder_optin_object(
+            person=person, event=ticket.ticket_type.event
+        )
+
+        send_out_reminders()
+
+        mock_send_sms.assert_called_once_with(
+            args=(
+                ticket.payment.person_id,
+                settings.REMINDER_SMS.format(
+                    ticket.payment.person.name, ticket.ticket_type.event.name
+                ),
+            ),
+            queue="main_queue",
+        )
+
+    @mock.patch("notifications.utils.send_sms.apply_async")
+    def test_send_out_reminders__no_optin(self, mock_send_sms: Any) -> None:
+        partner = partner_fixtures.create_partner_obj()
+        partner_fixtures.create_partner_sms_obj(partner=partner)
+        event = event_fixtures.create_event_object(owner=partner.owner)
+        ticket_fixtures.create_ticket_obj(event=event)
+
+        send_out_reminders()
+
+        assert not mock_send_sms.called
+
+    @mock.patch("notifications.utils.send_sms.apply_async")
+    def test_send_out_reminders__no_sms_package(self, mock_send_sms: Any) -> None:
+        partner = partner_fixtures.create_partner_obj()
+        event = event_fixtures.create_event_object(owner=partner.owner)
+        ticket: Ticket = ticket_fixtures.create_ticket_obj(event=event)
+        partner_fixtures.create_reminder_optin_object(event=ticket.ticket_type.event)
+
+        send_out_reminders()
+
+        assert not mock_send_sms.called
+
+    @mock.patch("notifications.utils.send_sms.apply_async")
+    def test_send_out_reminders__no_verified_sms_package(
+        self, mock_send_sms: Any
+    ) -> None:
+        partner = partner_fixtures.create_partner_obj()
+        sms_package = partner_fixtures.create_partner_sms_obj(partner=partner)
+        sms_package.verified = False
+        sms_package.save()
+        event = event_fixtures.create_event_object(owner=partner.owner)
+        ticket: Ticket = ticket_fixtures.create_ticket_obj(event=event)
+        partner_fixtures.create_reminder_optin_object(event=ticket.ticket_type.event)
+
+        send_out_reminders()
+
+        assert not mock_send_sms.called
+
+    @mock.patch("notifications.utils.send_sms.apply_async")
+    def test_send_out_promos(self, mock_send_sms: Any) -> None:
+        partner = partner_fixtures.create_partner_obj()
+        partner_fixtures.create_partner_sms_obj(partner=partner)
+        promo = partner_fixtures.create_partner_promo_obj(partner=partner)
+        promo.last_run = date.today() - timedelta(weeks=2)
+        promo.save()
+        optin = partner_fixtures.create_partner_promo_optin_obj(partner=partner)
+
+        send_out_promos()
+
+        mock_send_sms.assert_called_once_with(
+            args=(optin.person.id, promo.message),
+            queue="main_queue",
+        )
+
+        promo.refresh_from_db()
+
+        assert promo.last_run == date.today()
+
+    @mock.patch("notifications.utils.send_sms.apply_async")
+    def test_send_out_promos__no_sms_package(self, mock_send_sms: Any) -> None:
+        partner = partner_fixtures.create_partner_obj()
+        partner_fixtures.create_partner_promo_obj(partner=partner)
+        partner_fixtures.create_partner_promo_optin_obj(partner=partner)
+
+        send_out_promos()
+
+        assert not mock_send_sms.called
+
+    @mock.patch("notifications.utils.send_sms.apply_async")
+    def test_send_out_promos__no_optin(self, mock_send_sms: Any) -> None:
+        partner = partner_fixtures.create_partner_obj()
+        partner_fixtures.create_partner_sms_obj(partner=partner)
+        partner_fixtures.create_partner_promo_obj(partner=partner)
+
+        send_out_promos()
+
+        assert not mock_send_sms.called
+
+    @mock.patch("notifications.utils.send_sms.apply_async")
+    def test_send_out_promos__no_verified_sms_package(self, mock_send_sms: Any) -> None:
+        partner = partner_fixtures.create_partner_obj()
+        sms_package = partner_fixtures.create_partner_sms_obj(partner=partner)
+        sms_package.verified = False
+        sms_package.save()
+        partner_fixtures.create_partner_promo_obj(partner=partner)
+        partner_fixtures.create_partner_promo_optin_obj(partner=partner)
+
+        send_out_promos()
+
+        assert not mock_send_sms.called
+
+    @mock.patch("notifications.utils.send_sms.apply_async")
+    def test_send_out_promos__no_running_promos(self, mock_send_sms: Any) -> None:
+        partner = partner_fixtures.create_partner_obj()
+        partner_fixtures.create_partner_sms_obj(partner=partner)
+        promo = partner_fixtures.create_partner_promo_obj(partner=partner)
+        promo.starts_on = date.today() + timedelta(weeks=12)
+        promo.save()
+        partner_fixtures.create_partner_promo_optin_obj(partner=partner)
+
+        send_out_promos()
+
+        assert not mock_send_sms.called

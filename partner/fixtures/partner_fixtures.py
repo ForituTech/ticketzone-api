@@ -1,8 +1,20 @@
+from datetime import date, timedelta
 from random import randint
-from typing import Optional
+from typing import Dict, Optional
 
-from partner.constants import PersonType
-from partner.models import Partner, PartnerBankingInfo, PartnerPerson, Person
+from core.utils import random_string
+from events.fixtures import event_fixtures
+from events.models import Event, ReminderOptIn
+from partner.constants import PartnerPromotionPeriod, PersonType
+from partner.models import (
+    Partner,
+    PartnerBankingInfo,
+    PartnerPerson,
+    PartnerPromotion,
+    PartnerSMS,
+    Person,
+    PromoOptIn,
+)
 from partner.utils import create_access_token
 
 
@@ -105,3 +117,99 @@ def create_partner_person(
     )
     partner_person.save()
     return partner_person
+
+
+def reminder_optin_fixture(
+    person_id: Optional[str] = None,
+    event_id: Optional[str] = None,
+) -> Dict:
+    return {
+        "person_id": person_id if person_id else str(create_person_obj().id),
+        "event_id": event_id
+        if event_id
+        else str(event_fixtures.create_event_object().id),
+    }
+
+
+def create_reminder_optin_object(
+    person: Optional[Person] = None,
+    event: Optional[Event] = None,
+) -> ReminderOptIn:
+    data = reminder_optin_fixture(
+        person_id=str(person.id) if person else None,
+        event_id=str(event.id) if event else None,
+    )
+    return ReminderOptIn.objects.create(**data)
+
+
+def partner_sms_fixture(
+    partner_id: Optional[str] = None, verified: bool = True
+) -> Dict:
+    return {
+        "partner_id": partner_id if partner_id else str(create_partner_obj().id),
+        "per_sms_rate": 10,
+        "sms_limit": 10,
+        "verified": verified,
+    }
+
+
+def create_partner_sms_obj(
+    partner: Optional[Partner] = None, verified: bool = True
+) -> PartnerSMS:
+    data = partner_sms_fixture(
+        partner_id=str(partner.id) if partner else None, verified=verified
+    )
+    return PartnerSMS.objects.create(**data)
+
+
+def partner_promo_fixture(
+    partner_id: Optional[str] = None,
+    owner: Optional[Person] = None,
+    repeat: Optional[PartnerPromotionPeriod] = PartnerPromotionPeriod.FIXED,
+    starts_on: date = date.today(),
+    stops_on: date = date.today() + timedelta(days=1),
+) -> Dict:
+    return {
+        "name": random_string(),
+        "partner_id": partner_id if partner_id else str(create_partner_obj(owner).id),
+        "repeat": repeat,
+        "message": random_string(),
+        "starts_on": starts_on,
+        "stops_on": stops_on,
+    }
+
+
+def create_partner_promo_obj(
+    partner: Optional[Partner] = None,
+    owner: Optional[Person] = None,
+    repeat: Optional[PartnerPromotionPeriod] = PartnerPromotionPeriod.FIXED,
+    starts_on: date = date.today(),
+    stops_on: date = date.today() + timedelta(days=1),
+) -> PartnerPromotion:
+    data = partner_promo_fixture(
+        partner_id=str(partner.id) if partner else None,
+        owner=owner,
+        repeat=repeat,
+        starts_on=starts_on,
+        stops_on=stops_on,
+    )
+    return PartnerPromotion.objects.create(**data)
+
+
+def partner_promo_optin_fixture(
+    person_id: Optional[str] = None, partner_id: Optional[str] = None
+) -> Dict:
+    return {
+        "person_id": person_id if person_id else str(create_person_obj().id),
+        "partner_id": partner_id if partner_id else str(create_partner_obj().id),
+    }
+
+
+def create_partner_promo_optin_obj(
+    person: Optional[Person] = None, partner: Optional[Partner] = None
+) -> PromoOptIn:
+    data = partner_promo_optin_fixture(
+        person_id=str(person.id) if person else None,
+        partner_id=str(partner.id) if partner else None,
+    )
+    return PromoOptIn.objects.create(**data)

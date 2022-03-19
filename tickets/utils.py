@@ -3,7 +3,8 @@ import hashlib
 import os
 from datetime import datetime
 from io import BytesIO
-from typing import Union
+from tempfile import NamedTemporaryFile
+from typing import Any, Union
 
 import numpy as np
 import pdfkit
@@ -57,7 +58,7 @@ def get_ticket_hash_from_qr(image_str: str) -> str:
         raise EnvironmentError("Ticket hashes can only be decoded on dev")
 
 
-def generate_ticket_pdf(ticket: Ticket) -> None:
+def generate_ticket_pdf(ticket: Ticket) -> Any:
     date_obj = ticket.ticket_type.event.event_date
     date_str: str = datetime.strftime(date_obj, "%d-%B")
     date: list = date_str.split("-")
@@ -74,5 +75,28 @@ def generate_ticket_pdf(ticket: Ticket) -> None:
             "poster": poster,
         },
     )
+    temp_file = NamedTemporaryFile(mode="w+b")
+    ticket_pdf_data = pdfkit.from_string(ticket_html)
+    temp_file.name = f"{ticket.__str__()}"
+    temp_file.write(ticket_pdf_data)
+    temp_file.seek(0)
+    return temp_file
 
-    pdfkit.from_string(ticket_html)
+
+def generate_ticket_html(ticket: Ticket) -> str:
+    date_obj = ticket.ticket_type.event.event_date
+    date_str: str = datetime.strftime(date_obj, "%d-%B")
+    date: list = date_str.split("-")
+    image = generate_ticket_qr(ticket)
+    poster_data = open(ticket.ticket_type.event.poster.url[1:], "rb")
+    poster = base64.b64encode(poster_data.read()).decode("utf-8")
+
+    return render_to_string(
+        "ticket.html",
+        context={
+            "date": date,
+            "ticket_type": ticket.ticket_type,
+            "image": image,
+            "poster": poster,
+        },
+    )

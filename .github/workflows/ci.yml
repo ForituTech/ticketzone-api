@@ -17,6 +17,7 @@ env:
   POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
   POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
   POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+  BROKER_URL: ${{ secrets.BROKER_URL }}
 
 jobs:
   Typing-Lint-Checks:
@@ -66,7 +67,23 @@ jobs:
           POSTGRES_DB: github_actions
         ports:
           - 5432:5432
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        options: >-
+          --health-cmd pg_isready 
+          --health-interval 10s 
+          --health-timeout 5s 
+          --health-retries 5
+
+      redis:
+        image: redis:6
+        env:
+          REDIS_HOST: redis
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v2
 
