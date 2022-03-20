@@ -23,3 +23,7 @@ class InDBBaseSerializer(serializers.Serializer):
 
 class VerifyActionSerializer(serializers.Serializer):
     done = serializers.BooleanField(default=False)
+
+
+class PromoOptinCountSerializer(serializers.Serializer):
+    count = serializers.IntegerField()

@@ -109,6 +109,9 @@ class PartnerService(CRUDService[Partner, PartnerSerializer, PartnerUpdateSerial
             person_id=person_id,
         )
 
+    def promo_optin_count(self, partner_id: str) -> int:
+        return PromoOptIn.objects.filter(partner_id=partner_id).count()
+
 
 partner_service = PartnerService(Partner)
 
