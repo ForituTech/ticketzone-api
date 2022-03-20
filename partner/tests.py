@@ -528,3 +528,14 @@ class PartnerTestCase(TestCase):
         res = self.authed_client.get(f"/partner/promo/{str(promo.id)}/")
 
         assert res.status_code == 404
+
+    def test_get_optin_count(self) -> None:
+        person = partner_fixtures.create_person_obj()
+        partner_fixtures.create_partner_promo_optin_obj(person, self.owner.partner)
+        partner_fixtures.create_partner_promo_optin_obj()
+
+        res = self.authed_client.get(
+            f"/partner/promo/optin/count/{str(self.owner.partner.id)}/"
+        )
+        assert res.status_code == 200
+        assert res.json()["count"] == 1

@@ -134,6 +134,14 @@ def partner_promo_optin(request: Request, partner_id: str) -> Response:
     return Response({"done": True})
 
 
+@swagger_auto_schema(method="get", responses={200: VerifyActionSerializer()})
+@api_view(["GET"])
+@permission_classes([PartnerMembershipPermissions])
+def partner_promo_optin_count(request: Request, partner_id: str) -> Response:
+    count = partner_service.promo_optin_count(partner_id)
+    return Response({"count": count})
+
+
 class PersonViewSet(AbstractPermissionedView):
     @swagger_auto_schema(responses={200: PersonReadSerializer})
     def retrieve(self, request: Request, pk: Union[str, int]) -> Response:
