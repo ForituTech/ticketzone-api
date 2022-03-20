@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "django_celery_results",
     "notifications",
+    "owners",
 ]
 
 MIDDLEWARE = [
@@ -220,3 +221,5 @@ DEFAULT_TICKET_TEMPLATE = "tickets/templates/ticket.html"
 TICKET_EMAIL_TITLE = ""
 
 REMINDER_SMS = "Hi {} :), just reminding you that {} is in the next 24 hrs ! Wohoo!"
+
+POST_RECONCILIATION_MESSAGE = "HI {}. Your weekly reconciliation has just completed. Your total balance comes out to {}"

@@ -1,5 +1,5 @@
 from datetime import date, timedelta
-from typing import Any
+from typing import Any, Optional
 from unittest import mock
 
 from django.test import TestCase
@@ -9,9 +9,12 @@ from core.utils import random_string
 from eticketing_api import settings
 from events.fixtures import event_fixtures
 from events.models import Person, Ticket
+from owners.fixtures import owner_fixtures
 from partner.constants import PersonType
 from partner.fixtures import partner_fixtures
-from partner.tasks import send_out_promos, send_out_reminders
+from partner.models import Partner, PartnerSMS
+from partner.services import partner_service
+from partner.tasks import reconcile_payments, send_out_promos, send_out_reminders
 from partner.utils import verify_password
 from payments.fixtures import payment_fixtures
 from tickets.fixtures import ticket_fixtures
@@ -383,11 +386,12 @@ class PartnerTestCase(TestCase):
     @mock.patch("notifications.utils.send_sms.apply_async")
     def test_send_out_promos(self, mock_send_sms: Any) -> None:
         partner = partner_fixtures.create_partner_obj()
-        partner_fixtures.create_partner_sms_obj(partner=partner)
+        sms = partner_fixtures.create_partner_sms_obj(partner=partner)
         promo = partner_fixtures.create_partner_promo_obj(partner=partner)
         promo.last_run = date.today() - timedelta(weeks=2)
         promo.save()
         optin = partner_fixtures.create_partner_promo_optin_obj(partner=partner)
+        sms_pre_use = sms.sms_limit - sms.sms_used
 
         send_out_promos()
 
@@ -397,8 +401,25 @@ class PartnerTestCase(TestCase):
         )
 
         promo.refresh_from_db()
+        sms.refresh_from_db()
 
         assert promo.last_run == date.today()
+        assert sms_pre_use == ((sms.sms_limit - sms.sms_used) + 1)
+
+    def send_out_promo_util(self, partner: Optional[Partner] = None) -> float:
+        partner = partner if partner else partner_fixtures.create_partner_obj()
+        try:
+            sms = PartnerSMS.objects.get(partner_id=str(partner.id))
+        except PartnerSMS.DoesNotExist:
+            sms = partner_fixtures.create_partner_sms_obj(partner)
+        promo = partner_fixtures.create_partner_promo_obj(partner=partner)
+        promo.last_run = date.today() - timedelta(weeks=2)
+        promo.save()
+        partner_fixtures.create_partner_promo_optin_obj(partner=partner)
+
+        send_out_promos()
+
+        return sms.per_sms_rate
 
     @mock.patch("notifications.utils.send_sms.apply_async")
     def test_send_out_promos__no_sms_package(self, mock_send_sms: Any) -> None:
@@ -537,5 +558,53 @@ class PartnerTestCase(TestCase):
         res = self.authed_client.get(
             f"/partner/promo/optin/count/{str(self.owner.partner.id)}/"
         )
+
         assert res.status_code == 200
         assert res.json()["count"] == 1
+
+    def test_reconciliation_method(self) -> None:
+        partner = partner_fixtures.create_partner_obj()
+        partner_fixtures.create_partner_sms_obj(partner=partner)
+        event = event_fixtures.create_event_object(partner.owner)
+        t1 = ticket_fixtures.create_ticket_obj(event=event)
+        t2 = ticket_fixtures.create_ticket_obj(event=event)
+
+        assert partner_service.balance(str(partner.id)) == (
+            t1.payment.amount + t2.payment.amount
+        )
+
+    @mock.patch("notifications.utils.send_sms.apply_async")
+    def test_reconciliation(self, mock_send_sms: Any) -> None:
+        partner = partner_fixtures.create_partner_obj()
+        partner_fixtures.create_partner_sms_obj(partner=partner)
+        event = event_fixtures.create_event_object(partner.owner)
+        t1 = ticket_fixtures.create_ticket_obj(event=event)
+        t2 = ticket_fixtures.create_ticket_obj(event=event)
+        owner = owner_fixtures.create_owner_obj()
+
+        totals = t1.payment.amount + t2.payment.amount
+        totals -= self.send_out_promo_util(partner)
+
+        reconcile_payments()
+
+        calls = [
+            mock.call(
+                args=(
+                    partner.owner.phone_number,
+                    settings.POST_RECONCILIATION_MESSAGE.format(
+                        partner.owner.name, totals
+                    ),
+                ),
+                queue=mock.ANY,
+            ),
+            mock.call(
+                args=(
+                    owner.phone_number,
+                    f"Your weekly leverage for {date.today()} "
+                    f"is {(totals*(partner.comission_rate/100))*(owner.stake/100)}",
+                ),
+                queue=mock.ANY,
+            ),
+        ]
+
+        mock_send_sms.assert_has_calls(calls, any_order=True)

@@ -112,6 +112,27 @@ class PartnerService(CRUDService[Partner, PartnerSerializer, PartnerUpdateSerial
     def promo_optin_count(self, partner_id: str) -> int:
         return PromoOptIn.objects.filter(partner_id=partner_id).count()
 
+    def balance(self, partner_id: str) -> float:
+        ticket_filter = {
+            "ticket_type__event__partner_id": partner_id,
+            "payment__reconciled": False,
+        }
+        tickets: QuerySet[Ticket] = Ticket.objects.filter(**ticket_filter).distinct(
+            "payment"
+        )
+        total_revenue = 0.0
+        for ticket in tickets:
+            total_revenue += ticket.payment.amount
+            ticket.payment.reconciled = True
+            ticket.payment.save()
+        try:
+            sms: PartnerSMS = PartnerSMS.objects.get(partner_id=partner_id)
+            sms_cost = sms.sms_used * sms.per_sms_rate
+            total_revenue -= sms_cost
+        except PartnerSMS.DoesNotExist:
+            pass
+        return total_revenue
+
 
 partner_service = PartnerService(Partner)
 
