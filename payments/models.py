@@ -14,7 +14,7 @@ class Payment(BaseModel):
         Person, on_delete=models.DO_NOTHING, null=False, blank=False
     )
     made_through = models.CharField(
-        max_length=255, null=False, blank=False, default=PaymentProviders
+        max_length=255, null=False, blank=False, default=PaymentProviders.MPESA.value
     )
     # mapping from payment provider ids to internal relations
     transaction_id = models.CharField(max_length=256, null=True, blank=True)
@@ -22,6 +22,7 @@ class Payment(BaseModel):
         max_length=255, null=False, blank=False, default=PaymentStates.PENDIGN.value
     )
     verified = models.BooleanField(null=False, blank=False, default=False)
+    reconciled = models.BooleanField(null=False, blank=False, default=False)
 
     def __str__(self) -> str:
         return f"{self.person.name} paid " f"{self.amount} at {self.created_at}"

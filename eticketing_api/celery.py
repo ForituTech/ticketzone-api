@@ -20,4 +20,8 @@ celery.conf.beat_schedule = {
         "task": "cleanup_notifications",
         "schedule": crontab(day_of_week="sun"),
     },
+    "reconcile_payments": {
+        "task": "reconcile_payments",
+        "schedule": crontab(day_of_week="sun", hour=5),
+    },
 }

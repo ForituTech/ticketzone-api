@@ -10,7 +10,7 @@ from rest_framework.response import Response
 
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException
-from core.serializers import VerifyActionSerializer
+from core.serializers import PromoOptinCountSerializer, VerifyActionSerializer
 from core.views import AbstractPermissionedView
 from events.serializers import EventWithSales, TicketTypeWithSales
 from events.services import ticket_type_service
@@ -134,7 +134,7 @@ def partner_promo_optin(request: Request, partner_id: str) -> Response:
     return Response({"done": True})
 
 
-@swagger_auto_schema(method="get", responses={200: VerifyActionSerializer()})
+@swagger_auto_schema(method="get", responses={200: PromoOptinCountSerializer})
 @api_view(["GET"])
 @permission_classes([PartnerMembershipPermissions])
 def partner_promo_optin_count(request: Request, partner_id: str) -> Response:

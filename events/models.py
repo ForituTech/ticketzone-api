@@ -55,6 +55,7 @@ class Event(BaseModel):
             "name",
             "event_location",
             "description",
+            "partner__name",
         ]
 
     @property

@@ -65,16 +65,16 @@ def create_banking_info_obj() -> PartnerBankingInfo:
     return banking_info
 
 
-def partner_fixture() -> dict:
+def partner_fixture(owner_id: Optional[str] = None) -> dict:
     return {
         "name": "Muze Ticketing",
-        "owner_id": str(create_person_obj().id),
+        "owner_id": owner_id if owner_id else str(create_person_obj().id),
         "banking_info_id": str(create_banking_info_obj().id),
     }
 
 
 def create_partner_obj(owner: Optional[Person] = None) -> Partner:
-    data = partner_fixture()
+    data = partner_fixture(owner_id=str(owner.id) if owner else None)
     data["banking_info"] = create_banking_info_obj()
     if not owner:
         owner = create_person_obj()

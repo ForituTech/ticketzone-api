@@ -7,7 +7,9 @@ from django.db.models.query import QuerySet
 from eticketing_api import settings
 from events.models import ReminderOptIn, Ticket
 from notifications.utils import send_sms
-from partner.models import PartnerPromotion, PartnerSMS, PromoOptIn
+from owners.models import Owner
+from partner.models import Partner, PartnerPromotion, PartnerSMS, PromoOptIn
+from partner.services import partner_service
 
 
 @shared_task(name="send_out_reminders")
@@ -47,6 +49,8 @@ def send_out_reminders() -> None:
                 ),
                 queue="main_queue",
             )
+            event_partner_sms.sms_used += 1
+            event_partner_sms.save()
 
 
 @shared_task(name="send_out_promos")
@@ -75,5 +79,42 @@ def send_out_promos() -> None:
                     ),
                     queue="main_queue",
                 )
+                event_partner_sms.sms_used += 1
+                event_partner_sms.save()
+
             promo.last_run = date.today()
             promo.save()
+
+
+@shared_task(name="reconcile_payments")
+def reconcile_payments() -> None:
+    partners: QuerySet[Partner] = Partner.objects.all()
+
+    total_balance = 0.0
+    for partner in partners:
+        partner_balance = partner_service.balance(str(partner.id))
+        send_sms.apply_async(
+            args=(
+                partner.owner.phone_number,
+                settings.POST_RECONCILIATION_MESSAGE.format(
+                    partner.owner.name, partner_balance
+                ),
+            ),
+            queue="main_queue",
+        )
+        if partner_balance > 0:
+            # TODO: Add payment provider send to partner
+            total_balance += partner_balance * (partner.comission_rate / 100)
+        else:
+            total_balance += partner_balance
+
+    owners: QuerySet[Owner] = Owner.objects.all()
+    for owner in owners:
+        send_sms.apply_async(
+            args=(
+                owner.phone_number,
+                f"Your weekly leverage for {date.today()} "
+                f"is {total_balance*(owner.stake/100)}",
+            ),
+            queue="main_queue",
+        )
