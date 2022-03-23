@@ -19,6 +19,9 @@ class Notification(BaseModel):
     has_data = models.BooleanField(null=False, blank=False, default=True)
     sent = models.BooleanField(null=False, blank=False, default=False)
 
+    def __str__(self) -> str:
+        return f"{self.person.name}'s {self.channel} notification"
+
 
 class MassNotification(BaseModel):
     people = models.ManyToManyField(Person)
@@ -30,3 +33,6 @@ class MassNotification(BaseModel):
     )
     has_data = models.BooleanField(null=False, blank=False, default=True)
     sent = models.BooleanField(null=False, blank=False, default=False)
+
+    def __str__(self) -> str:
+        return f"Mass {self.channel} notification"

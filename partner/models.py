@@ -23,6 +23,12 @@ class PartnerBankingInfo(BaseModel):
     bank_code = models.IntegerField(null=False, blank=False)
     bank_account_number = models.BigIntegerField(null=False, blank=False)
 
+    def __str__(self) -> str:
+        if hasattr(self, "partner") and self.partner:
+            return f"{self.partner.name}'s banking info"
+        else:
+            return "Unused banking info"
+
 
 class Partner(BaseModel):
     name = models.CharField(max_length=255, null=False, blank=False)
@@ -36,8 +42,12 @@ class Partner(BaseModel):
     contact_person = models.ForeignKey(
         Person, on_delete=models.SET_NULL, null=True, blank=True
     )
-    banking_info = models.ForeignKey(
-        PartnerBankingInfo, on_delete=models.CASCADE, null=False, blank=False
+    banking_info = models.OneToOneField(
+        PartnerBankingInfo,
+        on_delete=models.CASCADE,
+        null=False,
+        blank=False,
+        related_name="partner",
     )
     comission_rate = models.FloatField(null=False, blank=False, default=3.0)
 
@@ -91,6 +101,9 @@ class PartnerSMS(BaseModel):
     def sms_left(self) -> bool:
         return (self.sms_limit - self.sms_used) > 0 and self.verified
 
+    def __str__(self) -> str:
+        return f"{self.partner.name} SMS package"
+
 
 class PartnerPromotion(BaseModel):
     name = models.CharField(max_length=1024, null=False, blank=False)
@@ -110,6 +123,9 @@ class PartnerPromotion(BaseModel):
     last_run = models.DateField(null=False, blank=False, auto_now_add=True)
     stops_on = models.DateField(null=False, blank=False, auto_now_add=True)
     verified = models.BooleanField(null=False, blank=False, default=False)
+
+    def __str__(self) -> str:
+        return f"{self.partner.name}'s {self.name} promotion"
 
     @property
     def next_run(self) -> Optional[Any]:
@@ -131,3 +147,6 @@ class PromoOptIn(BaseModel):
     partner = models.ForeignKey(
         Partner, on_delete=models.CASCADE, null=False, blank=False
     )
+
+    def __str__(self) -> str:
+        return f"{self.person.name}'s promo opt in for {self.partner.name}'s events"
