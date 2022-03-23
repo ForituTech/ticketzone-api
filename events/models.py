@@ -178,3 +178,6 @@ class ReminderOptIn(BaseModel):
         Person, on_delete=models.CASCADE, null=False, blank=False
     )
     event = models.ForeignKey(Event, on_delete=models.CASCADE, null=False, blank=False)
+
+    def __str__(self) -> str:
+        return f"{self.person.name}'s reminder for {self.event.name}"
