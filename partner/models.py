@@ -19,17 +19,6 @@ class Person(BaseModel):
         return self.name
 
 
-class PartnerBankingInfo(BaseModel):
-    bank_code = models.IntegerField(null=False, blank=False)
-    bank_account_number = models.BigIntegerField(null=False, blank=False)
-
-    def __str__(self) -> str:
-        if hasattr(self, "partner") and self.partner:
-            return f"{self.partner.name}'s banking info"
-        else:
-            return "Unused banking info"
-
-
 class Partner(BaseModel):
     name = models.CharField(max_length=255, null=False, blank=False)
     owner = models.OneToOneField(
@@ -42,13 +31,8 @@ class Partner(BaseModel):
     contact_person = models.ForeignKey(
         Person, on_delete=models.SET_NULL, null=True, blank=True
     )
-    banking_info = models.OneToOneField(
-        PartnerBankingInfo,
-        on_delete=models.CASCADE,
-        null=False,
-        blank=False,
-        related_name="partner",
-    )
+    bank_code = models.CharField(null=False, blank=False, max_length=255)
+    bank_account_number = models.CharField(null=False, blank=False, max_length=512)
     comission_rate = models.FloatField(null=False, blank=False, default=3.0)
 
     def __str__(self) -> str:

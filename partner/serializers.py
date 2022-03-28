@@ -52,31 +52,27 @@ class PersonUpdateSerializer(BaseSerializer, PersonBaseSerializer):
     pass
 
 
-class PartnerBankingInfoSerializer(serializers.Serializer):
-    bank_code = serializers.IntegerField(required=False)
-    bank_account_number = serializers.IntegerField(required=False)
-
-
 class PartnerBaseSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=255, required=False)
-    owner = serializers.CharField(required=False)
     contact_person = serializers.CharField(required=False)
-    banking_info = PartnerBankingInfoSerializer(required=False)
+    bank_code = serializers.CharField(required=False, max_length=255)
+    bank_account_number = serializers.CharField(required=False, max_length=512)
 
 
 class PartnerSerializer(BaseSerializer):
     name = serializers.CharField(max_length=255)
     owner = serializers.CharField()
     contact_person = serializers.CharField(required=False)
-    banking_info = PartnerBankingInfoSerializer()
+    bank_code = serializers.CharField(max_length=255)
+    bank_account_number = serializers.CharField(max_length=512)
 
 
 class PartnerReadSerializer(InDBBaseSerializer, PartnerBaseSerializer):
-    pass
+    owner = serializers.CharField(required=False)
 
 
 class PartnerUpdateSerializer(BaseSerializer, PartnerBaseSerializer):
-    banking_info_id = serializers.CharField(max_length=255, required=False)
+    pass
 
 
 class UserSerializer(serializers.Serializer):

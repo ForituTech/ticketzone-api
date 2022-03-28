@@ -96,20 +96,21 @@ class PartnerTestCase(TestCase):
         assert res.status_code == 403
 
     def test_update_partner(self) -> None:
-        code = 789101112
-        update_data = {"banking_info": {"bank_code": code}}
+        code = "789101112"
+        update_data = {"bank_code": code}
         res = self.authed_client.put(
             f"/partner/partner/{self.owner.partner.id}/",
             data=update_data,
             format="json",
         )
+        self.owner.partner.refresh_from_db()
         assert res.status_code == 200
         assert self.owner.partner.name == res.json()["name"]
-        assert self.owner.partner.banking_info.bank_code == code
+        assert self.owner.partner.bank_code == code
 
     def test_update_partner__unrelated(self) -> None:
         partner = partner_fixtures.create_partner_obj()
-        update_data = {"banking_info": {"bank_code": 789101112}}
+        update_data = {"banking_info": {"bank_code": "789101112"}}
         res = self.authed_client.put(
             f"/partner/partner/{partner.id}/",
             data=update_data,
