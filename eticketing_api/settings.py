@@ -223,3 +223,5 @@ TICKET_EMAIL_TITLE = ""
 REMINDER_SMS = "Hi {} :), just reminding you that {} is in the next 24 hrs ! Wohoo!"
 
 POST_RECONCILIATION_MESSAGE = "HI {}. Your weekly reconciliation has just completed. Your total balance comes out to {}"
+
+CORS_ALLOW_ALL_ORIGINS = True

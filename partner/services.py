@@ -9,7 +9,6 @@ from core.services import CRUDService
 from events.models import Event
 from partner.models import (
     Partner,
-    PartnerBankingInfo,
     PartnerPerson,
     PartnerPromotion,
     PartnerSMS,
@@ -63,13 +62,6 @@ person_service = PersonService(Person)
 
 
 class PartnerService(CRUDService[Partner, PartnerSerializer, PartnerUpdateSerializer]):
-    def on_relationship_update(self, obj_data: Dict[str, Any], obj: Partner) -> None:
-        PartnerBankingInfo.objects.filter(pk=str(obj.banking_info.id)).update(
-            **obj_data["banking_info"]
-        )
-        obj_data["banking_info_id"] = str(obj.banking_info.id)
-        del obj_data["banking_info"]
-
     def get_total_sales(self, partner_id: str) -> float:
         filters = {
             "ticket_type__event__partner_id": partner_id,

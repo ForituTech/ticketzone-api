@@ -8,7 +8,6 @@ from events.models import Event, ReminderOptIn
 from partner.constants import PartnerPromotionPeriod, PersonType
 from partner.models import (
     Partner,
-    PartnerBankingInfo,
     PartnerPerson,
     PartnerPromotion,
     PartnerSMS,
@@ -35,8 +34,8 @@ def person_fixture() -> dict:
 
 
 partner_banking_info_fixture = {
-    "bank_code": 123456,
-    "bank_account_number": 1234567891234657899,
+    "bank_code": random_string(),
+    "bank_account_number": random_string(),
 }
 
 
@@ -57,25 +56,16 @@ def create_auth_token(person: Optional[Person] = None) -> str:
     return create_access_token(person)
 
 
-def create_banking_info_obj() -> PartnerBankingInfo:
-    banking_info: PartnerBankingInfo = PartnerBankingInfo.objects.create(
-        **partner_banking_info_fixture
-    )
-    banking_info.save()
-    return banking_info
-
-
 def partner_fixture(owner_id: Optional[str] = None) -> dict:
     return {
         "name": random_string(),
         "owner_id": owner_id if owner_id else str(create_person_obj().id),
-        "banking_info_id": str(create_banking_info_obj().id),
+        **partner_banking_info_fixture,
     }
 
 
 def create_partner_obj(owner: Optional[Person] = None) -> Partner:
     data = partner_fixture(owner_id=str(owner.id) if owner else None)
-    data["banking_info"] = create_banking_info_obj()
     if not owner:
         owner = create_person_obj()
     data["owner_id"] = owner.id

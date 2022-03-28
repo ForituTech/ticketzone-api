@@ -2,7 +2,6 @@ from django.contrib import admin
 
 from .models import (
     Partner,
-    PartnerBankingInfo,
     PartnerPerson,
     PartnerPromotion,
     PartnerSMS,
@@ -17,7 +16,7 @@ class PersonAdminConfig(admin.ModelAdmin):
 
 class PartnerAdminConfig(admin.ModelAdmin):
     search_fields = ["name", "owner__name", "owner__phone_number"]
-    readonly_fields = ["banking_info", "owner"]
+    readonly_fields = ["bank_code", "bank_account_number", "owner"]
 
 
 class PartnerSMSConfig(admin.ModelAdmin):
@@ -63,4 +62,3 @@ admin.site.register(PartnerSMS, PartnerSMSConfig)
 admin.site.register(PartnerPromotion, PartnerPromoConfig)
 admin.site.register(PromoOptIn, PartnerOptinConfig)
 admin.site.register(PartnerPerson, PartnerPersonConfig)
-admin.site.register([PartnerBankingInfo])
