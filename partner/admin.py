@@ -16,7 +16,6 @@ class PersonAdminConfig(admin.ModelAdmin):
 
 class PartnerAdminConfig(admin.ModelAdmin):
     search_fields = ["name", "owner__name", "owner__phone_number"]
-    readonly_fields = ["bank_code", "bank_account_number", "owner"]
 
 
 class PartnerSMSConfig(admin.ModelAdmin):
