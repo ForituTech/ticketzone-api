@@ -44,6 +44,7 @@ from partner.serializers import (
     RedemtionRateSerializer,
     SalesSerializer,
     TokenSerializer,
+    UserSerializer,
 )
 from partner.services import (
     partner_person_service,
@@ -63,12 +64,18 @@ paginator = PageNumberPagination()
 paginator.page_size = 15
 
 
-@swagger_auto_schema(method="post", responses={200: TokenSerializer})
+@swagger_auto_schema(
+    method="post", request_body=UserSerializer, responses={200: TokenSerializer}
+)
 @api_view(["POST"])
 def login(request: Request) -> Response:
     token_key = "Authorization"
     if token_key in request.META:
-        return Response(data="Already logged in", status=status.HTTP_202_ACCEPTED)
+        return Response(
+            data="Already logged in",
+            status=status.HTTP_202_ACCEPTED,
+            content_type="json",
+        )
     user_group = person_service.get_by_phonenumber(request)
     if verify_password(
         str(user_group[1].data["password"]), user_group[0].hashed_password
