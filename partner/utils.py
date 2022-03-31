@@ -39,7 +39,7 @@ def get_membership_or_ownership(user: Person) -> Tuple[str, str]:
         status_code=404, code=ErrorCodes.NO_PARTNERSHIP
     )
     try:
-        partner = Partner.objects.get(owner=user.id)
+        partner = Partner.objects.get(owner_id=user.id)
         membership = PersonType.OWNER.value
     except Partner.DoesNotExist:
         try:

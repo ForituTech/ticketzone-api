@@ -207,3 +207,7 @@ def create_partner_promo_optin_obj(
         partner_id=str(partner.id) if partner else None,
     )
     return PromoOptIn.objects.create(**data)
+
+
+def get_partner_owner_auth(partner: Partner) -> str:
+    return create_access_token(partner.owner)

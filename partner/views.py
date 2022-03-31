@@ -42,6 +42,7 @@ from partner.serializers import (
     PersonSerializer,
     PersonUpdateSerializer,
     RedemtionRateSerializer,
+    RevenuesSerializer,
     SalesSerializer,
     TokenSerializer,
     UserSerializer,
@@ -99,6 +100,15 @@ def partner_sales(request: Request) -> Response:
     sales = partner_service.get_total_sales(partner_id)
     sales_dict = {"sales": sales}
     return Response(SalesSerializer(sales_dict).data)
+
+
+@swagger_auto_schema(method="get", responses={200: RevenuesSerializer})
+@api_view(["GET"])
+@permission_classes([PartnerMembershipPermissions])
+def partner_sales_revenue(request: Request) -> Response:
+    partner_id = get_request_partner_id(request)
+    revenues = partner_service.get_total_sales_revenue(partner_id)
+    return Response(RevenuesSerializer(revenues).data)
 
 
 @swagger_auto_schema(method="get", responses={200: RedemtionRateSerializer})

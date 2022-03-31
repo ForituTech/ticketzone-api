@@ -609,3 +609,26 @@ class PartnerTestCase(TestCase):
         ]
 
         mock_send_sms.assert_has_calls(calls, any_order=True)
+
+    def test_get_partner_revenue(self) -> None:
+        partner = partner_fixtures.create_partner_obj()
+        event = event_fixtures.create_event_object(owner=partner.owner)
+        ticket_type = event_fixtures.create_ticket_type_obj(event=event)
+        payment = payment_fixtures.create_payment_object(partner.owner)
+        ticket_fixtures.create_ticket_obj(ticket_type, payment)
+
+        res = self.unauthed_client.get(
+            "/partner/revenue/",
+            Authorization=partner_fixtures.get_partner_owner_auth(partner),
+        )
+
+        assert res.status_code == 200
+        assert "expenses" in res.json()
+        assert "revenue" in res.json()
+        assert "net" in res.json()
+        revenues = res.json()
+        assert revenues["revenue"] == payment.amount
+        assert revenues["expenses"] == 0
+        assert revenues["net"] == payment.amount * (
+            (100 - partner.comission_rate) / 100
+        )

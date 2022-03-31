@@ -45,6 +45,7 @@ class PartnerPerson(BaseModel):
         on_delete=models.CASCADE,
         null=False,
         blank=False,
+        related_name="membership",
     )
     partner = models.ForeignKey(
         Partner,
