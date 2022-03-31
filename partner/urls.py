@@ -20,6 +20,7 @@ urlpatterns = [
         name="redemtion-rate",
     ),
     path("sales/", view=views.partner_sales, name="sales"),
+    path("revenue/", view=views.partner_sales_revenue, name="revenue"),
     path("events/ranked/", view=views.partner_ranked_events, name="ranked-events"),
     path(
         "events/tickets/<str:event_id>/",

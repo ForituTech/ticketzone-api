@@ -6,7 +6,7 @@ from rest_framework.request import Request
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException
 from partner.constants import PersonType
-from partner.models import PartnerPerson
+from partner.models import Partner, PartnerPerson
 from partner.utils import decode_access_token, get_user_from_access_token
 
 ACCESS_DENIED_EXCEPTION = HttpErrorException(
@@ -85,7 +85,10 @@ def check_permissions(request: Request, person_type: PersonType) -> bool:
         if not partner_person.is_active:
             raise ACCESS_DENIED_EXCEPTION
     except PartnerPerson.DoesNotExist:
-        raise NO_PARTNERSHIP_EXCEPTION
+        try:
+            Partner.objects.get(owner_id=user_data["user_id"])
+        except Partner.DoesNotExist:
+            raise NO_PARTNERSHIP_EXCEPTION
 
     if user_data["membership"] != person_type.value:
         raise ACCESS_DENIED_EXCEPTION
