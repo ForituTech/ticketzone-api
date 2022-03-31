@@ -62,15 +62,35 @@ person_service = PersonService(Person)
 
 
 class PartnerService(CRUDService[Partner, PartnerSerializer, PartnerUpdateSerializer]):
-    def get_total_sales(self, partner_id: str) -> float:
+    def get_total_sales(self, partner_id: str) -> int:
         filters = {
             "ticket_type__event__partner_id": partner_id,
         }
-        tickets: QuerySet[Ticket] = Ticket.objects.filter(**filters)
+        tickets: int = Ticket.objects.filter(**filters).count()
+        return tickets
+
+    def get_total_sales_revenue(self, partner_id: str) -> Dict[str, float]:
+        filters = {
+            "ticket_type__event__partner_id": partner_id,
+        }
+        tickets: QuerySet[Ticket] = Ticket.objects.filter(**filters).distinct()
+        partner: Partner = Partner.objects.get(id=partner_id)
         sales_total = 0.0
         for ticket in tickets:
             sales_total += ticket.payment.amount
-        return sales_total
+
+        expenses = 0.0
+        try:
+            sms: PartnerSMS = PartnerSMS.objects.get(partner_id=partner_id)
+            sms_cost = sms.sms_used * sms.per_sms_rate
+            expenses += sms_cost
+        except PartnerSMS.DoesNotExist:
+            pass
+        return {
+            "revenue": sales_total,
+            "net": (100 - partner.comission_rate) / 100 * sales_total,
+            "expenses": expenses,
+        }
 
     def get_ranked_events_by_sales(self, partner_id: str) -> List[Event]:
         filters = {

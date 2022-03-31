@@ -110,7 +110,13 @@ class TokenSerializer(serializers.Serializer):
 
 
 class SalesSerializer(serializers.Serializer):
-    sales = serializers.FloatField()
+    sales = serializers.IntegerField()
+
+
+class RevenuesSerializer(serializers.Serializer):
+    revenue = serializers.FloatField()
+    expenses = serializers.FloatField()
+    net = serializers.FloatField()
 
 
 class RedemtionRateSerializer(serializers.Serializer):
