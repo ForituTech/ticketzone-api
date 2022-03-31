@@ -3,7 +3,7 @@ This project has a couple of non python dependencies
 [wkhtmltopdf](https://wkhtmltopdf.org/downloads.html)
 [poetry](https://python-poetry.org/docs/#installation)
 
-ensure you have those installed first
+ensure you have those installed first.
 
 ## Setting-Up the system
 The core dependencies are `poetry` and `python`. You need them installed before
