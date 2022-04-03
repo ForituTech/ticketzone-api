@@ -13,6 +13,7 @@ from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException, ObjectNotFoundException
 from core.serializers import VerifyActionSerializer
 from core.views import AbstractPermissionedView
+from eticketing_api import settings
 from events.serializers import (
     CategorySerializer,
     EventBaseSerializer,
@@ -120,7 +121,7 @@ def list_categories(request: Request) -> Response:
 @swagger_auto_schema(method="post", responses={200: VerifyActionSerializer(many=True)})
 @api_view(["POST"])
 def event_reminder_optin(request: Request, event_id: str) -> Response:
-    token_key = "Authorization"
+    token_key = settings.AUTH_HEADER
     person_id = get_user_from_access_token(request.META[token_key]).id
     event_service.create_reminder_optin(str(person_id), event_id)
     return Response({"done": True})

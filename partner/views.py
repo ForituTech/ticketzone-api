@@ -12,6 +12,7 @@ from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException
 from core.serializers import PromoOptinCountSerializer, VerifyActionSerializer
 from core.views import AbstractPermissionedView
+from eticketing_api import settings
 from events.serializers import EventWithSales, TicketTypeWithSales
 from events.services import ticket_type_service
 from partner.permissions import (
@@ -70,13 +71,7 @@ paginator.page_size = 15
 )
 @api_view(["POST"])
 def login(request: Request) -> Response:
-    token_key = "Authorization"
-    if token_key in request.META:
-        return Response(
-            data="Already logged in",
-            status=status.HTTP_202_ACCEPTED,
-            content_type="json",
-        )
+    token_key = settings.AUTH_HEADER
     user_group = person_service.get_by_phonenumber(request)
     if verify_password(
         str(user_group[1].data["password"]), user_group[0].hashed_password
@@ -145,7 +140,7 @@ def partner_event_ticket_with_sales(request: Request, event_id: str) -> Response
 @api_view(["POST"])
 @permission_classes([LoggedInPermission])
 def partner_promo_optin(request: Request, partner_id: str) -> Response:
-    token_key = "Authorization"
+    token_key = settings.AUTH_HEADER
     person_id = get_user_from_access_token(request.META[token_key]).id
     partner_service.add_promo_opt_in(partner_id, str(person_id))
     return Response({"done": True})
@@ -174,7 +169,7 @@ class PersonViewSet(AbstractPermissionedView):
         request_body=PersonSerializer, responses={200: PersonReadSerializer}
     )
     def create(self, request: Request) -> Response:
-        token_key = "Authorization"
+        token_key = settings.AUTH_HEADER
         person = person_service.create(
             obj_data=request.data, serializer=PersonCreateSerializer
         )
@@ -232,6 +227,7 @@ class PartnerPersonViewset(AbstractPermissionedView):
         "retrieve": [PartnerOwnerPermissions],
         "create": [PartnerOwnerPermissions],
         "update": [PartnerOwnerPermissions],
+        "list": [PartnerOwnerPermissions],
     }
 
     @swagger_auto_schema(responses={200: PartnerPersonReadSerializer})
@@ -259,6 +255,17 @@ class PartnerPersonViewset(AbstractPermissionedView):
             obj_data=request.data, serializer=PartnerPersonUpdateSerializer, obj_id=pk
         )
         return Response(PartnerPersonReadSerializer(partner_person).data)
+
+    @swagger_auto_schema(responses={200: PartnerPersonReadSerializer(many=True)})
+    def list(self, request: Request) -> Response:
+        partner_id = get_request_partner_id(request)
+        people = partner_person_service.get_filtered(
+            paginator=paginator, request=request, filters={"partner_id": partner_id}
+        )
+        paginated_people = paginator.paginate_queryset(people, request)
+        return paginator.get_paginated_response(
+            PartnerPersonReadSerializer(paginated_people, many=True).data
+        )
 
 
 class PartnerSMSPackageViewset(AbstractPermissionedView):

@@ -29,10 +29,10 @@ class PartnerTestCase(TestCase):
             person_type=PersonType.TICKETING_AGENT
         )
         auth_header = {
-            "Authorization": partner_fixtures.create_auth_token(self.owner.person)
+            settings.AUTH_HEADER: partner_fixtures.create_auth_token(self.owner.person)
         }
         ta_auth_header = {
-            "Authorization": partner_fixtures.create_auth_token(
+            settings.AUTH_HEADER: partner_fixtures.create_auth_token(
                 self.ticketing_agent.person
             )
         }
@@ -50,7 +50,7 @@ class PartnerTestCase(TestCase):
         res = self.authed_client.post(
             "/partner/login/", data=login_credentials, format="json"
         )
-        assert res.status_code == 202
+        assert res.status_code == 200
 
     def test_login(self) -> None:
         login_credentials = {
@@ -150,7 +150,7 @@ class PartnerTestCase(TestCase):
                 assert new_person[key] == person_data[key]
             else:
                 assert verify_password("1234", new_person[key])
-        assert "Authorization" in res.headers
+        assert settings.AUTH_HEADER in res.headers
 
     def test_partner_person_create(self) -> None:
         partner_person_data = partner_fixtures.partner_person_fixture()
@@ -162,7 +162,7 @@ class PartnerTestCase(TestCase):
         )
 
         assert res.status_code == 200
-        assert "person_id" in res.json()
+        assert "person" in res.json()
 
     def test_partner_person_create__non_owner(self) -> None:
         partner_person_data = partner_fixtures.partner_person_fixture()
@@ -233,7 +233,7 @@ class PartnerTestCase(TestCase):
 
         assert res.status_code == 200
         read_data = res.json()
-        assert read_data["person_id"] == str(partner_person.person.id)
+        assert read_data["person"]["id"] == str(partner_person.person.id)
         assert read_data["partner_id"] == str(partner_person.partner.id)
 
     def test_partner_person_read__non_owner(self) -> None:
@@ -619,7 +619,7 @@ class PartnerTestCase(TestCase):
 
         res = self.unauthed_client.get(
             "/partner/revenue/",
-            Authorization=partner_fixtures.get_partner_owner_auth(partner),
+            HTTP_AUTHORIZATION=partner_fixtures.get_partner_owner_auth(partner),
         )
 
         assert res.status_code == 200

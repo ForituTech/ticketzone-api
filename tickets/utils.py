@@ -9,8 +9,10 @@ from typing import Any, Union
 import numpy as np
 import pdfkit
 import qrcode
+import requests
 from django.template.loader import render_to_string
 
+from eticketing_api import settings
 from events.models import Event
 from partner.models import Person
 from tickets.models import Ticket
@@ -63,8 +65,10 @@ def generate_ticket_pdf(ticket: Ticket) -> Any:
     date_str: str = datetime.strftime(date_obj, "%d-%B")
     date: list = date_str.split("-")
     image = generate_ticket_qr(ticket)
-    poster_data = open(ticket.ticket_type.event.poster.url[1:], "rb")
-    poster = base64.b64encode(poster_data.read()).decode("utf-8")
+    poster_data = requests.get(
+        f"{settings.BASE_S3_URL}{ticket.ticket_type.event.poster}"
+    ).content
+    poster = base64.b64encode(poster_data).decode("utf-8")
 
     ticket_html = render_to_string(
         "ticket.html",
@@ -73,6 +77,7 @@ def generate_ticket_pdf(ticket: Ticket) -> Any:
             "ticket_type": ticket.ticket_type,
             "image": image,
             "poster": poster,
+            "env": os.environ.get("ENV", None) == "dev",
         },
     )
     temp_file = NamedTemporaryFile(mode="w+b")
@@ -88,8 +93,10 @@ def generate_ticket_html(ticket: Ticket) -> str:
     date_str: str = datetime.strftime(date_obj, "%d-%B")
     date: list = date_str.split("-")
     image = generate_ticket_qr(ticket)
-    poster_data = open(ticket.ticket_type.event.poster.url[1:], "rb")
-    poster = base64.b64encode(poster_data.read()).decode("utf-8")
+    poster_data = requests.get(
+        f"{settings.BASE_S3_URL}{ticket.ticket_type.event.poster}"
+    ).content
+    poster = base64.b64encode(poster_data).decode("utf-8")
 
     return render_to_string(
         "ticket.html",

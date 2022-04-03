@@ -101,7 +101,7 @@ class PartnerPersonSerializer(BaseSerializer, PartnerPersonBaseSerializer):
 
 
 class PartnerPersonReadSerializer(InDBBaseSerializer, PartnerPersonBaseSerializer):
-    person_id = serializers.CharField(max_length=255)
+    person = PersonReadSerializer()
     partner_id = serializers.CharField(max_length=255)
 
 

@@ -1,6 +1,7 @@
 from django.test import TestCase
 from rest_framework.test import APIClient
 
+from eticketing_api import settings
 from events.fixtures import event_fixtures
 from partner.constants import PersonType
 from partner.fixtures import partner_fixtures
@@ -11,7 +12,6 @@ from tickets.fixtures import ticket_fixtures
 from tickets.models import Ticket
 from tickets.utils import (
     compute_ticket_hash,
-    generate_ticket_pdf,
     generate_ticket_qr,
     get_ticket_hash_from_qr,
 )
@@ -22,12 +22,12 @@ class TicketTestCase(TestCase):
         self.owner = partner_fixtures.create_partner_person(
             person_type=PersonType.OWNER
         )
-        self.auth_header = {"Authorization": create_auth_token(self.owner.person)}
+        self.auth_header = {settings.AUTH_HEADER: create_auth_token(self.owner.person)}
         self.client = APIClient(enforce_csrf_checks=False, **self.auth_header)
         # Only logged_in, no partnership
         self.person = partner_fixtures.create_person_obj()
         self.li_authed_header = {
-            "Authorization": create_access_token_lite(user=self.person)
+            settings.AUTH_HEADER: create_access_token_lite(user=self.person)
         }
         self.li_client = APIClient(enforce_csrf_checks=False, **self.li_authed_header)
 
@@ -140,11 +140,3 @@ class TicketTestCase(TestCase):
         image_hash = get_ticket_hash_from_qr(image_str)
 
         assert image_hash == ticket.hash
-
-    def test_generate_ticket_pdf(self) -> None:
-        event = event_fixtures.create_event_object(self.person)
-        ticket_type = event_fixtures.create_ticket_type_obj(event=event)
-        payment = payment_fixtures.create_payment_object(self.person)
-        ticket = ticket_fixtures.create_ticket_obj(ticket_type, payment)
-
-        generate_ticket_pdf(ticket)

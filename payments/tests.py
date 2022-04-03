@@ -1,6 +1,7 @@
 from django.test import TestCase
 from rest_framework.test import APIClient
 
+from eticketing_api import settings
 from partner.constants import PersonType
 from partner.fixtures import partner_fixtures
 from payments.fixtures import payment_fixtures
@@ -12,7 +13,9 @@ class PaymentTestCase(TestCase):
             person_type=PersonType.OWNER
         )
         auth_header = {
-            "Authorization": partner_fixtures.create_access_token(self.owner.person)
+            settings.AUTH_HEADER: partner_fixtures.create_access_token(
+                self.owner.person
+            )
         }
         self.client = APIClient(False, **auth_header)
         self.unauthed_client = APIClient(

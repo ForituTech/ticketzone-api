@@ -40,8 +40,12 @@ class NotificationsTestCase(TestCase):
             user_ids=[str(self.person.id)], body=message, data={message: message}
         )
 
+    @mock.patch("requests.get")
     @mock.patch("notifications.utils.EmailMessage")
-    def test_send_ticket_email(self, mock_email_service: Any) -> None:
+    def test_send_ticket_email(
+        self, mock_email_service: Any, mock_get_response: Any
+    ) -> None:
+        mock_get_response.return_value = notification_fixtures.MockResp()
         mock_email_object = mock_email_service.return_value
         ticket: Ticket = ticket_fixtures.create_ticket_obj()
 
