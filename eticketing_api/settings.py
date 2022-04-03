@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "corsheaders",
+    "storages",
     "rest_framework",
     "core",
     "events",
@@ -239,3 +240,12 @@ CORS_ALLOW_METHODS = [
 ]
 CORS_URLS_REGEX = r"^.*$"
 CORS_ALLOW_HEADERS = list(default_headers)
+
+AUTH_HEADER = "HTTP_AUTHORIZATION"
+
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+AWS_ACCESS_KEY_ID = os.environ["AWS_ACCESS_KEY_ID"]
+AWS_SECRET_ACCESS_KEY = os.environ["AWS_SECRET_ACCESS_KEY"]
+AWS_STORAGE_BUCKET_NAME = os.environ["AWS_STORAGE_BUCKET_NAME"]
+AWS_QUERYSTRING_AUTH = False
+BASE_S3_URL = os.environ["BASE_S3_URL"]

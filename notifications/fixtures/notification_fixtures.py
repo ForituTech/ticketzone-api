@@ -7,6 +7,11 @@ from partner.fixtures import partner_fixtures
 from partner.models import Person
 
 
+class MockResp:
+    def __init__(self) -> None:
+        self.content = open("media/42_EluV6G9.jpg", "rb").read()
+
+
 def notification_fixture(
     person_id: Optional[str] = None, channel: Optional[NotificationsChannels] = None
 ) -> Dict:

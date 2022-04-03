@@ -5,6 +5,7 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from eticketing_api import settings
 from events.constants import EventState
 from events.fixtures import event_fixtures
 from events.models import TicketType
@@ -21,10 +22,10 @@ class EventTestCase(TestCase):
             person_type=PersonType.TICKETING_AGENT
         )
         self.auth_header = {
-            "Authorization": partner_fixtures.create_auth_token(self.owner.person)
+            settings.AUTH_HEADER: partner_fixtures.create_auth_token(self.owner.person)
         }
         self.ta_auth_header = {
-            "Authorization": partner_fixtures.create_auth_token(
+            settings.AUTH_HEADER: partner_fixtures.create_auth_token(
                 self.ticketing_agent.person
             )
         }

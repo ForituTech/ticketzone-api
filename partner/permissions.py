@@ -5,6 +5,7 @@ from rest_framework.request import Request
 
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException
+from eticketing_api import settings
 from partner.constants import PersonType
 from partner.models import Partner, PartnerPerson
 from partner.utils import decode_access_token, get_user_from_access_token
@@ -26,7 +27,7 @@ NO_PARTNERSHIP_EXCEPTION = HttpErrorException(
 
 
 def check_self(request: Request, pk: Union[str, int]) -> bool:
-    token_key = "Authorization"
+    token_key = settings.AUTH_HEADER
     if token_key not in request.META:
         raise ACCESS_DENIED_EXCEPTION
 
@@ -39,7 +40,7 @@ def check_self(request: Request, pk: Union[str, int]) -> bool:
 
 
 def check_self_no_partnership(request: Request, pk: Union[str, int]) -> bool:
-    token_key = "Authorization"
+    token_key = settings.AUTH_HEADER
     if token_key not in request.META:
         raise ACCESS_DENIED_EXCEPTION
 
@@ -52,7 +53,7 @@ def check_self_no_partnership(request: Request, pk: Union[str, int]) -> bool:
 
 
 def get_request_user_id(request: Request) -> str:
-    token_key = "Authorization"
+    token_key = settings.AUTH_HEADER
     if token_key not in request.META:
         raise ACCESS_DENIED_EXCEPTION
 
@@ -62,7 +63,7 @@ def get_request_user_id(request: Request) -> str:
 
 
 def get_request_partner_id(request: Request) -> str:
-    token_key = "Authorization"
+    token_key = settings.AUTH_HEADER
     if token_key not in request.META:
         raise ACCESS_DENIED_EXCEPTION
 
@@ -72,7 +73,7 @@ def get_request_partner_id(request: Request) -> str:
 
 
 def check_permissions(request: Request, person_type: PersonType) -> bool:
-    token_key = "Authorization"
+    token_key = settings.AUTH_HEADER
     if token_key not in request.META:
         raise ACCESS_DENIED_EXCEPTION
 
@@ -138,7 +139,7 @@ class LoggedInPermission(BasePermission):
     message = "You need to be authenticated to perform this action"
 
     def has_permission(self, request: Request, view: Any) -> bool:
-        token_key = "Authorization"
+        token_key = settings.AUTH_HEADER
         if token_key not in request.META:
             raise ACCESS_DENIED_EXCEPTION
 
