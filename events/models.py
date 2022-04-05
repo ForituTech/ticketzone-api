@@ -78,7 +78,10 @@ class Event(BaseModel):
         }
         tickets: QuerySet[Ticket] = Ticket.objects.filter(**filters)
         tickets_redeemed: QuerySet[Ticket] = Ticket.objects.filter(**filters_redeemed)
-        return len(tickets_redeemed) / len(tickets)
+        try:
+            return len(tickets_redeemed) / len(tickets)
+        except ZeroDivisionError:
+            return 0
 
 
 class TicketType(BaseModel):

@@ -105,7 +105,10 @@ class PartnerService(CRUDService[Partner, PartnerSerializer, PartnerUpdateSerial
             "partner_id": partner_id,
         }
         events: QuerySet[Event] = Event.objects.filter(**filters)
-        return sum([event.redemtion_rate for event in events]) / len(events)
+        try:
+            return sum([event.redemtion_rate for event in events]) / len(events)
+        except ZeroDivisionError:
+            return 0
 
     def add_promo_opt_in(self, partner_id: str, person_id: str) -> None:
         try:
