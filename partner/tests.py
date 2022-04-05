@@ -288,6 +288,22 @@ class PartnerTestCase(TestCase):
 
         assert res.status_code == 200
         assert "rate" in res.json()
+        assert res.json()["rate"] == 0.5
+
+        partner = partner_fixtures.create_partner_obj()
+        event2 = event_fixtures.create_event_object(owner=partner.owner)
+        ticket_type2 = event_fixtures.create_ticket_type_obj(event=event2)
+        payment2 = payment_fixtures.create_payment_object(partner.owner)
+        ticket_fixtures.create_ticket_obj(ticket_type2, payment2)
+
+        res = self.unauthed_client.get(
+            "/partner/events/redemtion-rate/",
+            HTTP_AUTHORIZATION=partner_fixtures.get_partner_owner_auth(partner),
+        )
+
+        assert res.status_code == 200
+        assert "rate" in res.json()
+        assert res.json()["rate"] == 0
 
     def test_partner_events_ranked(self) -> None:
         event = event_fixtures.create_event_object(owner=self.owner.person)
