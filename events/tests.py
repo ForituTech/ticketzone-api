@@ -12,6 +12,8 @@ from events.models import TicketType
 from partner.constants import PersonType
 from partner.fixtures import partner_fixtures
 
+API_VER = settings.API_VERSION_STRING
+
 
 class EventTestCase(TestCase):
     def setUp(self) -> None:
@@ -36,17 +38,19 @@ class EventTestCase(TestCase):
         self.owner.person.delete()
 
     def test_create_event__no_data(self) -> None:
-        res = self.client.post("/events/events/", data={}, format="json")
+        res = self.client.post(f"/{API_VER}/events/events/", data={}, format="json")
         assert res.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_create_event(self) -> None:
         data = event_fixtures.event_fixture(partner_id=str(self.owner.partner.id))
-        res = self.client.post("/events/events/", data=data, format="json")
+        res = self.client.post(f"/{API_VER}/events/events/", data=data, format="json")
         assert res.status_code == status.HTTP_200_OK
 
     def test_create_event__non_owner(self) -> None:
         res = self.ta_client.post(
-            "/events/events/", data=event_fixtures.event_fixture(), format="json"
+            f"/{API_VER}/events/events/",
+            data=event_fixtures.event_fixture(),
+            format="json",
         )
         assert res.status_code == status.HTTP_403_FORBIDDEN
 
@@ -57,7 +61,7 @@ class EventTestCase(TestCase):
         }
         event = event_fixtures.create_event_object(owner=self.owner.person)
         res = self.client.put(
-            f"/events/events/{event.id}/", data=update_data, format="json"
+            f"/{API_VER}/events/events/{event.id}/", data=update_data, format="json"
         )
         assert res.status_code == status.HTTP_200_OK
         assert res.json()["name"] == name
@@ -69,24 +73,24 @@ class EventTestCase(TestCase):
         }
         event = event_fixtures.create_event_object(owner=self.owner.person)
         res = self.ta_client.put(
-            f"/events/events/{event.id}/", data=update_data, format="json"
+            f"/{API_VER}/events/events/{event.id}/", data=update_data, format="json"
         )
         assert res.status_code == 403
 
     def test_read_event(self) -> None:
         event = event_fixtures.create_event_object(owner=self.owner.person)
-        res = self.client.put(f"/events/events/{event.id}/", format="json")
+        res = self.client.put(f"/{API_VER}/events/events/{event.id}/", format="json")
         assert res.status_code == 200
         assert res.json()["id"] == str(event.id)
 
     def test_create_ticket_type(self) -> None:
         event = event_fixtures.create_event_object(owner=self.owner.person)
         data = event_fixtures.ticket_type_fixture(event_id=str(event.id))
-        res = self.client.post("/events/tickets/", data=data, format="json")
+        res = self.client.post(f"/{API_VER}/events/tickets/", data=data, format="json")
         assert res.status_code == status.HTTP_200_OK
 
     def test_list_ticket_types__generic(self) -> None:
-        res = self.client.get("/events/tickets/")
+        res = self.client.get(f"/{API_VER}/events/tickets/")
         assert res.status_code == status.HTTP_403_FORBIDDEN
 
     def test_list_ticket_types(self) -> None:
@@ -94,7 +98,7 @@ class EventTestCase(TestCase):
         event2 = event_fixtures.create_event_object(self.owner.person)
         event_fixtures.create_ticket_type_obj(event=event1)
         event_fixtures.create_ticket_type_obj(event=event2)
-        res = self.client.get(f"/events/tickets/?event_id={event1.id}")
+        res = self.client.get(f"/{API_VER}/events/tickets/?event_id={event1.id}")
         assert res.status_code == status.HTTP_200_OK
         assert res.json()["count"] == 1
 
@@ -106,27 +110,31 @@ class EventTestCase(TestCase):
         data = {
             "name": name,
         }
-        res = self.client.put(f"/events/tickets/{ticket.id}/", data=data, format="json")
+        res = self.client.put(
+            f"/{API_VER}/events/tickets/{ticket.id}/", data=data, format="json"
+        )
         assert res.status_code == status.HTTP_200_OK
         assert res.json()["name"] == name
 
     def test_event_search(self) -> None:
         event = event_fixtures.create_event_object()
-        res = self.client.get(f"/events/search/{event.event_location}%20{event.name}/")
+        res = self.client.get(
+            f"/{API_VER}/events/search/{event.event_location}%20{event.name}/"
+        )
 
         assert res.status_code == 200
         assert res.json()["count"] == 1
 
     def test_event_search__by_description(self) -> None:
         event = event_fixtures.create_event_object()
-        res = self.client.get(f"/events/search/{event.description}/")
+        res = self.client.get(f"/{API_VER}/events/search/{event.description}/")
 
         assert res.status_code == 200
         assert res.json()["count"] == 1
 
     def test_event_search__non_existant_terms(self) -> None:
         event = event_fixtures.create_event_object()
-        res = self.client.get(f"/events/search/{event.event_location}-1234/")
+        res = self.client.get(f"/{API_VER}/events/search/{event.event_location}-1234/")
 
         assert res.status_code == 200
         assert res.json()["count"] == 0
@@ -136,29 +144,35 @@ class EventTestCase(TestCase):
         category = event_fixtures.create_event_category_obj()
         event.category = category
         event.save()
-        res = self.client.get(f"/events/events/?category={category.id}")
+        res = self.client.get(f"/{API_VER}/events/events/?category={category.id}")
 
         assert res.status_code == 200
         assert res.json()["count"] == 1
 
     def test_event_filter(self) -> None:
         event = event_fixtures.create_event_object()
-        res = self.client.get(f"/events/events/?event_date={event.event_date}")
+        res = self.client.get(
+            f"/{API_VER}/events/events/?event_date={event.event_date}"
+        )
 
         assert res.status_code == 200
         assert res.json()["count"] == 1
 
-        res = self.client.get(f"/events/events/?partner={event.partner.id}")
+        res = self.client.get(f"/{API_VER}/events/events/?partner={event.partner.id}")
 
         assert res.status_code == 200
         assert res.json()["count"] == 1
 
-        res = self.client.get(f"/events/events/?event_state={event.event_state}")
+        res = self.client.get(
+            f"/{API_VER}/events/events/?event_state={event.event_state}"
+        )
 
         assert res.status_code == 200
         assert res.json()["count"] == 1
 
-        res = self.client.get(f"/events/events/?event_state={EventState.CLOSED}")
+        res = self.client.get(
+            f"/{API_VER}/events/events/?event_state={EventState.CLOSED}"
+        )
 
         assert res.status_code == 200
         assert res.json()["count"] == 0
@@ -168,14 +182,18 @@ class EventTestCase(TestCase):
     def test_event_promo_create(self) -> None:
         event = event_fixtures.create_event_object(owner=self.owner.person)
         event_data = event_fixtures.event_promo_fixture(event_id=str(event.id))
-        res = self.client.post("/events/event/promo/", data=event_data, format="json")
+        res = self.client.post(
+            f"/{API_VER}/events/event/promo/", data=event_data, format="json"
+        )
 
         assert res.status_code == 200
         assert res.json()["event_id"] == str(event.id)
 
     def test_event_promo_create__non_self(self) -> None:
         event_data = event_fixtures.event_promo_fixture()
-        res = self.client.post("/events/event/promo/", data=event_data, format="json")
+        res = self.client.post(
+            f"/{API_VER}/events/event/promo/", data=event_data, format="json"
+        )
 
         assert res.status_code == 403
 
@@ -183,7 +201,7 @@ class EventTestCase(TestCase):
         event = event_fixtures.create_event_object(owner=self.owner.person)
         event_data = event_fixtures.event_promo_fixture(event_id=str(event.id))
         res = self.ta_client.post(
-            "/events/event/promo/", data=event_data, format="json"
+            f"/{API_VER}/events/event/promo/", data=event_data, format="json"
         )
 
         assert res.status_code == 403
@@ -193,7 +211,7 @@ class EventTestCase(TestCase):
         event_fixtures.create_event_promo_obj(event=event)
         event_fixtures.create_event_promo_obj()
 
-        res = self.client.get("/events/event/promo/")
+        res = self.client.get(f"/{API_VER}/events/event/promo/")
 
         assert res.status_code == 200
         assert res.json()["count"] == 1
@@ -205,7 +223,9 @@ class EventTestCase(TestCase):
         update_data = {"promotion_rate": rate}
 
         res = self.client.put(
-            f"/events/event/promo/{promo.id}/", data=update_data, format="json"
+            f"/{API_VER}/events/event/promo/{promo.id}/",
+            data=update_data,
+            format="json",
         )
 
         assert res.status_code == 200
@@ -217,7 +237,9 @@ class EventTestCase(TestCase):
         update_data = {"promotion_rate": rate}
 
         res = self.client.put(
-            f"/events/event/promo/{promo.id}/", data=update_data, format="json"
+            f"/{API_VER}/events/event/promo/{promo.id}/",
+            data=update_data,
+            format="json",
         )
 
         assert res.status_code == 403
@@ -229,7 +251,9 @@ class EventTestCase(TestCase):
         update_data = {"promotion_rate": rate}
 
         res = self.ta_client.put(
-            f"/events/event/promo/{promo.id}/", data=update_data, format="json"
+            f"/{API_VER}/events/event/promo/{promo.id}/",
+            data=update_data,
+            format="json",
         )
 
         assert res.status_code == 403
@@ -239,7 +263,7 @@ class EventTestCase(TestCase):
         ticket_promo_data = event_fixtures.ticket_promo_fixture(str(ticket_type.id))
 
         res = self.client.post(
-            "/events/ticket/promo/", data=ticket_promo_data, format="json"
+            f"/{API_VER}/events/ticket/promo/", data=ticket_promo_data, format="json"
         )
 
         assert res.status_code == 200
@@ -249,7 +273,7 @@ class EventTestCase(TestCase):
         ticket_promo_data = event_fixtures.ticket_promo_fixture()
 
         res = self.client.post(
-            "/events/ticket/promo/", data=ticket_promo_data, format="json"
+            f"/{API_VER}/events/ticket/promo/", data=ticket_promo_data, format="json"
         )
 
         assert res.status_code == 403
@@ -258,7 +282,7 @@ class EventTestCase(TestCase):
         ticket_promo_data = event_fixtures.ticket_promo_fixture()
 
         res = self.ta_client.post(
-            "/events/ticket/promo/", data=ticket_promo_data, format="json"
+            f"/{API_VER}/events/ticket/promo/", data=ticket_promo_data, format="json"
         )
 
         assert res.status_code == 403
@@ -268,7 +292,7 @@ class EventTestCase(TestCase):
         event_fixtures.create_ticket_promo_obj(ticket_type)
         event_fixtures.create_ticket_promo_obj()
 
-        res = self.client.get("/events/ticket/promo/")
+        res = self.client.get(f"/{API_VER}/events/ticket/promo/")
 
         assert res.status_code == 200
         assert res.json()["count"] == 1
@@ -283,7 +307,9 @@ class EventTestCase(TestCase):
         }
 
         res = self.client.put(
-            f"/events/ticket/promo/{ticket_promo.id}/", data=update_data, format="json"
+            f"/{API_VER}/events/ticket/promo/{ticket_promo.id}/",
+            data=update_data,
+            format="json",
         )
 
         assert res.status_code == 200
@@ -298,7 +324,9 @@ class EventTestCase(TestCase):
         }
 
         res = self.client.put(
-            f"/events/ticket/promo/{ticket_promo.id}/", data=update_data, format="json"
+            f"/{API_VER}/events/ticket/promo/{ticket_promo.id}/",
+            data=update_data,
+            format="json",
         )
 
         assert res.status_code == 403
@@ -313,7 +341,9 @@ class EventTestCase(TestCase):
         }
 
         res = self.ta_client.put(
-            f"/events/ticket/promo/{ticket_promo.id}/", data=update_data, format="json"
+            f"/{API_VER}/events/ticket/promo/{ticket_promo.id}/",
+            data=update_data,
+            format="json",
         )
 
         assert res.status_code == 403
@@ -327,7 +357,9 @@ class EventTestCase(TestCase):
         }
 
         res = self.client.post(
-            f"/events/redeem/code/{ticket_promo.name}/", data=data, format="json"
+            f"/{API_VER}/events/redeem/code/{ticket_promo.name}/",
+            data=data,
+            format="json",
         )
 
         assert res.status_code == 200
@@ -343,7 +375,9 @@ class EventTestCase(TestCase):
         }
 
         res = self.client.post(
-            f"/events/redeem/code/{ticket_promo.name}/", data=data, format="json"
+            f"/{API_VER}/events/redeem/code/{ticket_promo.name}/",
+            data=data,
+            format="json",
         )
 
         assert res.status_code == 200
@@ -354,7 +388,7 @@ class EventTestCase(TestCase):
     def test_list_categories(self) -> None:
         event_fixtures.create_event_category_obj()
 
-        res = self.client.get("/events/categories/")
+        res = self.client.get(f"/{API_VER}/events/categories/")
 
         assert res.status_code == 200
         assert len(res.json()) == 1
@@ -362,7 +396,7 @@ class EventTestCase(TestCase):
     def test_reminder_optin(self) -> None:
         event = event_fixtures.create_event_object()
 
-        res = self.client.post(f"/events/reminder/optin/{event.id}/")
+        res = self.client.post(f"/{API_VER}/events/reminder/optin/{event.id}/")
 
         assert res.status_code == 200
         assert res.json()["done"]

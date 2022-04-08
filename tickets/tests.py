@@ -16,6 +16,8 @@ from tickets.utils import (
     get_ticket_hash_from_qr,
 )
 
+API_VER = settings.API_VERSION_STRING
+
 
 class TicketTestCase(TestCase):
     def setUp(self) -> None:
@@ -40,7 +42,9 @@ class TicketTestCase(TestCase):
             ticket_type_id=str(ticket_type.id), payment_id=str(payment.id)
         )
 
-        res = self.li_client.post("/tickets/", data=ticket_data, format="json")
+        res = self.li_client.post(
+            f"/{API_VER}/tickets/", data=ticket_data, format="json"
+        )
         assert res.status_code == 200
         returned_ticket = res.json()
         assert returned_ticket["ticket_type_id"] == str(ticket_type.id)
@@ -53,7 +57,9 @@ class TicketTestCase(TestCase):
     def test_create_ticket__not_self(self) -> None:
         ticket_data = ticket_fixtures.ticket_fixture()
 
-        res = self.li_client.post("/tickets/", data=ticket_data, format="json")
+        res = self.li_client.post(
+            f"/{API_VER}/tickets/", data=ticket_data, format="json"
+        )
 
         assert res.status_code == 403
 
@@ -64,7 +70,7 @@ class TicketTestCase(TestCase):
         ticket_fixtures.create_ticket_obj(ticket_type, payment)
         ticket_fixtures.create_ticket_obj()
 
-        res = self.client.get("/tickets/")
+        res = self.client.get(f"/{API_VER}/tickets/")
 
         assert res.status_code == 200
         assert res.json()["count"] == 1
@@ -75,7 +81,7 @@ class TicketTestCase(TestCase):
         payment = payment_fixtures.create_payment_object(self.person)
         ticket_fixtures.create_ticket_obj(ticket_type, payment)
 
-        res = self.li_client.get("/tickets/")
+        res = self.li_client.get(f"/{API_VER}/tickets/")
 
         assert res.status_code == 403
 
@@ -87,13 +93,13 @@ class TicketTestCase(TestCase):
         ticket.hash = compute_ticket_hash(ticket)
         ticket.save()
 
-        res = self.client.get(f"/tickets/{ticket.hash}/")
+        res = self.client.get(f"/{API_VER}/tickets/{ticket.hash}/")
 
         assert res.status_code == 200
         assert res.json()["id"] == str(ticket.id)
 
     def test_ticket_read__invalid_hash(self) -> None:
-        res = self.client.get(f"/tickets/{123}/")
+        res = self.client.get(f"/{API_VER}/tickets/{123}/")
 
         assert res.status_code == 404
         assert "UNRESOLVABLE_HASH" in res.json()["detail"]
@@ -109,7 +115,9 @@ class TicketTestCase(TestCase):
         ticket.payment.save()
 
         update_data = {"redeemed": True}
-        res = self.client.put(f"/tickets/{ticket.id}/", data=update_data, format="json")
+        res = self.client.put(
+            f"/{API_VER}/tickets/{ticket.id}/", data=update_data, format="json"
+        )
 
         assert res.status_code == 200
         assert res.json()["redeemed"]
@@ -123,7 +131,9 @@ class TicketTestCase(TestCase):
         ticket.save()
 
         update_data = {"redeemed": True}
-        res = self.client.put(f"/tickets/{ticket.id}/", data=update_data, format="json")
+        res = self.client.put(
+            f"/{API_VER}/tickets/{ticket.id}/", data=update_data, format="json"
+        )
 
         assert res.status_code == 403
         assert "UNPAID" in res.json()["detail"]

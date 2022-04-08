@@ -30,7 +30,7 @@ DEBUG = bool(int(os.environ["DEBUG"]))
 
 ALLOWED_HOSTS = [os.environ["ALLOWED_HOSTS"]]
 
-
+API_VERSION_STRING = "v1"
 # Application definition
 
 INSTALLED_APPS = [
