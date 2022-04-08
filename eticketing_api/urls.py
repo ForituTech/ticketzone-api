@@ -11,7 +11,7 @@ admin.site.index_title = "Welcome to Eticketing Super-Admin Portal"
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="GatePass API",
+        title="Ticketzone API",
         default_version="v1",
         description="Ticketing Engine",
         contact=openapi.Contact(email="mogendi.mongare@gmail.com"),
