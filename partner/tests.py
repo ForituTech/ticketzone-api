@@ -19,6 +19,8 @@ from partner.utils import verify_password
 from payments.fixtures import payment_fixtures
 from tickets.fixtures import ticket_fixtures
 
+API_VER = settings.API_VERSION_STRING
+
 
 class PartnerTestCase(TestCase):
     def setUp(self) -> None:
@@ -48,7 +50,7 @@ class PartnerTestCase(TestCase):
             "password": "123456",
         }
         res = self.authed_client.post(
-            "/partner/login/", data=login_credentials, format="json"
+            f"/{API_VER}/partner/login/", data=login_credentials, format="json"
         )
         assert res.status_code == 200
 
@@ -58,7 +60,7 @@ class PartnerTestCase(TestCase):
             "password": "123456",
         }
         res = self.unauthed_client.post(
-            "/partner/login/", data=login_credentials, format="json"
+            f"/{API_VER}/partner/login/", data=login_credentials, format="json"
         )
         assert res.status_code == 200
         assert "token" in res.json()
@@ -66,7 +68,7 @@ class PartnerTestCase(TestCase):
     def test_login__no_credentials(self) -> None:
         login_credentials = {"phone_number": "254799762771", "password": "123456"}
         res = self.unauthed_client.post(
-            "/partner/login/", data=login_credentials, format="json"
+            f"/{API_VER}/partner/login/", data=login_credentials, format="json"
         )
         assert res.status_code == 404
         assert "INVALID_CREDENTIALS" in res.json()["detail"]
@@ -76,14 +78,14 @@ class PartnerTestCase(TestCase):
             "password": "123457",
         }
         res = self.unauthed_client.post(
-            "/partner/login/", data=login_credentials, format="json"
+            f"/{API_VER}/partner/login/", data=login_credentials, format="json"
         )
         assert res.status_code == 404
         assert "INVALID_CREDENTIALS" in res.json()["detail"]
 
     def test_read_partner(self) -> None:
         res = self.authed_client.get(
-            f"/partner/partner/{self.owner.partner.id}/",
+            f"/{API_VER}/partner/partner/{self.owner.partner.id}/",
         )
         assert res.status_code == 200
         assert self.owner.partner.name == res.json()["name"]
@@ -91,7 +93,7 @@ class PartnerTestCase(TestCase):
     def test_read_partner__unrelated(self) -> None:
         partner = partner_fixtures.create_partner_obj()
         res = self.authed_client.get(
-            f"/partner/partner/{partner.id}/",
+            f"/{API_VER}/partner/partner/{partner.id}/",
         )
         assert res.status_code == 403
 
@@ -99,7 +101,7 @@ class PartnerTestCase(TestCase):
         code = "789101112"
         update_data = {"bank_code": code}
         res = self.authed_client.put(
-            f"/partner/partner/{self.owner.partner.id}/",
+            f"/{API_VER}/partner/partner/{self.owner.partner.id}/",
             data=update_data,
             format="json",
         )
@@ -112,7 +114,7 @@ class PartnerTestCase(TestCase):
         partner = partner_fixtures.create_partner_obj()
         update_data = {"banking_info": {"bank_code": "789101112"}}
         res = self.authed_client.put(
-            f"/partner/partner/{partner.id}/",
+            f"/{API_VER}/partner/partner/{partner.id}/",
             data=update_data,
             format="json",
         )
@@ -122,7 +124,7 @@ class PartnerTestCase(TestCase):
 
     def test_person_read(self) -> None:
         res = self.authed_client.get(
-            f"/partner/person/{self.owner.person.id}/",
+            f"/{API_VER}/partner/person/{self.owner.person.id}/",
         )
         assert res.status_code == 200
         assert self.owner.person.phone_number == res.json()["phone_number"]
@@ -130,7 +132,7 @@ class PartnerTestCase(TestCase):
     def test_person_read__unrelated(self) -> None:
         person = partner_fixtures.create_person_obj()
         res = self.authed_client.get(
-            f"/partner/person/{person.id}/",
+            f"/{API_VER}/partner/person/{person.id}/",
         )
         assert res.status_code == 403
         assert "detail" in res.json()
@@ -140,7 +142,7 @@ class PartnerTestCase(TestCase):
         person_data = partner_fixtures.person_fixture()
         person_data["hashed_password"] = "1234"
         res = self.unauthed_client.post(
-            "/partner/person/", data=person_data, format="json"
+            f"/{API_VER}/partner/person/", data=person_data, format="json"
         )
         assert res.status_code == 200
         new_person = res.json()
@@ -158,7 +160,9 @@ class PartnerTestCase(TestCase):
         partner_person_data["partner_id"] = str(partner_person_data["partner_id"])
 
         res = self.authed_client.post(
-            "/partner/partnership/person/", data=partner_person_data, format="json"
+            f"/{API_VER}/partner/partnership/person/",
+            data=partner_person_data,
+            format="json",
         )
 
         assert res.status_code == 200
@@ -170,7 +174,9 @@ class PartnerTestCase(TestCase):
         partner_person_data["partner_id"] = str(partner_person_data["partner_id"])
 
         res = self.ta_client.post(
-            "/partner/partnership/person/", data=partner_person_data, format="json"
+            f"/{API_VER}/partner/partnership/person/",
+            data=partner_person_data,
+            format="json",
         )
 
         assert res.status_code == 403
@@ -184,7 +190,9 @@ class PartnerTestCase(TestCase):
         ].strip("+")
 
         res = self.authed_client.post(
-            "/partner/partnership/person/", data=partner_person_data, format="json"
+            f"/{API_VER}/partner/partnership/person/",
+            data=partner_person_data,
+            format="json",
         )
 
         assert res.status_code == 422
@@ -198,7 +206,7 @@ class PartnerTestCase(TestCase):
         }
 
         res = self.authed_client.put(
-            f"/partner/partnership/person/{partner_person.id}/",
+            f"/{API_VER}/partner/partnership/person/{partner_person.id}/",
             data=update_data,
             format="json",
         )
@@ -215,7 +223,7 @@ class PartnerTestCase(TestCase):
         }
 
         res = self.ta_client.put(
-            f"/partner/partnership/person/{partner_person.id}/",
+            f"/{API_VER}/partner/partnership/person/{partner_person.id}/",
             data=update_data,
             format="json",
         )
@@ -228,7 +236,7 @@ class PartnerTestCase(TestCase):
         )
 
         res = self.authed_client.get(
-            f"/partner/partnership/person/{partner_person.id}/",
+            f"/{API_VER}/partner/partnership/person/{partner_person.id}/",
         )
 
         assert res.status_code == 200
@@ -242,7 +250,7 @@ class PartnerTestCase(TestCase):
         )
 
         res = self.ta_client.get(
-            f"/partner/partnership/person/{partner_person.id}/",
+            f"/{API_VER}/partner/partnership/person/{partner_person.id}/",
         )
 
         assert res.status_code == 403
@@ -256,7 +264,7 @@ class PartnerTestCase(TestCase):
         )
 
         res = self.authed_client.get(
-            f"/partner/partnership/person/{partner_person.id}/",
+            f"/{API_VER}/partner/partnership/person/{partner_person.id}/",
         )
 
         self.owner.is_active = True
@@ -270,7 +278,7 @@ class PartnerTestCase(TestCase):
         payment = payment_fixtures.create_payment_object(self.owner.person)
         ticket_fixtures.create_ticket_obj(ticket_type, payment)
 
-        res = self.authed_client.get("/partner/sales/")
+        res = self.authed_client.get(f"/{API_VER}/partner/sales/")
 
         assert res.status_code == 200
         assert "sales" in res.json()
@@ -284,7 +292,7 @@ class PartnerTestCase(TestCase):
         ticket.save()
         ticket_fixtures.create_ticket_obj(ticket_type, payment)
 
-        res = self.authed_client.get("/partner/events/redemtion-rate/")
+        res = self.authed_client.get(f"/{API_VER}/partner/events/redemtion-rate/")
 
         assert res.status_code == 200
         assert "rate" in res.json()
@@ -297,7 +305,7 @@ class PartnerTestCase(TestCase):
         ticket_fixtures.create_ticket_obj(ticket_type2, payment2)
 
         res = self.unauthed_client.get(
-            "/partner/events/redemtion-rate/",
+            f"/{API_VER}/partner/events/redemtion-rate/",
             HTTP_AUTHORIZATION=partner_fixtures.get_partner_owner_auth(partner),
         )
 
@@ -314,7 +322,7 @@ class PartnerTestCase(TestCase):
 
         event_fixtures.create_event_object(owner=self.owner.person)
 
-        res = self.authed_client.get("/partner/events/ranked/")
+        res = self.authed_client.get(f"/{API_VER}/partner/events/ranked/")
 
         assert res.status_code == 200
         assert res.json()[0]["id"] == str(event.id)
@@ -325,7 +333,7 @@ class PartnerTestCase(TestCase):
         payment = payment_fixtures.create_payment_object(self.owner.person)
         ticket_fixtures.create_ticket_obj(ticket_type, payment)
 
-        res = self.authed_client.get(f"/partner/events/tickets/{event.id}/")
+        res = self.authed_client.get(f"/{API_VER}/partner/events/tickets/{event.id}/")
 
         assert res.status_code == 200
         assert "sales" in res.json()[0]
@@ -333,7 +341,7 @@ class PartnerTestCase(TestCase):
     def test_partner_promo_optin(self) -> None:
         partner = partner_fixtures.create_partner_obj()
 
-        res = self.authed_client.post(f"/partner/promo/optin/{partner.id}/")
+        res = self.authed_client.post(f"/{API_VER}/partner/promo/optin/{partner.id}/")
 
         assert res.status_code == 200
         assert res.json()["done"]
@@ -501,7 +509,9 @@ class PartnerTestCase(TestCase):
     def test_partner_sms_package_create(self) -> None:
         data = partner_fixtures.partner_sms_fixture(str(self.owner.partner_id), False)
 
-        res = self.authed_client.post("/partner/sms/", data=data, format="json")
+        res = self.authed_client.post(
+            f"/{API_VER}/partner/sms/", data=data, format="json"
+        )
 
         assert res.status_code == 200
         assert not res.json()["verified"]
@@ -510,7 +520,7 @@ class PartnerTestCase(TestCase):
     def test_partner_sms_package_read(self) -> None:
         sms = partner_fixtures.create_partner_sms_obj(partner=self.owner.partner)
 
-        res = self.authed_client.get(f"/partner/sms/{sms.id}/")
+        res = self.authed_client.get(f"/{API_VER}/partner/sms/{sms.id}/")
 
         assert res.status_code == 200
         assert res.json()["id"] == str(sms.id)
@@ -520,7 +530,9 @@ class PartnerTestCase(TestCase):
             partner_id=str(self.owner.partner.id)
         )
 
-        res = self.authed_client.post("/partner/promo/", data=data, format="json")
+        res = self.authed_client.post(
+            f"/{API_VER}/partner/promo/", data=data, format="json"
+        )
 
         assert res.status_code == 200
         assert res.json()["partner_id"] == str(self.owner.partner.id)
@@ -530,7 +542,9 @@ class PartnerTestCase(TestCase):
         update_data = {"message": random_string()}
 
         res = self.authed_client.put(
-            f"/partner/promo/{str(promo.id)}/", data=update_data, format="json"
+            f"/{API_VER}/partner/promo/{str(promo.id)}/",
+            data=update_data,
+            format="json",
         )
 
         assert res.status_code == 200
@@ -540,7 +554,9 @@ class PartnerTestCase(TestCase):
         update_data = {"message": random_string()}
 
         res = self.authed_client.put(
-            f"/partner/promo/{str(promo.id)}/", data=update_data, format="json"
+            f"/{API_VER}/partner/promo/{str(promo.id)}/",
+            data=update_data,
+            format="json",
         )
         assert res.status_code == 404
 
@@ -548,7 +564,7 @@ class PartnerTestCase(TestCase):
         partner_fixtures.create_partner_promo_obj(partner=self.owner.partner)
         partner_fixtures.create_partner_promo_obj()
 
-        res = self.authed_client.get("/partner/promo/")
+        res = self.authed_client.get(f"/{API_VER}/partner/promo/")
 
         assert res.status_code == 200
         assert res.json()["count"] == 1
@@ -556,14 +572,14 @@ class PartnerTestCase(TestCase):
     def test_read_promo(self) -> None:
         promo = partner_fixtures.create_partner_promo_obj(partner=self.owner.partner)
 
-        res = self.authed_client.get(f"/partner/promo/{str(promo.id)}/")
+        res = self.authed_client.get(f"/{API_VER}/partner/promo/{str(promo.id)}/")
 
         assert res.status_code == 200
         assert res.json()["id"] == str(promo.id)
 
         promo = partner_fixtures.create_partner_promo_obj()
 
-        res = self.authed_client.get(f"/partner/promo/{str(promo.id)}/")
+        res = self.authed_client.get(f"/{API_VER}/partner/promo/{str(promo.id)}/")
 
         assert res.status_code == 404
 
@@ -573,7 +589,7 @@ class PartnerTestCase(TestCase):
         partner_fixtures.create_partner_promo_optin_obj()
 
         res = self.authed_client.get(
-            f"/partner/promo/optin/count/{str(self.owner.partner.id)}/"
+            f"/{API_VER}/partner/promo/optin/count/{str(self.owner.partner.id)}/"
         )
 
         assert res.status_code == 200
@@ -634,7 +650,7 @@ class PartnerTestCase(TestCase):
         ticket_fixtures.create_ticket_obj(ticket_type, payment)
 
         res = self.unauthed_client.get(
-            "/partner/revenue/",
+            f"/{API_VER}/partner/revenue/",
             HTTP_AUTHORIZATION=partner_fixtures.get_partner_owner_auth(partner),
         )
 

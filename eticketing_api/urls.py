@@ -4,6 +4,8 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
+from eticketing_api.settings import API_VERSION_STRING
+
 admin.site.site_header = "Eticketing Super-Admin"
 admin.site.site_title = "Eticketing Super-Admin Portal"
 admin.site.index_title = "Welcome to Eticketing Super-Admin Portal"
@@ -28,9 +30,9 @@ urlpatterns = [
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
     ),
-    path("admin/", admin.site.urls),
-    path("events/", include("events.urls")),
-    path("partner/", include("partner.urls")),
-    path("payments/", include("payments.urls")),
-    path("", include("tickets.urls")),
+    path(f"{API_VERSION_STRING}/admin/", admin.site.urls),
+    path(f"{API_VERSION_STRING}/events/", include("events.urls")),
+    path(f"{API_VERSION_STRING}/partner/", include("partner.urls")),
+    path(f"{API_VERSION_STRING}/payments/", include("payments.urls")),
+    path(f"{API_VERSION_STRING}/", include("tickets.urls")),
 ]
