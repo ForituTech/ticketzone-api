@@ -34,5 +34,5 @@ urlpatterns = [
     path(f"{API_VERSION_STRING}/events/", include("events.urls")),
     path(f"{API_VERSION_STRING}/partner/", include("partner.urls")),
     path(f"{API_VERSION_STRING}/payments/", include("payments.urls")),
-    path(f"{API_VERSION_STRING}/", include("tickets.urls")),
+    path(f"{API_VERSION_STRING}/tickets/", include("tickets.urls")),
 ]

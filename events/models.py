@@ -103,6 +103,7 @@ class TicketType(BaseModel):
         default=False,
         verbose_name="Is Ticket Visible To Users",
     )
+    use_limit = models.IntegerField(null=False, blank=False, default=1)
 
     def __str__(self) -> str:
         return "{0} - {1}".format(self.event.name, self.name)
@@ -166,7 +167,8 @@ class Ticket(BaseModel):
         default=False,
         verbose_name="Has the ticket been redeemed",
     )
-    hash = models.CharField(max_length=255, null=True, blank=True)
+    uses = models.IntegerField(null=False, blank=False, default=0)
+    hash = models.CharField(max_length=255, null=True, blank=True, unique=True)
 
     def __str__(self) -> str:
         return (

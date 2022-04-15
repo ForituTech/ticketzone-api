@@ -29,12 +29,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v7
-        with:
-          files: |
-            .
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -55,7 +49,6 @@ jobs:
         run: |
           poetry install --no-root
       - name: Run linting
-        if: steps.changed-files.outputs.any_changed == 'true'
         run: |
           chmod +x scripts/lint.sh
           poetry run ./scripts/lint.sh
@@ -91,12 +84,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v7
-        with:
-          files: |
-            .
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -119,6 +106,5 @@ jobs:
           sudo apt-get install wkhtmltopdf
           poetry install --no-root
       - name: Run Tests
-        if: steps.changed-files.outputs.any_changed == 'true'
         run: |
           poetry run ./manage.py test
