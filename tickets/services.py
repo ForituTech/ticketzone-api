@@ -21,12 +21,28 @@ class TicketService(
             obj.hash = hash
             obj.save()
 
-    def on_pre_update(self, obj_in: TicketUpdateInnerSerializer, obj: Ticket) -> None:
-        if obj.payment.state != PaymentStates.PAID.value:
+    def redeem(self, pk: str) -> Ticket:
+        try:
+            ticket: Ticket = Ticket.objects.get(pk=pk)
+        except Ticket.DoesNotExist:
+            raise HttpErrorException(
+                status_code=HTTPStatus.NOT_FOUND, code=ErrorCodes.INVALID_TICKET_ID
+            )
+        if ticket.payment.state != PaymentStates.PAID.value:
             raise HttpErrorException(
                 status_code=HTTPStatus.FORBIDDEN,
                 code=ErrorCodes.UNPAID_FOR_TICKET,
             )
+        if ticket.ticket_type.use_limit <= ticket.uses:
+            raise HttpErrorException(
+                status_code=HTTPStatus.FORBIDDEN,
+                code=ErrorCodes.REDEEMED_TICKET,
+            )
+
+        ticket.uses += 1
+
+        ticket.save()
+        return ticket
 
     def send(self, ticket: Ticket) -> bool:
         pass

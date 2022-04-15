@@ -129,6 +129,7 @@ class UpdateService(Generic[ModelType, UpdateSerializer]):
         obj = self.model.objects.get(pk=obj_id)
         if hasattr(self, "on_post_update"):
             self.on_post_update(obj)
+        obj.save()
         return obj
 
     def on_pre_update(self, obj_in: UpdateSerializer, obj: ModelType) -> None:

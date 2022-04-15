@@ -28,3 +28,4 @@ class ErrorCodes(enum.Enum):
     UNPAID_FOR_TICKET = "A ticket with an unverified payment cannot be redeemed"
     UNRESOLVABLE_HASH = "THe provided has doesn't corespond to any ticket"
     PROMO_NOT_FOUND = "The promotion code was not found"
+    REDEEMED_TICKET = "The current ticket has already been redeemed"

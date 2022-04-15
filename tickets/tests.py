@@ -93,18 +93,31 @@ class TicketTestCase(TestCase):
         ticket.hash = compute_ticket_hash(ticket)
         ticket.save()
 
-        res = self.client.get(f"/{API_VER}/tickets/{ticket.hash}/")
+        res = self.client.get(f"/{API_VER}/tickets/{ticket.id}/")
 
         assert res.status_code == 200
         assert res.json()["id"] == str(ticket.id)
 
-    def test_ticket_read__invalid_hash(self) -> None:
-        res = self.client.get(f"/{API_VER}/tickets/{123}/")
+    def test_ticket_read_by_hash(self) -> None:
+        event = event_fixtures.create_event_object(self.person)
+        ticket_type = event_fixtures.create_ticket_type_obj(event=event)
+        payment = payment_fixtures.create_payment_object(self.person)
+        ticket = ticket_fixtures.create_ticket_obj(ticket_type, payment)
+        ticket.hash = compute_ticket_hash(ticket)
+        ticket.save()
+
+        res = self.client.get(f"/{API_VER}/tickets/by/hash/{ticket.hash}/")
+
+        assert res.status_code == 200
+        assert res.json()["id"] == str(ticket.id)
+
+    def test_ticket_read_by_hash__invalid_hash(self) -> None:
+        res = self.client.get(f"/{API_VER}/tickets/by/hash/{123}/")
 
         assert res.status_code == 404
         assert "UNRESOLVABLE_HASH" in res.json()["detail"]
 
-    def test_ticket_update(self) -> None:
+    def test_ticket_redeem(self) -> None:
         event = event_fixtures.create_event_object(self.person)
         ticket_type = event_fixtures.create_ticket_type_obj(event=event)
         payment = payment_fixtures.create_payment_object(self.person)
@@ -114,15 +127,39 @@ class TicketTestCase(TestCase):
         ticket.payment.state = "PAID"
         ticket.payment.save()
 
-        update_data = {"redeemed": True}
-        res = self.client.put(
-            f"/{API_VER}/tickets/{ticket.id}/", data=update_data, format="json"
-        )
+        res = self.client.post(f"/{API_VER}/tickets/redeem/{ticket.id}/")
 
         assert res.status_code == 200
-        assert res.json()["redeemed"]
+        assert res.json()["uses"] == 1
 
-    def test_ticket_update__unpaid(self) -> None:
+    def test_ticket_multiple_redeem(self) -> None:
+        event = event_fixtures.create_event_object(self.person)
+        ticket_type = event_fixtures.create_ticket_type_obj(event=event)
+        payment = payment_fixtures.create_payment_object(self.person)
+        ticket = ticket_fixtures.create_ticket_obj(ticket_type, payment)
+        ticket.hash = compute_ticket_hash(ticket)
+        ticket.save()
+        ticket_type.use_limit = 2
+        ticket_type.save()
+        ticket.payment.state = "PAID"
+        ticket.payment.save()
+
+        res = self.client.post(f"/{API_VER}/tickets/redeem/{ticket.id}/")
+
+        assert res.status_code == 200
+        assert res.json()["uses"] == 1
+
+        res = self.client.post(f"/{API_VER}/tickets/redeem/{ticket.id}/")
+
+        assert res.status_code == 200
+        assert res.json()["uses"] == 2
+
+        res = self.client.post(f"/{API_VER}/tickets/redeem/{ticket.id}/")
+
+        assert res.status_code == 403
+        assert "REDEEMED_TICKET" in res.json()["detail"]
+
+    def test_ticket_redeem__unpaid(self) -> None:
         event = event_fixtures.create_event_object(self.person)
         ticket_type = event_fixtures.create_ticket_type_obj(event=event)
         payment = payment_fixtures.create_payment_object(self.person)
@@ -130,10 +167,7 @@ class TicketTestCase(TestCase):
         ticket.hash = compute_ticket_hash(ticket)
         ticket.save()
 
-        update_data = {"redeemed": True}
-        res = self.client.put(
-            f"/{API_VER}/tickets/{ticket.id}/", data=update_data, format="json"
-        )
+        res = self.client.post(f"/{API_VER}/tickets/redeem/{ticket.id}/")
 
         assert res.status_code == 403
         assert "UNPAID" in res.json()["detail"]
