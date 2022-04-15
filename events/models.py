@@ -177,6 +177,18 @@ class Ticket(BaseModel):
             f"{self.ticket_type.name} ticket"
         )
 
+    @classmethod
+    @property
+    def search_vector(cls) -> List[str]:
+        return [
+            "hash",
+            "payment__person__name",
+            "payment__person__email",
+            "payment__person__phone_number",
+            "ticket_type__name",
+            "ticket_type__event__name",
+        ]
+
 
 class ReminderOptIn(BaseModel):
     person = models.ForeignKey(
