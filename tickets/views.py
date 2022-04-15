@@ -56,6 +56,16 @@ def read_ticket_by_hash(request: Request, hash: str) -> Response:
     return Response(TicketReadSerializer(tickets[0]).data)
 
 
+@swagger_auto_schema(method="get", responses={200: TicketReadSerializer(many=True)})
+@api_view(["GET"])
+def search_tickets(request: Request, search_term: str) -> Response:
+    tickets = ticket_service.search(search_term=search_term)
+    tickets_paginated = paginator.paginate_queryset(tickets, request)
+    return paginator.get_paginated_response(
+        TicketReadSerializer(tickets_paginated, many=True).data
+    )
+
+
 class TicketViewSet(AbstractPermissionedView):
 
     permissions_by_action = {

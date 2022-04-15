@@ -184,3 +184,16 @@ class TicketTestCase(TestCase):
         image_hash = get_ticket_hash_from_qr(image_str)
 
         assert image_hash == ticket.hash
+
+    def test_search_tickets(self) -> None:
+        event = event_fixtures.create_event_object(self.person)
+        ticket_type = event_fixtures.create_ticket_type_obj(event=event)
+        payment = payment_fixtures.create_payment_object(self.person)
+        ticket = ticket_fixtures.create_ticket_obj(ticket_type, payment)
+
+        res = self.client.get(
+            f"/{API_VER}/tickets/search/{ticket.payment.person.name}/"
+        )
+
+        assert res.status_code == 200
+        assert len(res.json()["results"]) == 1
