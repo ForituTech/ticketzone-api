@@ -11,6 +11,8 @@ from events.fixtures import event_fixtures
 from events.models import TicketType
 from partner.constants import PersonType
 from partner.fixtures import partner_fixtures
+from payments.fixtures import payment_fixtures
+from tickets.fixtures import ticket_fixtures
 
 API_VER = settings.API_VERSION_STRING
 
@@ -33,9 +35,6 @@ class EventTestCase(TestCase):
         }
         self.client = APIClient(False, **self.auth_header)
         self.ta_client = APIClient(False, **self.ta_auth_header)
-
-    def tearDown(self) -> None:
-        self.owner.person.delete()
 
     def test_create_event__no_data(self) -> None:
         res = self.client.post(f"/{API_VER}/events/events/", data={}, format="json")
@@ -400,3 +399,17 @@ class EventTestCase(TestCase):
 
         assert res.status_code == 200
         assert res.json()["done"]
+
+    def test_highlighted_events(self) -> None:
+        event = event_fixtures.create_event_object(owner=self.owner.person)
+        ticket_type = event_fixtures.create_ticket_type_obj(event=event)
+        payment = payment_fixtures.create_payment_object(self.owner.person)
+        ticket_fixtures.create_ticket_obj(ticket_type, payment)
+        ticket_fixtures.create_ticket_obj(ticket_type, payment)
+
+        event_fixtures.create_event_object(owner=self.owner.person)
+
+        res = self.client.get(f"/{API_VER}/events/highlighted/")
+
+        assert res.status_code == 200
+        assert res.json()["results"][0]["id"] == str(event.id)

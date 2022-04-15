@@ -185,7 +185,7 @@ class ReadService(Generic[ModelType]):
             return self.model.objects.filter(**filters).order_by("id")[:limit]
         return self.model.objects.all().order_by("id")[:limit]
 
-    @no_type_check  # FIX
+    @no_type_check  # TODO: FIX
     def search(self, *, search_term: str) -> QuerySet[ModelType]:
         if hasattr(self.model, "search_vector") and len(self.model.search_vector) > 0:
             unpacked_vector = None

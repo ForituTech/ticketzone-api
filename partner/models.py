@@ -18,6 +18,13 @@ class Person(BaseModel):
     def __str__(self) -> str:
         return self.name
 
+    def save(self, *args: tuple, **kwargs: dict) -> None:  # type: ignore
+        from partner.utils import hash_password  # noqa
+
+        if not self.id:
+            self.hashed_password = hash_password(self.hashed_password)
+        return super().save(*args, **kwargs)  # type: ignore
+
 
 class Partner(BaseModel):
     name = models.CharField(max_length=255, null=False, blank=False)
