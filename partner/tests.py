@@ -15,7 +15,6 @@ from partner.fixtures import partner_fixtures
 from partner.models import Partner, PartnerSMS
 from partner.services import partner_service
 from partner.tasks import reconcile_payments, send_out_promos, send_out_reminders
-from partner.utils import verify_password
 from payments.fixtures import payment_fixtures
 from tickets.fixtures import ticket_fixtures
 
@@ -150,8 +149,6 @@ class PartnerTestCase(TestCase):
         for key in person_data.keys():
             if key != "hashed_password":
                 assert new_person[key] == person_data[key]
-            else:
-                assert verify_password("1234", new_person[key])
         assert settings.AUTH_HEADER in res.headers
 
     def test_partner_person_create(self) -> None:

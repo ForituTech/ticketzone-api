@@ -3,7 +3,7 @@ from typing import Any
 from rest_framework import serializers
 
 from core.serializers import BaseSerializer, InDBBaseSerializer
-from partner.utils import random_password, validate_email, validate_phonenumber
+from partner.utils import validate_email, validate_phonenumber
 
 
 class PersonBaseSerializer(serializers.Serializer):
@@ -11,7 +11,6 @@ class PersonBaseSerializer(serializers.Serializer):
     email = serializers.CharField(max_length=255, required=False)
     phone_number = serializers.CharField(max_length=15, required=False)
     person_type = serializers.CharField(max_length=255, required=False)
-    hashed_password = serializers.CharField(default=random_password(), required=False)
 
     def validate_email(self, email: str) -> Any:
         if not validate_email(email):

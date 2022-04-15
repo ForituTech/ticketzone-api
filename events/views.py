@@ -60,6 +60,19 @@ paginator.page_size = 15
 
 @swagger_auto_schema(method="get", responses={200: EventReadSerializer(many=True)})
 @api_view(["GET"])
+def highlighted_events(request: Request) -> Response:
+    events = sorted(
+        event_service.get_filtered(paginator=paginator, request=request, limit=5),
+        key=lambda event: (-1 * event.sales),
+    )
+    paginated_events = paginator.paginate_queryset(events, request=request)  # type: ignore
+    return paginator.get_paginated_response(
+        EventReadSerializer(paginated_events, many=True).data
+    )
+
+
+@swagger_auto_schema(method="get", responses={200: EventReadSerializer(many=True)})
+@api_view(["GET"])
 def search_events(request: Request, search_term: str) -> Response:
     events = event_service.search(search_term=search_term)
     paginated_events = paginator.paginate_queryset(events, request=request)
