@@ -80,7 +80,11 @@ class PartnerPerson(BaseModel):
 
 class PartnerSMS(BaseModel):
     partner = models.OneToOneField(
-        Partner, on_delete=models.CASCADE, null=False, blank=False
+        Partner,
+        on_delete=models.CASCADE,
+        null=False,
+        blank=False,
+        related_name="sms_package",
     )
     per_sms_rate = models.FloatField(
         "Partner Cost Per SMS", null=False, blank=False, default=0.0
