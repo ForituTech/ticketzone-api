@@ -51,6 +51,24 @@ class PersonUpdateSerializer(BaseSerializer, PersonBaseSerializer):
     pass
 
 
+class PartnerSMSPackageBaseSerializer(serializers.Serializer):
+    pass
+
+
+class PartnerSMSPackageSerializer(serializers.Serializer):
+    partner_id = serializers.CharField(max_length=255)
+
+
+class PartnerSMSPackageReadSerializer(
+    InDBBaseSerializer, PartnerSMSPackageBaseSerializer
+):
+    partner_id = serializers.CharField(max_length=255)
+    per_sms_rate = serializers.FloatField()
+    sms_limit = serializers.IntegerField()
+    sms_used = serializers.IntegerField()
+    verified = serializers.BooleanField()
+
+
 class PartnerBaseSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=255, required=False)
     contact_person = serializers.CharField(required=False)
@@ -68,6 +86,7 @@ class PartnerSerializer(BaseSerializer):
 
 class PartnerReadSerializer(InDBBaseSerializer, PartnerBaseSerializer):
     owner = serializers.CharField(required=False)
+    sms_package = PartnerSMSPackageReadSerializer()
 
 
 class PartnerUpdateSerializer(BaseSerializer, PartnerBaseSerializer):
@@ -120,24 +139,6 @@ class RevenuesSerializer(serializers.Serializer):
 
 class RedemtionRateSerializer(serializers.Serializer):
     rate = serializers.FloatField()
-
-
-class PartnerSMSPackageBaseSerializer(serializers.Serializer):
-    pass
-
-
-class PartnerSMSPackageSerializer(serializers.Serializer):
-    partner_id = serializers.CharField(max_length=255)
-
-
-class PartnerSMSPackageReadSerializer(
-    InDBBaseSerializer, PartnerSMSPackageBaseSerializer
-):
-    partner_id = serializers.CharField(max_length=255)
-    per_sms_rate = serializers.FloatField()
-    sms_limit = serializers.IntegerField()
-    sms_used = serializers.IntegerField()
-    verified = serializers.BooleanField()
 
 
 class PartnerSMSPackageUpdateSerializer(

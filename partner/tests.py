@@ -83,11 +83,15 @@ class PartnerTestCase(TestCase):
         assert "INVALID_CREDENTIALS" in res.json()["detail"]
 
     def test_read_partner(self) -> None:
+        sms_package = partner_fixtures.create_partner_sms_obj(
+            partner=self.owner.partner
+        )
         res = self.authed_client.get(
             f"/{API_VER}/partner/partner/{self.owner.partner.id}/",
         )
         assert res.status_code == 200
         assert self.owner.partner.name == res.json()["name"]
+        assert res.json()["sms_package"]["id"] == str(sms_package.id)
 
     def test_read_partner__unrelated(self) -> None:
         partner = partner_fixtures.create_partner_obj()
