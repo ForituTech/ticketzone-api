@@ -85,7 +85,7 @@ class PartnerSerializer(BaseSerializer):
 
 
 class PartnerReadSerializer(InDBBaseSerializer, PartnerBaseSerializer):
-    owner = serializers.CharField(required=False)
+    owner = PersonReadSerializer()
     sms_package = PartnerSMSPackageReadSerializer()
 
 

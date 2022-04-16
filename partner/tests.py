@@ -92,6 +92,7 @@ class PartnerTestCase(TestCase):
         assert res.status_code == 200
         assert self.owner.partner.name == res.json()["name"]
         assert res.json()["sms_package"]["id"] == str(sms_package.id)
+        assert res.json()["owner"]
 
     def test_read_partner__unrelated(self) -> None:
         partner = partner_fixtures.create_partner_obj()
