@@ -1,7 +1,7 @@
 from http import HTTPStatus
 
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -11,15 +11,18 @@ from core.exceptions import HttpErrorException
 from core.views import AbstractPermissionedView
 from partner.permissions import (
     LoggedInPermission,
+    PartnerMembershipPermissions,
     PartnerOwnerPermissions,
     TicketingAgentPermissions,
     check_self_no_partnership,
+    get_request_partner_id,
     get_request_user_id,
 )
 from tickets.serializers import (
     TicketCreateSerializer,
     TicketReadSerializer,
     TicketSerializer,
+    TotalSalesOverTime,
 )
 from tickets.services import ticket_service
 
@@ -27,8 +30,19 @@ paginator = PageNumberPagination()
 paginator.page_size = 15
 
 
+@swagger_auto_schema(method="get")
+@api_view(["GET"])
+@permission_classes([PartnerMembershipPermissions])
+def ticket_sales_per_day(request: Request) -> Response:
+    partner_id = get_request_partner_id(request)
+    counts_set = ticket_service.counts_over_time(partner_id)
+    counts = {"data": counts_set}
+    return Response(TotalSalesOverTime(counts).data)  # type: ignore
+
+
 @swagger_auto_schema(method="post", responses={200: TicketReadSerializer(many=True)})
-@api_view(["post"])
+@api_view(["POST"])
+@permission_classes([TicketingAgentPermissions])
 def redeem_ticket(request: Request, pk: str) -> Response:
     ticket = ticket_service.redeem(pk=pk)
     return Response(TicketReadSerializer(ticket).data)
@@ -36,6 +50,7 @@ def redeem_ticket(request: Request, pk: str) -> Response:
 
 @swagger_auto_schema(method="get", responses={200: TicketReadSerializer(many=True)})
 @api_view(["GET"])
+@permission_classes([TicketingAgentPermissions])
 def read_ticket_by_hash(request: Request, hash: str) -> Response:
     filters = {
         "hash": hash,
@@ -58,6 +73,7 @@ def read_ticket_by_hash(request: Request, hash: str) -> Response:
 
 @swagger_auto_schema(method="get", responses={200: TicketReadSerializer(many=True)})
 @api_view(["GET"])
+@permission_classes([PartnerMembershipPermissions])
 def search_tickets(request: Request, search_term: str) -> Response:
     tickets = ticket_service.search(search_term=search_term)
     tickets_paginated = paginator.paginate_queryset(tickets, request)

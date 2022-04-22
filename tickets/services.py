@@ -1,4 +1,9 @@
+from datetime import datetime, timedelta
 from http import HTTPStatus
+
+from django.db.models import Count
+from django.db.models.functions import TruncDay
+from django.db.models.query import QuerySet
 
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException
@@ -43,6 +48,18 @@ class TicketService(
 
         ticket.save()
         return ticket
+
+    def counts_over_time(self, partner_id: str) -> QuerySet:
+        last_week = datetime.today() - timedelta(days=7)
+        return (
+            Ticket.objects.all()
+            .annotate(date=TruncDay("created_at"))
+            .values("date")
+            .annotate(count=Count("id"))
+            .order_by("-date")
+            .filter(ticket_type__event__partner_id=partner_id)
+            .filter(created_at__gte=last_week)
+        )
 
     def send(self, ticket: Ticket) -> bool:
         pass
