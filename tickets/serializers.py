@@ -29,3 +29,12 @@ class TicketReadSerializer(InDBBaseSerializer, TicketSerializer):
     redeemed = serializers.BooleanField()
     sent = serializers.BooleanField()
     uses = serializers.IntegerField()
+
+
+class CountAtDate(serializers.Serializer):
+    count = serializers.IntegerField()
+    date = serializers.CharField(max_length=255)
+
+
+class TotalSalesOverTime(serializers.Serializer):
+    data = serializers.ListField(child=CountAtDate())  # type: ignore

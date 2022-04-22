@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from django.test import TestCase
 from rest_framework.test import APIClient
 
@@ -197,3 +199,23 @@ class TicketTestCase(TestCase):
 
         assert res.status_code == 200
         assert len(res.json()["results"]) == 1
+
+    def test_ticket_counts_over_time(self) -> None:
+        event = event_fixtures.create_event_object(self.owner.person)
+        ticket_type = event_fixtures.create_ticket_type_obj(event=event)
+        payment = payment_fixtures.create_payment_object(self.person)
+        tickets = [
+            ticket_fixtures.create_ticket_obj(ticket_type, payment),
+            ticket_fixtures.create_ticket_obj(ticket_type, payment),
+            ticket_fixtures.create_ticket_obj(ticket_type, payment),
+        ]
+        tickets[2].created_at = datetime.today() - timedelta(days=1)
+        tickets[2].save()
+        ticket_fixtures.create_ticket_obj()
+
+        res = self.client.get(f"/{API_VER}/tickets/count/by/date/")
+
+        assert res.status_code == 200
+        counts = res.json()["data"]
+        assert {"count": 2, "date": "2022-04-22"} in counts
+        assert {"count": 1, "date": "2022-04-21"} in counts
