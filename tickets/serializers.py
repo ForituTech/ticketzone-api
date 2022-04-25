@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from core.serializers import BaseSerializer, InDBBaseSerializer
+from partner.serializers import PersonSerializer
 
 
 class TicketBaseSerialier(serializers.Serializer):
@@ -25,10 +26,16 @@ class TicketUpdateInnerSerializer(BaseSerializer, TicketUpdateSerializer):
     pass
 
 
+class PaymentLiteSerializer(serializers.Serializer):
+    state = serializers.CharField(max_length=255)
+    person = PersonSerializer()
+
+
 class TicketReadSerializer(InDBBaseSerializer, TicketSerializer):
     redeemed = serializers.BooleanField()
     sent = serializers.BooleanField()
     uses = serializers.IntegerField()
+    payment = PaymentLiteSerializer()
 
 
 class CountAtDate(serializers.Serializer):

@@ -199,6 +199,7 @@ class TicketTestCase(TestCase):
 
         assert res.status_code == 200
         assert len(res.json()["results"]) == 1
+        assert "payment" in res.json()["results"][0]
 
     def test_ticket_counts_over_time(self) -> None:
         event = event_fixtures.create_event_object(self.owner.person)
@@ -217,5 +218,8 @@ class TicketTestCase(TestCase):
 
         assert res.status_code == 200
         counts = res.json()["data"]
-        assert {"count": 2, "date": "2022-04-22"} in counts
-        assert {"count": 1, "date": "2022-04-21"} in counts
+        assert {"count": 2, "date": datetime.today().strftime("%Y-%m-%d")} in (counts)
+        assert {
+            "count": 1,
+            "date": (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d"),
+        } in (counts)
