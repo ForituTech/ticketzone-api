@@ -30,7 +30,7 @@ paginator = PageNumberPagination()
 paginator.page_size = 15
 
 
-@swagger_auto_schema(method="get")
+@swagger_auto_schema(method="get", responses={200: TotalSalesOverTime})
 @api_view(["GET"])
 @permission_classes([PartnerMembershipPermissions])
 def ticket_sales_per_day(request: Request) -> Response:
