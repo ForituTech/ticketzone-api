@@ -14,7 +14,9 @@ from partner.models import (
     Person,
     PromoOptIn,
 )
-from partner.utils import create_access_token
+from partner.serializers import PersonCreateSerializer
+from partner.services import person_service
+from partner.utils import create_access_token, random_password
 
 
 def random_phone_number() -> str:
@@ -27,9 +29,7 @@ def person_fixture() -> dict:
         "name": "Nelson Mongare",
         "email": "nelsonmongare@protonmail.com",
         "phone_number": f"+{random_phone_number()}",
-        "hashed_password": (
-            "$2b$12$IjyvmhueX4ebK0WOElWvJODwy9zWfqSZDhul/BF8l7cVGahv/WYo6"
-        ),
+        "hashed_password": (random_password()),
     }
 
 
@@ -44,7 +44,9 @@ def create_person_obj() -> Person:
     try:
         person: Person = Person.objects.get(phone_number=person_data["phone_number"])
     except Person.DoesNotExist:
-        person = Person.objects.create(**person_data)
+        person = person_service.create(
+            obj_data=person_data, serializer=PersonCreateSerializer
+        )
     person.save()
     return person
 
@@ -104,7 +106,7 @@ def create_partner_person(
         person=person,
         partner=partner,
         person_type=person_type,
-    )
+    )  # type: ignore
     partner_person.save()
     return partner_person
 

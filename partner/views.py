@@ -37,6 +37,8 @@ from partner.serializers import (
     PartnerSMSPackageCreateSerializer,
     PartnerSMSPackageReadSerializer,
     PartnerUpdateSerializer,
+    PasswordResetPayloadSerializer,
+    PasswordResetVerificationSerializer,
     PersonBaseSerializer,
     PersonCreateSerializer,
     PersonReadSerializer,
@@ -46,6 +48,7 @@ from partner.serializers import (
     RevenuesSerializer,
     SalesSerializer,
     TokenSerializer,
+    UserPasswordResetSerializer,
     UserSerializer,
 )
 from partner.services import (
@@ -72,7 +75,7 @@ paginator.page_size = 15
 @api_view(["POST"])
 def login(request: Request) -> Response:
     token_key = settings.AUTH_HEADER
-    user_group = person_service.get_by_phonenumber(request)
+    user_group = person_service.get_user_by_phonenumber(request)
     if verify_password(
         str(user_group[1].data["password"]), user_group[0].hashed_password
     ):
@@ -85,6 +88,29 @@ def login(request: Request) -> Response:
         )
     else:
         raise HttpErrorException(status_code=404, code=ErrorCodes.INVALID_CREDENTIALS)
+
+
+@swagger_auto_schema(
+    method="post",
+    request_body=UserPasswordResetSerializer,
+    responses={200: PasswordResetPayloadSerializer},
+)
+@api_view(["POST"])
+def reset_password(request: Request) -> Response:
+    user = person_service.get_by_phonenumber(request)
+    reset_secret = person_service.reset_password(user)
+    return Response(PasswordResetPayloadSerializer({"secret": reset_secret}).data)
+
+
+@swagger_auto_schema(
+    method="post",
+    request_body=PasswordResetVerificationSerializer,
+    responses={200: TokenSerializer},
+)
+@api_view(["POST"])
+def verify_otp(request: Request) -> Response:
+    token = person_service.verify_otp(request)
+    return Response(TokenSerializer({"token": token}).data)
 
 
 @swagger_auto_schema(method="get", responses={200: SalesSerializer})

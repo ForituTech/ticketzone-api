@@ -7,6 +7,7 @@ from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException, ObjectNotFoundException
 from core.services import CRUDService
 from events.models import Event
+from notifications.utils import send_sms
 from partner.models import (
     Partner,
     PartnerPerson,
@@ -24,11 +25,13 @@ from partner.serializers import (
     PartnerSMSPackageCreateSerializer,
     PartnerSMSPackageUpdateSerializer,
     PartnerUpdateSerializer,
+    PasswordResetVerificationSerializer,
     PersonCreateSerializer,
     PersonUpdateSerializer,
+    UserPasswordResetSerializer,
     UserSerializer,
 )
-from partner.utils import hash_password
+from partner.utils import create_access_token, create_otp, hash_password, verify_otp
 from tickets.models import Ticket
 
 
@@ -41,7 +44,9 @@ class PersonService(
     def on_pre_update(self, obj_in: PersonUpdateSerializer, obj: Person) -> None:
         obj_in.hashed_password = hash_password(obj_in.hashed_password)  # type: ignore
 
-    def get_by_phonenumber(self, request: Request) -> Tuple[Person, UserSerializer]:
+    def get_user_by_phonenumber(
+        self, request: Request
+    ) -> Tuple[Person, UserSerializer]:
         credential_error_exception = HttpErrorException(
             status_code=404,
             code=ErrorCodes.INVALID_CREDENTIALS,
@@ -56,6 +61,55 @@ class PersonService(
         except Person.MultipleObjectsReturned:
             raise credential_error_exception
         return (user, user_in)
+
+    def get_by_phonenumber(self, request: Request) -> Person:
+        credential_error_exception = HttpErrorException(
+            status_code=404,
+            code=ErrorCodes.INVALID_CREDENTIALS,
+        )
+        reset_payload = UserPasswordResetSerializer(data=request.data)
+        if not reset_payload.is_valid():
+            raise credential_error_exception
+        try:
+            user = Person.objects.get(phone_number=reset_payload.data["phone_number"])
+        except Person.DoesNotExist:
+            raise credential_error_exception
+        except Person.MultipleObjectsReturned:
+            raise credential_error_exception
+        return user
+
+    def reset_password(self, user: Person) -> str:
+        otp, token = create_otp(user)
+        send_sms.apply_async(
+            args=(user.id, f"Your ticketzone OTP is: {otp}"),
+            queue="main_queue",
+        )
+        return token
+
+    def verify_otp(self, request: Request) -> str:
+        credential_error_exception = HttpErrorException(
+            status_code=400,
+            code=ErrorCodes.INVALID_OTP,
+        )
+        otp_verification_payload = PasswordResetVerificationSerializer(
+            data=request.data
+        )
+        if not otp_verification_payload.is_valid():
+            raise credential_error_exception
+        verification = verify_otp(
+            str(otp_verification_payload.data["secret"]),
+            str(otp_verification_payload.data["otp"]),
+        )
+        if not verification[0]:
+            raise credential_error_exception
+
+        user: Person = Person.objects.get(phone_number=verification[1])
+        user.hashed_password = hash_password(
+            otp_verification_payload.data["new_password"]
+        )
+        user.save()
+
+        return create_access_token(user)
 
 
 person_service = PersonService(Person)

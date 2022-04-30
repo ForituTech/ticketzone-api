@@ -2,6 +2,6 @@ db.sqlite3
 __pycache__
 *.pyc
 *mypy_cache*
-.pytest_cache/
+*.pytest_cache/
 TODO
 *.db
