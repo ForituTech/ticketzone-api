@@ -98,6 +98,10 @@ class UserSerializer(serializers.Serializer):
     password = serializers.CharField()
 
 
+class UserPasswordResetSerializer(serializers.Serializer):
+    phone_number = serializers.CharField()
+
+
 class PartnerPersonBaseSerializer(serializers.Serializer):
     person_type = serializers.CharField(required=False, max_length=255)
     is_active = serializers.BooleanField(required=False)
@@ -124,7 +128,17 @@ class PartnerPersonReadSerializer(InDBBaseSerializer, PartnerPersonBaseSerialize
 
 
 class TokenSerializer(serializers.Serializer):
-    token = serializers.CharField(max_length=255)
+    token = serializers.CharField(max_length=1024)
+
+
+class PasswordResetPayloadSerializer(serializers.Serializer):
+    secret = serializers.CharField(max_length=1024)
+
+
+class PasswordResetVerificationSerializer(serializers.Serializer):
+    secret = serializers.CharField(max_length=1024)
+    otp = serializers.CharField(max_length=10)
+    new_password = serializers.CharField(max_length=256)
 
 
 class SalesSerializer(serializers.Serializer):

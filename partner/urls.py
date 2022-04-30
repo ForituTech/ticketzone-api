@@ -37,6 +37,8 @@ urlpatterns = [
         view=views.partner_promo_optin_count,
         name="partner-promo-optin-count",
     ),
+    path("reset/password/", view=views.reset_password, name="password-reset"),
+    path("verify/otp/", view=views.verify_otp, name="verify-otp"),
 ]
 
 urlpatterns += router.urls

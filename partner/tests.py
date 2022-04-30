@@ -13,8 +13,9 @@ from owners.fixtures import owner_fixtures
 from partner.constants import PersonType
 from partner.fixtures import partner_fixtures
 from partner.models import Partner, PartnerSMS
-from partner.services import partner_service
+from partner.services import partner_service, person_service
 from partner.tasks import reconcile_payments, send_out_promos, send_out_reminders
+from partner.utils import random_password, verify_otp, verify_password
 from payments.fixtures import payment_fixtures
 from tickets.fixtures import ticket_fixtures
 
@@ -22,7 +23,10 @@ API_VER = settings.API_VERSION_STRING
 
 
 class PartnerTestCase(TestCase):
-    def setUp(self) -> None:
+    @mock.patch("partner.fixtures.partner_fixtures.random_password")
+    def setUp(self, mock_random_password: Any) -> None:
+        self.password = random_password()
+        mock_random_password.return_value = self.password
         self.owner = partner_fixtures.create_partner_person(
             person_type=PersonType.OWNER
         )
@@ -46,7 +50,7 @@ class PartnerTestCase(TestCase):
     def test_login__authed(self) -> None:
         login_credentials = {
             "phone_number": str(self.owner.person.phone_number),
-            "password": "123456",
+            "password": self.password,
         }
         res = self.authed_client.post(
             f"/{API_VER}/partner/login/", data=login_credentials, format="json"
@@ -56,7 +60,7 @@ class PartnerTestCase(TestCase):
     def test_login(self) -> None:
         login_credentials = {
             "phone_number": str(self.owner.person.phone_number),
-            "password": "123456",
+            "password": self.password,
         }
         res = self.unauthed_client.post(
             f"/{API_VER}/partner/login/", data=login_credentials, format="json"
@@ -65,7 +69,10 @@ class PartnerTestCase(TestCase):
         assert "token" in res.json()
 
     def test_login__no_credentials(self) -> None:
-        login_credentials = {"phone_number": "254799762771", "password": "123456"}
+        login_credentials = {
+            "phone_number": partner_fixtures.random_phone_number(),
+            "password": "123456",
+        }
         res = self.unauthed_client.post(
             f"/{API_VER}/partner/login/", data=login_credentials, format="json"
         )
@@ -666,3 +673,76 @@ class PartnerTestCase(TestCase):
         assert revenues["net"] == payment.amount * (
             (100 - partner.comission_rate) / 100
         )
+
+    @mock.patch("partner.utils.random_password")
+    @mock.patch("notifications.utils.send_sms.apply_async")
+    def test_create_verify_otp(
+        self, mock_send_sms: Any, mock_random_password: Any
+    ) -> None:
+        otp = random_password()
+        mock_random_password.return_value = otp
+        person = partner_fixtures.create_person_obj()
+        token = person_service.reset_password(person)
+
+        verification = verify_otp(token, otp)
+
+        assert verification[0]
+        assert verification[1] == person.phone_number
+
+        token = person_service.reset_password(person)
+        verification = verify_otp(token, random_password())
+
+        assert not verification[0]
+        mock_send_sms.assert_called()
+
+    @mock.patch("partner.utils.random_password")
+    @mock.patch("notifications.utils.send_sms.apply_async")
+    def test_reset_password(
+        self, mock_send_sms: Any, mock_random_password: Any
+    ) -> None:
+        otp = random_password()
+        mock_random_password.return_value = otp
+        person = partner_fixtures.create_person_obj()
+        partner_fixtures.create_partner_obj(owner=person)
+        reset_payload = {
+            "phone_number": person.phone_number,
+        }
+
+        res = self.unauthed_client.post(
+            f"/{API_VER}/partner/reset/password/", data=reset_payload, format="json"
+        )
+
+        assert res.status_code == 200
+        assert res.json()["secret"]
+        mock_send_sms.assert_called()
+        reset_secret = res.json()["secret"]
+
+        new_password = random_string()
+
+        verification_payload = {
+            "secret": reset_secret,
+            "otp": otp,
+            "new_password": new_password,
+        }
+
+        res = self.unauthed_client.post(
+            f"/{API_VER}/partner/verify/otp/", data=verification_payload, format="json"
+        )
+
+        assert res.status_code == 200
+        assert res.json()["token"]
+        person.refresh_from_db()
+        assert verify_password(new_password, person.hashed_password)
+
+        # with invalid OTP
+        verification_payload = {
+            "secret": reset_secret,
+            "otp": random_password(),
+            "new_password": new_password,
+        }
+
+        res = self.unauthed_client.post(
+            f"/{API_VER}/partner/verify/otp/", data=verification_payload, format="json"
+        )
+
+        assert res.status_code == 400
