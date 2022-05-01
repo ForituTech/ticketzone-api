@@ -41,6 +41,7 @@ boto3 = "^1.21.32"
 django-storages = "^1.12.3"
 types-requests = "^2.27.16"
 pycryptodome = "^3.14.1"
+pre-commit = "^2.18.1"
 
 [tool.isort]
 profile = "black"
