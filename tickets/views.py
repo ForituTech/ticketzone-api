@@ -8,6 +8,7 @@ from rest_framework.response import Response
 
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException
+from core.serializers import DefaultQuerySerialzier
 from core.views import AbstractPermissionedView
 from partner.permissions import (
     LoggedInPermission,
@@ -71,17 +72,6 @@ def read_ticket_by_hash(request: Request, hash: str) -> Response:
     return Response(TicketReadSerializer(tickets[0]).data)
 
 
-@swagger_auto_schema(method="get", responses={200: TicketReadSerializer(many=True)})
-@api_view(["GET"])
-@permission_classes([PartnerMembershipPermissions])
-def search_tickets(request: Request, search_term: str) -> Response:
-    tickets = ticket_service.search(search_term=search_term)
-    tickets_paginated = paginator.paginate_queryset(tickets, request)
-    return paginator.get_paginated_response(
-        TicketReadSerializer(tickets_paginated, many=True).data
-    )
-
-
 class TicketViewSet(AbstractPermissionedView):
 
     permissions_by_action = {
@@ -91,11 +81,12 @@ class TicketViewSet(AbstractPermissionedView):
         "update": [TicketingAgentPermissions],
     }
 
-    @swagger_auto_schema(responses={200: TicketReadSerializer(many=True)})
+    @swagger_auto_schema(
+        responses={200: TicketReadSerializer(many=True)},
+        query_serializer=DefaultQuerySerialzier,
+    )
     def list(self, request: Request) -> Response:
         filters = request.query_params.dict()
-        if not filters:
-            filters = {}
         filters["ticket_type__event__partner__owner_id"] = get_request_user_id(request)
         tickets = ticket_service.get_filtered(
             paginator=paginator, request=request, filters=filters

@@ -28,6 +28,7 @@ dj-database-url==0.5.0
 dj-static==0.0.6
 django-celery-results==2.3.1
 django-cors-headers==3.11.0; python_version >= "3.7"
+django-filter==21.1; python_version >= "3.6"
 django-storages==1.12.3; python_version >= "3.5"
 django-stubs-ext==0.4.0; python_version >= "3.7"
 django-stubs==1.10.1; python_version >= "3.7"

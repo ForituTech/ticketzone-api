@@ -11,7 +11,7 @@ from rest_framework.response import Response
 
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException, ObjectNotFoundException
-from core.serializers import VerifyActionSerializer
+from core.serializers import DefaultQuerySerialzier, VerifyActionSerializer
 from core.views import AbstractPermissionedView
 from eticketing_api import settings
 from events.serializers import (
@@ -71,16 +71,6 @@ def highlighted_events(request: Request) -> Response:
     )
 
 
-@swagger_auto_schema(method="get", responses={200: EventReadSerializer(many=True)})
-@api_view(["GET"])
-def search_events(request: Request, search_term: str) -> Response:
-    events = event_service.search(search_term=search_term)
-    paginated_events = paginator.paginate_queryset(events, request=request)
-    return paginator.get_paginated_response(
-        EventReadSerializer(paginated_events, many=True).data
-    )
-
-
 @swagger_auto_schema(
     method="post",
     request_body=PromoVerifyInnerSerializer,
@@ -125,9 +115,7 @@ def redeem_promo_code(request: Request, code: str) -> Response:
 @swagger_auto_schema(method="get", responses={200: CategorySerializer(many=True)})
 @api_view(["GET"])
 def list_categories(request: Request) -> Response:
-    categories = category_service.get_filtered(
-        paginator=paginator, request=request, filters=None
-    )
+    categories = category_service.get_filtered(paginator=paginator, request=request)
     return Response(CategorySerializer(categories, many=True).data)
 
 
@@ -147,7 +135,10 @@ class EventViewset(AbstractPermissionedView):
         "update": [PartnerOwnerPermissions],
     }
 
-    @swagger_auto_schema(responses={200: EventReadSerializer(many=True)})
+    @swagger_auto_schema(
+        responses={200: EventReadSerializer(many=True)},
+        query_serializer=DefaultQuerySerialzier,
+    )
     def list(self, request: Request) -> Response:
         filters = request.query_params.dict()
         events = event_service.get_filtered(
@@ -288,8 +279,6 @@ class TicketTypePromotionViewset(AbstractPermissionedView):
     @swagger_auto_schema(responses={200: TicketTypePromotionReadSerializer(many=True)})
     def list(self, request: Request) -> Response:
         filters = request.query_params.dict()
-        if not filters:
-            filters = {}
         filters["ticket__event__partner__owner_id"] = get_request_user_id(request)
         ticket_promos = ticket_type_promo_service.get_filtered(
             paginator=paginator, request=request, filters=filters
@@ -341,8 +330,6 @@ class EventPromotionViewset(AbstractPermissionedView):
     @swagger_auto_schema(responses={200: EventPromotionReadSerializer(many=True)})
     def list(self, request: Request) -> Response:
         filters = request.query_params.dict()
-        if not filters:
-            filters = {}
         filters["event__partner__owner_id"] = get_request_user_id(request)
         event_promos = event_promo_service.get_filtered(
             paginator=paginator, request=request, filters=filters

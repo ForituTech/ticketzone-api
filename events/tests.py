@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 from random import randint
 from typing import Any, Dict
 
@@ -78,9 +79,28 @@ class EventTestCase(TestCase):
 
     def test_read_event(self) -> None:
         event = event_fixtures.create_event_object(owner=self.owner.person)
-        res = self.client.put(f"/{API_VER}/events/events/{event.id}/", format="json")
+        res = self.client.get(f"/{API_VER}/events/events/{event.id}/")
         assert res.status_code == 200
         assert res.json()["id"] == str(event.id)
+
+    def test_list_events(self) -> None:
+        event_fixtures.create_event_object(owner=self.owner.person)
+        event2 = event_fixtures.create_event_object(owner=self.owner.person)
+        event_fixtures.create_event_object()
+        event2.created_at = date.today() - timedelta(days=1)
+        event2.save()
+
+        res = self.client.get(
+            f"/{API_VER}/events/events/?partner_id={self.owner.partner_id}"
+            "&ordering=-created_at,updated_at"
+        )
+
+        assert res.status_code == 200
+        assert res.json()["count"] == 2
+        returned_events_created_at = [
+            event["created_at"] for event in res.json()["results"]
+        ]
+        assert returned_events_created_at[0] > returned_events_created_at[1]
 
     def test_create_ticket_type(self) -> None:
         event = event_fixtures.create_event_object(owner=self.owner.person)
@@ -117,23 +137,24 @@ class EventTestCase(TestCase):
 
     def test_event_search(self) -> None:
         event = event_fixtures.create_event_object()
+        event_fixtures.create_event_object()
         res = self.client.get(
-            f"/{API_VER}/events/search/{event.event_location}%20{event.name}/"
+            f"/{API_VER}/events/events/?search={event.event_location}%20{event.name}/"
         )
 
         assert res.status_code == 200
         assert res.json()["count"] == 1
 
-    def test_event_search__by_description(self) -> None:
-        event = event_fixtures.create_event_object()
-        res = self.client.get(f"/{API_VER}/events/search/{event.description}/")
+        res = self.client.get(f"/{API_VER}/events/events/?search={event.description}/")
 
         assert res.status_code == 200
         assert res.json()["count"] == 1
 
     def test_event_search__non_existant_terms(self) -> None:
         event = event_fixtures.create_event_object()
-        res = self.client.get(f"/{API_VER}/events/search/{event.event_location}-1234/")
+        res = self.client.get(
+            f"/{API_VER}/events/events/?search={event.event_location}-1234/"
+        )
 
         assert res.status_code == 200
         assert res.json()["count"] == 0
