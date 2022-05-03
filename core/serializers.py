@@ -27,3 +27,8 @@ class VerifyActionSerializer(serializers.Serializer):
 
 class PromoOptinCountSerializer(serializers.Serializer):
     count = serializers.IntegerField()
+
+
+class DefaultQuerySerialzier(serializers.Serializer):
+    search = serializers.CharField(required=False, help_text="search query")
+    ordering = serializers.CharField(required=False)

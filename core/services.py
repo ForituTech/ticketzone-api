@@ -181,12 +181,22 @@ class ReadService(Generic[ModelType]):
         filters: Optional[dict[str, Any]] = None,
         limit: Optional[int] = None,
     ) -> QuerySet[ModelType]:
+        order_by_fields = ["id"]
         if filters:
-            return self.model.objects.filter(**filters).order_by("id")[:limit]
-        return self.model.objects.all().order_by("id")[:limit]
+            if "ordering" in filters:
+                order_by_fields = filters["ordering"].split(",")
+                filters.pop("ordering")
+            if "search" in filters:
+                return self.search(search_term=filters["search"], filters=filters)
+            return self.model.objects.filter(**filters).order_by(*order_by_fields)[
+                :limit
+            ]
+        return self.model.objects.all().order_by(*order_by_fields)[:limit]
 
     @no_type_check  # TODO: FIX
-    def search(self, *, search_term: str) -> QuerySet[ModelType]:
+    def search(
+        self, *, search_term: str, filters: Optional[dict[str, Any]] = None
+    ) -> QuerySet[ModelType]:
         if hasattr(self.model, "search_vector") and len(self.model.search_vector) > 0:
             unpacked_vector = None
             for vector in self.model.search_vector:
@@ -195,10 +205,24 @@ class ReadService(Generic[ModelType]):
                     continue
                 unpacked_vector += SearchVector(vector)
             query = SearchQuery(search_term)
+
+            order_by_fields = ["id"]
+            if filters:
+                if "ordering" in filters:
+                    order_by_fields = filters["ordering"].split(",")
+                    filters.pop("ordering")
+                if "search" in filters:
+                    filters.pop("search")
+                return (
+                    self.model.objects.annotate(search=unpacked_vector)
+                    .filter(search=query)
+                    .order_by(*order_by_fields)
+                    .filter(**filters)
+                )
             return (
                 self.model.objects.annotate(search=unpacked_vector)
                 .filter(search=query)
-                .order_by("id")
+                .order_by(*order_by_fields)
             )
         else:
             raise HttpErrorException(

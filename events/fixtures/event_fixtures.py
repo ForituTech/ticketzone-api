@@ -1,6 +1,7 @@
 from datetime import date, datetime, timedelta
 from typing import Dict, Optional, Union
 
+from core.utils import random_string
 from events.models import (
     Event,
     EventCategory,
@@ -24,11 +25,11 @@ def create_event_category_obj() -> EventCategory:
 
 def event_fixture(partner_id: Union[str, int] = None) -> dict:
     return {
-        "name": "new-event",
+        "name": random_string(),
         "poster": "media/42_EluV6G9.jpg",
         "event_date": (date.today() + timedelta(days=1)).strftime("%Y-%m-%d"),
         "event_location": "Nairobi",
-        "description": "A random event description",
+        "description": random_string(),
         "partner_id": partner_id
         if partner_id
         else str(partner_fixtures.create_partner_obj().id),

@@ -10,7 +10,11 @@ from rest_framework.response import Response
 
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException
-from core.serializers import PromoOptinCountSerializer, VerifyActionSerializer
+from core.serializers import (
+    DefaultQuerySerialzier,
+    PromoOptinCountSerializer,
+    VerifyActionSerializer,
+)
 from core.views import AbstractPermissionedView
 from eticketing_api import settings
 from events.serializers import EventWithSales, TicketTypeWithSales
@@ -282,11 +286,15 @@ class PartnerPersonViewset(AbstractPermissionedView):
         )
         return Response(PartnerPersonReadSerializer(partner_person).data)
 
-    @swagger_auto_schema(responses={200: PartnerPersonReadSerializer(many=True)})
+    @swagger_auto_schema(
+        responses={200: PartnerPersonReadSerializer(many=True)},
+        query_serializer=DefaultQuerySerialzier,
+    )
     def list(self, request: Request) -> Response:
-        partner_id = get_request_partner_id(request)
+        filters = request.query_params.dict()
+        filters["partner_id"] = get_request_partner_id(request)
         people = partner_person_service.get_filtered(
-            paginator=paginator, request=request, filters={"partner_id": partner_id}
+            paginator=paginator, request=request, filters=filters
         )
         paginated_people = paginator.paginate_queryset(people, request)
         return paginator.get_paginated_response(
@@ -354,12 +362,8 @@ class PartnerPromotionViewset(AbstractPermissionedView):
         responses={200: PartnerPromoReadSerializer(many=True)},
     )
     def list(self, request: Request) -> Response:
-        filters = request.query_params.dict()
-        filters.update(
-            {
-                "partner_id": get_request_partner_id(request),
-            }
-        )
+        filters = request.query_params.dict() or {}
+        filters["partner_id"] = get_request_partner_id(request)
         promos = partner_promo_service.get_filtered(
             paginator=paginator, request=request, filters=filters
         )
