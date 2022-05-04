@@ -97,7 +97,7 @@ def send_ticket_email(
                 body_source,
                 retry + 1,
             ),
-            queue="main_queue",
+            queue=settings.CELERY_NOTIFICATIONS_QUEUE,
         )
     if not retry:
         Notification.objects.create(

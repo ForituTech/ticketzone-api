@@ -47,7 +47,7 @@ def send_out_reminders() -> None:
                         ticket.payment.person.name, ticket.ticket_type.event.name
                     ),
                 ),
-                queue="main_queue",
+                queue=settings.CELERY_NOTIFICATIONS_QUEUE,
             )
             event_partner_sms.sms_used += 1
             event_partner_sms.save()
@@ -77,7 +77,7 @@ def send_out_promos() -> None:
                         promo_optin.person_id,
                         promo.message,
                     ),
-                    queue="main_queue",
+                    queue=settings.CELERY_NOTIFICATIONS_QUEUE,
                 )
                 event_partner_sms.sms_used += 1
                 event_partner_sms.save()
@@ -100,7 +100,7 @@ def reconcile_payments() -> None:
                     partner.owner.name, partner_balance
                 ),
             ),
-            queue="main_queue",
+            queue=settings.CELERY_NOTIFICATIONS_QUEUE,
         )
         if partner_balance > 0:
             # TODO: Add payment provider send to partner
@@ -116,5 +116,5 @@ def reconcile_payments() -> None:
                 f"Your weekly leverage for {date.today()} "
                 f"is {total_balance*(owner.stake/100)}",
             ),
-            queue="main_queue",
+            queue=settings.CELERY_NOTIFICATIONS_QUEUE,
         )
