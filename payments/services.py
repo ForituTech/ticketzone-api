@@ -1,6 +1,7 @@
 from django.db.models.query import QuerySet
 
 from core.services import CRUDService
+from eticketing_api import settings
 from events.models import Ticket
 from notifications.utils import send_ticket_email
 from payments.models import Payment
@@ -15,7 +16,7 @@ class PaymentService(
         for ticket in tickets:
             send_ticket_email.apply_async(
                 args=(ticket.id,),
-                queue="main-queue",
+                queue=settings.CELERY_MAIN_QUEUE,
             )
 
 

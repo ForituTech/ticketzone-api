@@ -253,3 +253,6 @@ BASE_S3_URL = os.environ["BASE_S3_URL"]
 if os.environ.get("ENV") != "dev" and not os.environ.get("GITHUB_WORKFLOW", None):
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_SSL_REDIRECT = True
+
+CELERY_MAIN_QUEUE = "main_queue"
+CELERY_NOTIFICATIONS_QUEUE = "notifications-queue"

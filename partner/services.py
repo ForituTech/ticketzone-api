@@ -6,6 +6,7 @@ from rest_framework.request import Request
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException, ObjectNotFoundException
 from core.services import CRUDService
+from eticketing_api import settings
 from events.models import Event
 from notifications.utils import send_sms
 from partner.models import (
@@ -82,7 +83,7 @@ class PersonService(
         otp, token = create_otp(user)
         send_sms.apply_async(
             args=(user.id, f"Your ticketzone OTP is: {otp}"),
-            queue="main_queue",
+            queue=settings.CELERY_NOTIFICATIONS_QUEUE,
         )
         return token
 

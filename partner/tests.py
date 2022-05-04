@@ -376,7 +376,7 @@ class PartnerTestCase(TestCase):
                     ticket.payment.person.name, ticket.ticket_type.event.name
                 ),
             ),
-            queue="main_queue",
+            queue=mock.ANY,
         )
 
     @mock.patch("notifications.utils.send_sms.apply_async")
@@ -431,7 +431,7 @@ class PartnerTestCase(TestCase):
 
         mock_send_sms.assert_called_once_with(
             args=(optin.person.id, promo.message),
-            queue="main_queue",
+            queue=mock.ANY,
         )
 
         promo.refresh_from_db()
