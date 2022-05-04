@@ -48,10 +48,14 @@ jobs:
       - name: Install dependencies
         run: |
           poetry install --no-root
+
       - name: Run linting
         run: |
           chmod +x scripts/lint.sh
           poetry run ./scripts/lint.sh
+
+      - name: Run System Checks
+        run: poetry run ./manage.py check
 
   Unit-Tests:
     runs-on: ubuntu-latest
