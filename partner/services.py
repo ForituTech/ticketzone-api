@@ -16,6 +16,7 @@ from partner.models import (
     PartnerSMS,
     Person,
     PromoOptIn,
+    TempOTPStore,
 )
 from partner.serializers import (
     PartnerPersonCreateSerializer,
@@ -85,6 +86,7 @@ class PersonService(
             args=(user.id, f"Your ticketzone OTP is: {otp}"),
             queue=settings.CELERY_NOTIFICATIONS_QUEUE,
         )
+        TempOTPStore.objects.create(otp=otp)
         return token
 
     def verify_otp(self, request: Request) -> str:
