@@ -143,3 +143,6 @@ class PromoOptIn(BaseModel):
 
 class TempOTPStore(BaseModel):
     otp = models.CharField(max_length=255, null=False, blank=False)
+
+    def __str__(self) -> str:
+        return self.otp

@@ -7,6 +7,7 @@ from .models import (
     PartnerSMS,
     Person,
     PromoOptIn,
+    TempOTPStore,
 )
 
 
@@ -61,3 +62,4 @@ admin.site.register(PartnerSMS, PartnerSMSConfig)
 admin.site.register(PartnerPromotion, PartnerPromoConfig)
 admin.site.register(PromoOptIn, PartnerOptinConfig)
 admin.site.register(PartnerPerson, PartnerPersonConfig)
+admin.site.register(TempOTPStore)
