@@ -29,13 +29,26 @@ class TicketUpdateInnerSerializer(BaseSerializer, TicketUpdateSerializer):
 class PaymentLiteSerializer(serializers.Serializer):
     state = serializers.CharField(max_length=255)
     person = PersonSerializer()
+    amount = serializers.FloatField()
+
+
+class EventLiteSerializer(serializers.Serializer):
+    event_number = serializers.CharField()
+    name = serializers.CharField(max_length=255)
+
+
+class TicketTypeLiteSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    event = EventLiteSerializer()
 
 
 class TicketReadSerializer(InDBBaseSerializer, TicketSerializer):
+    ticket_number = serializers.CharField()
     redeemed = serializers.BooleanField()
     sent = serializers.BooleanField()
     uses = serializers.IntegerField()
     payment = PaymentLiteSerializer()
+    ticket_type = TicketTypeLiteSerializer()
 
 
 class CountAtDate(serializers.Serializer):

@@ -210,7 +210,7 @@ class TicketTestCase(TestCase):
             ticket_fixtures.create_ticket_obj(ticket_type, payment),
             ticket_fixtures.create_ticket_obj(ticket_type, payment),
         ]
-        tickets[2].created_at = datetime.today() - timedelta(days=1)
+        tickets[2].created_at = datetime.utcnow() - timedelta(days=1)
         tickets[2].save()
         ticket_fixtures.create_ticket_obj()
 
@@ -218,8 +218,6 @@ class TicketTestCase(TestCase):
 
         assert res.status_code == 200
         counts = res.json()["data"]
-        assert {"count": 2, "date": datetime.today().strftime("%Y-%m-%d")} in (counts)
-        assert {
-            "count": 1,
-            "date": (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d"),
-        } in (counts)
+        counts_without_date = [count["count"] for count in counts]
+        assert 2 in counts_without_date
+        assert 1 in counts_without_date

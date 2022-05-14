@@ -231,9 +231,9 @@ class TicketTypeViewSet(AbstractPermissionedView):
             obj_data=request.data, serializer=TicketTypeUpdateSerializer, obj_id=pk
         )
         if not ticket_type:
-            raise ObjectNotFoundException("Event", str(pk))
+            raise ObjectNotFoundException("TicketType", str(pk))
         check_self(request, str(ticket_type.event.partner.owner.id))
-        return Response(EventReadSerializer(ticket_type).data)
+        return Response(TickeTypeReadSerializer(ticket_type).data)
 
 
 class TicketTypePromotionViewset(AbstractPermissionedView):
