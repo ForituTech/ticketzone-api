@@ -5,6 +5,7 @@ from django.db.models.query import QuerySet
 
 from core.models import BaseModel
 from events.constants import EventState
+from events.utils import generate_event_number, generate_ticket_number
 from partner.models import Partner, Person
 from payments.models import Payment
 
@@ -17,6 +18,9 @@ class EventCategory(BaseModel):
 
 
 class Event(BaseModel):
+    event_number = models.CharField(
+        max_length=255, null=False, blank=False, default=generate_event_number
+    )
     name = models.CharField(
         max_length=256, null=False, blank=False, default="new-event"
     )
@@ -56,6 +60,7 @@ class Event(BaseModel):
             "event_location",
             "description",
             "partner__name",
+            "event_number",
         ]
 
     @property
@@ -145,6 +150,9 @@ class TicketPromotion(BaseModel):
 
 
 class Ticket(BaseModel):
+    ticket_number = models.CharField(
+        max_length=255, null=False, blank=False, default=generate_ticket_number
+    )
     ticket_type = models.ForeignKey(
         TicketType, on_delete=models.CASCADE, null=False, blank=False
     )

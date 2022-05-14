@@ -21,7 +21,8 @@ class EventSerializer(BaseSerializer):
 
 
 class EventReadSerializer(InDBBaseSerializer, EventBaseSerializer):
-    pass
+    sales = serializers.FloatField()
+    event_number = serializers.CharField()
 
 
 class EventUpdateSerializer(BaseSerializer, EventBaseSerializer):
