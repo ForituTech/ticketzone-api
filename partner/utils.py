@@ -65,6 +65,8 @@ def create_access_token(
     membership = get_membership_or_ownership(user)
     to_encode = {
         "phone_number": user.phone_number,
+        "name": user.name,
+        "email": user.email,
         "user_id": str(user.id),
         "partner": membership[0],
         "membership": membership[1],
@@ -80,7 +82,10 @@ def create_access_token_lite(
 ) -> str:
     to_encode = {
         "phone_number": user.phone_number,
+        "name": user.name,
+        "email": user.email,
         "user_id": str(user.id),
+        "user_name": user.name,
     }
     expire = datetime.utcnow() + timedelta(minutes=1440)
     to_encode.update({"expiry": expire.strftime("%H:%M:%S %d-%b-%Y")})
