@@ -23,6 +23,11 @@ urlpatterns = [
         name="event-reminder-optin",
     ),
     path("highlighted/", views.highlighted_events, name="highlighted_events"),
+    path(
+        "partner/count/<str:partner_id>/",
+        view=views.get_total_events_for_partner,
+        name="partner_events_count",
+    ),
 ]
 
 urlpatterns += router.urls

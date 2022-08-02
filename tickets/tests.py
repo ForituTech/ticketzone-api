@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from django.test import TestCase
+from django.test import Client, TestCase
 from rest_framework.test import APIClient
 
 from eticketing_api import settings
@@ -33,7 +33,9 @@ class TicketTestCase(TestCase):
         self.li_authed_header = {
             settings.AUTH_HEADER: create_access_token_lite(user=self.person)
         }
-        self.li_client = APIClient(enforce_csrf_checks=False, **self.li_authed_header)
+        self.li_client: Client = APIClient(
+            enforce_csrf_checks=False, **self.li_authed_header
+        )
 
     def test_create_ticket(self) -> None:
         event = event_fixtures.create_event_object(self.person)

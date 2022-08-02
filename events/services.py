@@ -46,6 +46,9 @@ class EventService(CRUDService[Event, EventSerializer, EventUpdateSerializer]):
     def get_partner_events(self, partner_id: uuid.UUID) -> QuerySet[Event]:
         return Event.objects.filter(partner=partner_id)
 
+    def get_partner_events_count(self, partner_id: uuid.UUID) -> int:
+        return Event.objects.filter(partner=partner_id).count()
+
     def get_event_ticket_types(
         self, event_id: uuid.UUID, **filters: Dict[str, Any]
     ) -> QuerySet[TicketType]:
