@@ -32,3 +32,7 @@ class PromoOptinCountSerializer(serializers.Serializer):
 class DefaultQuerySerialzier(serializers.Serializer):
     search = serializers.CharField(required=False, help_text="search query")
     ordering = serializers.CharField(required=False)
+
+
+class EventCountSerializer(serializers.Serializer):
+    count = serializers.IntegerField(required=True)

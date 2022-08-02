@@ -1,6 +1,7 @@
 import json
 from http import HTTPStatus
 from typing import Union
+from uuid import UUID
 
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
@@ -11,7 +12,11 @@ from rest_framework.response import Response
 
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException, ObjectNotFoundException
-from core.serializers import DefaultQuerySerialzier, VerifyActionSerializer
+from core.serializers import (
+    DefaultQuerySerialzier,
+    EventCountSerializer,
+    VerifyActionSerializer,
+)
 from core.views import AbstractPermissionedView
 from eticketing_api import settings
 from events.serializers import (
@@ -126,6 +131,13 @@ def event_reminder_optin(request: Request, event_id: str) -> Response:
     person_id = get_user_from_access_token(request.META[token_key]).id
     event_service.create_reminder_optin(str(person_id), event_id)
     return Response({"done": True})
+
+
+@swagger_auto_schema(method="get", responses={200: EventCountSerializer})
+@api_view(["GET"])
+def get_total_events_for_partner(request: Request, partner_id: str) -> Response:
+    count = event_service.get_partner_events_count(partner_id=UUID(partner_id))
+    return Response(EventCountSerializer({"count": count}).data)
 
 
 class EventViewset(AbstractPermissionedView):

@@ -434,3 +434,15 @@ class EventTestCase(TestCase):
 
         assert res.status_code == 200
         assert res.json()["results"][0]["id"] == str(event.id)
+
+    def test_partner_events_count(self) -> None:
+        event_fixtures.create_event_object(owner=self.owner.person)
+        event_fixtures.create_event_object(owner=self.owner.person)
+        event_fixtures.create_event_object()
+
+        res = self.client.get(
+            f"/{API_VER}/events/partner/count/{self.owner.partner_id}/"
+        )
+
+        assert res.status_code == 200
+        assert res.json()["count"] == 2

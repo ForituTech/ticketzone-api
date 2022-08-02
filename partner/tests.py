@@ -2,7 +2,7 @@ from datetime import date, timedelta
 from typing import Any, Optional
 from unittest import mock
 
-from django.test import TestCase
+from django.test import Client, TestCase
 from rest_framework.test import APIClient
 
 from core.utils import random_string
@@ -41,11 +41,9 @@ class PartnerTestCase(TestCase):
                 self.ticketing_agent.person
             )
         }
-        self.authed_client = APIClient(False, **auth_header)
-        self.ta_client = APIClient(False, **ta_auth_header)
-        self.unauthed_client = APIClient(
-            False,
-        )
+        self.authed_client: Client = APIClient(False, **auth_header)
+        self.ta_client: Client = APIClient(False, **ta_auth_header)
+        self.unauthed_client: Client = APIClient(False)
 
     def test_login__authed(self) -> None:
         login_credentials = {
