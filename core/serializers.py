@@ -30,6 +30,8 @@ class PromoOptinCountSerializer(serializers.Serializer):
 
 
 class DefaultQuerySerialzier(serializers.Serializer):
+    page = serializers.IntegerField(required=False)
+    per_page = serializers.IntegerField(required=False, max_value=100)
     search = serializers.CharField(required=False, help_text="search query")
     ordering = serializers.CharField(required=False)
 
