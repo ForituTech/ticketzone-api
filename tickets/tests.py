@@ -82,7 +82,7 @@ class TicketTestCase(TestCase):
         res = self.client.get(f"/{API_VER}/tickets/?page=1")
         res.status_code == 200
 
-        res = self.client.get(f"/{API_VER}/tickets/?page=1")
+        res = self.client.get(f"/{API_VER}/tickets/?per_page=1")
         res.status_code == 200
 
     def test_ticket_list__non_owner(self) -> None:
