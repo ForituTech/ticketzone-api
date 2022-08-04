@@ -1,0 +1,1 @@
+poetry shell && set -o allexport && source .env

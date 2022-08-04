@@ -12,6 +12,7 @@ from rest_framework.response import Response
 
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException, ObjectNotFoundException
+from core.pagination import CustomPagination
 from core.serializers import (
     DefaultQuerySerialzier,
     EventCountSerializer,
@@ -146,6 +147,7 @@ class EventViewset(AbstractPermissionedView):
         "create": [PartnerOwnerPermissions],
         "update": [PartnerOwnerPermissions],
     }
+    pagination_class = CustomPagination
 
     @swagger_auto_schema(
         responses={200: EventReadSerializer(many=True)},
@@ -203,6 +205,7 @@ class TicketTypeViewSet(AbstractPermissionedView):
         "create": [PartnerMembershipPermissions],
         "update": [PartnerMembershipPermissions],
     }
+    pagination_class = CustomPagination
 
     @swagger_auto_schema(responses={200: TickeTypeReadSerializer(many=True)})
     def list(self, request: Request) -> Response:
@@ -255,6 +258,7 @@ class TicketTypePromotionViewset(AbstractPermissionedView):
         "update": [PartnerMembershipPermissions],
         "list": [PartnerOwnerPermissions],
     }
+    pagination_class = CustomPagination
 
     @swagger_auto_schema(
         request_body=TicketTypePromotionSerializer,
@@ -308,6 +312,7 @@ class EventPromotionViewset(AbstractPermissionedView):
         "update": [PartnerMembershipPermissions],
         "list": [PartnerOwnerPermissions],
     }
+    pagination_class = CustomPagination
 
     @swagger_auto_schema(
         request_body=EventPromotionSerializer,

@@ -79,6 +79,12 @@ class TicketTestCase(TestCase):
         assert res.status_code == 200
         assert res.json()["count"] == 1
 
+        res = self.client.get(f"/{API_VER}/tickets/?page=1")
+        res.status_code == 200
+
+        res = self.client.get(f"/{API_VER}/tickets/?page=1")
+        res.status_code == 200
+
     def test_ticket_list__non_owner(self) -> None:
         event = event_fixtures.create_event_object(self.person)
         ticket_type = event_fixtures.create_ticket_type_obj(event=event)

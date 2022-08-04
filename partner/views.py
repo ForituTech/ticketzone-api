@@ -10,6 +10,7 @@ from rest_framework.response import Response
 
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException
+from core.pagination import CustomPagination
 from core.serializers import (
     DefaultQuerySerialzier,
     PromoOptinCountSerializer,
@@ -259,6 +260,7 @@ class PartnerPersonViewset(AbstractPermissionedView):
         "update": [PartnerOwnerPermissions],
         "list": [PartnerOwnerPermissions],
     }
+    pagination_class = CustomPagination
 
     @swagger_auto_schema(responses={200: PartnerPersonReadSerializer})
     def retrieve(self, request: Request, pk: Union[str, int]) -> Response:
@@ -334,6 +336,7 @@ class PartnerPromotionViewset(AbstractPermissionedView):
         "list": [PartnerMembershipPermissions],
         "update": [PartnerMembershipPermissions],
     }
+    pagination_class = CustomPagination
 
     @swagger_auto_schema(
         responses={200: PartnerPromoReadSerializer},

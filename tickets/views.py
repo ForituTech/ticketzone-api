@@ -8,6 +8,7 @@ from rest_framework.response import Response
 
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException
+from core.pagination import CustomPagination
 from core.serializers import DefaultQuerySerialzier
 from core.views import AbstractPermissionedView
 from partner.permissions import (
@@ -80,6 +81,7 @@ class TicketViewSet(AbstractPermissionedView):
         "retrieve": [TicketingAgentPermissions],
         "update": [TicketingAgentPermissions],
     }
+    pagination_class = CustomPagination
 
     @swagger_auto_schema(
         responses={200: TicketReadSerializer(many=True)},

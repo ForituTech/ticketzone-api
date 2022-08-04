@@ -181,13 +181,18 @@ class ReadService(Generic[ModelType]):
         filters: Optional[dict[str, Any]] = None,
         limit: Optional[int] = None,
     ) -> QuerySet[ModelType]:
-        order_by_fields = ["id"]
+        order_by_fields = ["id", "created_at"]
         if filters:
             if "ordering" in filters:
                 order_by_fields = filters["ordering"].split(",")
                 filters.pop("ordering")
             if "search" in filters:
                 return self.search(search_term=filters["search"], filters=filters)
+            if "page" in filters:
+                filters.pop("page")
+            if "page_number" in filters:
+                filters.pop("page_number")
+
             return self.model.objects.filter(**filters).order_by(*order_by_fields)[
                 :limit
             ]
