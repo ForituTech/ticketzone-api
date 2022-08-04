@@ -190,8 +190,8 @@ class ReadService(Generic[ModelType]):
                 return self.search(search_term=filters["search"], filters=filters)
             if "page" in filters:
                 filters.pop("page")
-            if "page_number" in filters:
-                filters.pop("page_number")
+            if "per_page" in filters:
+                filters.pop("per_page")
 
             return self.model.objects.filter(**filters).order_by(*order_by_fields)[
                 :limit
