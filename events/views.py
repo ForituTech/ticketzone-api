@@ -1,6 +1,6 @@
 import json
 from http import HTTPStatus
-from typing import List, Union
+from typing import Union
 from uuid import UUID
 
 from django.http import StreamingHttpResponse
@@ -144,7 +144,7 @@ def get_total_events_for_partner(request: Request, partner_id: str) -> Response:
     return Response(EventCountSerializer({"count": count}).data)
 
 
-@swagger_auto_schema(method="get", responses={200: List[str]})
+@swagger_auto_schema(method="get")
 @api_view(["GET"])
 @permission_classes([PartnerOwnerPermissions])
 @renderer_classes([CSVRenderer])
