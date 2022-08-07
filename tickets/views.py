@@ -76,7 +76,7 @@ def read_ticket_by_hash(request: Request, hash: str) -> Response:
     return Response(TicketReadSerializer(tickets[0]).data)
 
 
-@swagger_auto_schema(method="get", responses={200: TicketReadSerializer(many=True)})
+@swagger_auto_schema(method="get")
 @api_view(["GET"])
 @permission_classes([TicketingAgentPermissions])
 @renderer_classes([CSVRenderer])
