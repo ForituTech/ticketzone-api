@@ -85,6 +85,16 @@ class TicketTestCase(TestCase):
         res = self.client.get(f"/{API_VER}/tickets/?per_page=1")
         res.status_code == 200
 
+    def test_tickets_export(self) -> None:
+        event = event_fixtures.create_event_object(self.owner.person)
+        ticket_type = event_fixtures.create_ticket_type_obj(event=event)
+        payment = payment_fixtures.create_payment_object(self.person)
+        ticket_fixtures.create_ticket_obj(ticket_type, payment)
+        ticket_fixtures.create_ticket_obj()
+
+        res = self.client.get(f"/{API_VER}/tickets/export/csv/")
+        assert res.status_code == 200
+
     def test_ticket_list__non_owner(self) -> None:
         event = event_fixtures.create_event_object(self.person)
         ticket_type = event_fixtures.create_ticket_type_obj(event=event)

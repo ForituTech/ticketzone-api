@@ -1,14 +1,16 @@
 import json
 from http import HTTPStatus
-from typing import Union
+from typing import List, Union
 from uuid import UUID
 
+from django.http import StreamingHttpResponse
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, renderer_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework_csv.renderers import CSVRenderer
 
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException, ObjectNotFoundException
@@ -18,6 +20,7 @@ from core.serializers import (
     EventCountSerializer,
     VerifyActionSerializer,
 )
+from core.utils import _stream_model_data
 from core.views import AbstractPermissionedView
 from eticketing_api import settings
 from events.serializers import (
@@ -139,6 +142,25 @@ def event_reminder_optin(request: Request, event_id: str) -> Response:
 def get_total_events_for_partner(request: Request, partner_id: str) -> Response:
     count = event_service.get_partner_events_count(partner_id=UUID(partner_id))
     return Response(EventCountSerializer({"count": count}).data)
+
+
+@swagger_auto_schema(method="get", responses={200: List[str]})
+@api_view(["GET"])
+@permission_classes([PartnerOwnerPermissions])
+@renderer_classes([CSVRenderer])
+def export_events(request: Request) -> StreamingHttpResponse:
+    # This is dependent on djangos default lazy loading
+    # behaviour
+    tickets = event_service.get_all()
+    response = StreamingHttpResponse(
+        request.accepted_renderer.render(
+            _stream_model_data(queryset=tickets, serializer=EventReadSerializer)
+        ),
+        status=200,
+        content_type="text/csv",
+    )
+    response["Content-Disposition"] = 'attachment; filename="tickets.csv"'
+    return response
 
 
 class EventViewset(AbstractPermissionedView):

@@ -28,6 +28,7 @@ urlpatterns = [
         view=views.get_total_events_for_partner,
         name="partner_events_count",
     ),
+    path("export/csv/", view=views.export_events, name="export_events"),
 ]
 
 urlpatterns += router.urls
