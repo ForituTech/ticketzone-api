@@ -102,6 +102,16 @@ class EventTestCase(TestCase):
         ]
         assert returned_events_created_at[0] > returned_events_created_at[1]
 
+    def test_export_events(self) -> None:
+        event_fixtures.create_event_object(owner=self.owner.person)
+        event2 = event_fixtures.create_event_object(owner=self.owner.person)
+        event_fixtures.create_event_object()
+        event2.created_at = date.today() - timedelta(days=1)
+        event2.save()
+
+        res = self.client.get(f"/{API_VER}/events/export/csv/")
+        assert res.status_code == 200
+
     def test_create_ticket_type(self) -> None:
         event = event_fixtures.create_event_object(owner=self.owner.person)
         data = event_fixtures.ticket_type_fixture(event_id=str(event.id))

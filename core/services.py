@@ -173,6 +173,16 @@ class ReadService(Generic[ModelType]):
 
         return obj
 
+    def get_all(
+        self,
+        *,
+        filters: Optional[dict[str, Any]] = None,
+    ) -> QuerySet[ModelType]:
+        order_by_fields = ["created_at"]
+        if not filters:
+            filters = {}
+        return self.model.objects.filter(**filters).order_by(*order_by_fields)
+
     def get_filtered(
         self,
         *,
@@ -181,7 +191,7 @@ class ReadService(Generic[ModelType]):
         filters: Optional[dict[str, Any]] = None,
         limit: Optional[int] = None,
     ) -> QuerySet[ModelType]:
-        order_by_fields = ["id", "created_at"]
+        order_by_fields = ["created_at"]
         if filters:
             if "ordering" in filters:
                 order_by_fields = filters["ordering"].split(",")
