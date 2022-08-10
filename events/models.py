@@ -19,7 +19,10 @@ class EventCategory(BaseModel):
 
 class Event(BaseModel):
     event_number = models.CharField(
-        max_length=255, null=False, blank=False, default=generate_event_number
+        max_length=255,
+        null=False,
+        blank=False,
+        default=generate_event_number,
     )
     name = models.CharField(
         max_length=256, null=False, blank=False, default="new-event"
@@ -151,7 +154,10 @@ class TicketPromotion(BaseModel):
 
 class Ticket(BaseModel):
     ticket_number = models.CharField(
-        max_length=255, null=False, blank=False, default=generate_ticket_number
+        max_length=255,
+        null=False,
+        blank=False,
+        default=generate_ticket_number,
     )
     ticket_type = models.ForeignKey(
         TicketType, on_delete=models.CASCADE, null=False, blank=False
@@ -190,6 +196,7 @@ class Ticket(BaseModel):
     def search_vector(cls) -> List[str]:
         return [
             "hash",
+            "ticket_number",
             "payment__person__name",
             "payment__person__email",
             "payment__person__phone_number",
