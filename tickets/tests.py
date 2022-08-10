@@ -212,7 +212,7 @@ class TicketTestCase(TestCase):
         ticket = ticket_fixtures.create_ticket_obj(ticket_type, payment)
 
         res = self.client.get(
-            f"/{API_VER}/tickets/?search={ticket.payment.person.name}"
+            f"/{API_VER}/tickets/?page=1&per_page=5&search={ticket.payment.person.name}"
         )
 
         assert res.status_code == 200
