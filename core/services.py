@@ -79,6 +79,9 @@ class CreateService(Generic[ModelType, CreateSerializer]):
         obj = self.model.objects.create(**dict(obj_in.validated_data))
         if hasattr(self, "on_relationship"):
             self.on_relationship(obj_in=obj_in, obj=obj)
+
+        obj.save()
+
         if hasattr(self, "on_post_create"):
             self.on_post_create(obj)
         return obj
@@ -165,9 +168,9 @@ class ReadService(Generic[ModelType]):
     def __init__(self, model: Type[ModelType]):
         self.model = model
 
-    def get(self, *, pk: Any, **kwargs: Any) -> Optional[ModelType]:
+    def get(self, *args: Any, **kwargs: Any) -> Optional[ModelType]:
         try:
-            obj = self.model.objects.get(pk=pk, **kwargs)
+            obj = self.model.objects.get(*args, **kwargs)
         except self.model.DoesNotExist:
             return None
 
