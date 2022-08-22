@@ -106,6 +106,8 @@ class PartnerPersonBaseSerializer(serializers.Serializer):
     person_type = serializers.CharField(required=False, max_length=255)
     is_active = serializers.BooleanField(required=False)
     is_hidden = serializers.BooleanField(required=False)
+    is_scheduled = serializers.BooleanField(required=False)
+    state = serializers.CharField(required=False, max_length=255)
 
 
 class PartnerPersonCreateSerializer(BaseSerializer, PartnerPersonBaseSerializer):

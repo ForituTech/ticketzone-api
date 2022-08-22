@@ -54,10 +54,9 @@ class ServiceInterface(Protocol[ModelType]):
     def on_pre_delete(self, obj: ModelType) -> None:
         pass
 
-    def on_relationship(self, obj_in: UpdateSerializer, obj: ModelType) -> None:
-        pass
-
-    def on_relationship_update(self, obj_data: Dict[str, Any], obj: ModelType) -> None:
+    def on_relationship(
+        self, obj_in: Dict[str, Any], obj: ModelType, create: bool = True
+    ) -> None:
         pass
 
 
@@ -71,16 +70,23 @@ class CreateService(Generic[ModelType, CreateSerializer]):
         obj_data: Dict[str, Any],
         serializer: Type[CreateSerializer],
     ) -> ModelType:
+        obj_data_cleaned = obj_data.copy()
+        for key in list(obj_data_cleaned.keys()):
+            if key not in self.model.__dict__.keys():
+                del obj_data_cleaned[key]
+
         if hasattr(self, "on_pre_create"):
-            self.on_pre_create(obj_data)
-        obj_in = serializer(data_in=obj_data, data=obj_data)
+            self.on_pre_create(obj_data_cleaned)
+
+        obj_in = serializer(data_in=obj_data_cleaned, data=obj_data_cleaned)
         if not obj_in.is_valid(raise_exception=False):
             raise ObjectInvalidException(self.model.__name__)
         obj = self.model.objects.create(**dict(obj_in.validated_data))
-        if hasattr(self, "on_relationship"):
-            self.on_relationship(obj_in=obj_in, obj=obj)
 
         obj.save()
+
+        if hasattr(self, "on_relationship"):
+            self.on_relationship(obj_in=obj_data, obj=obj, create=True)
 
         if hasattr(self, "on_post_create"):
             self.on_post_create(obj)
@@ -92,7 +98,9 @@ class CreateService(Generic[ModelType, CreateSerializer]):
     def on_post_create(self, obj: ModelType) -> None:
         pass
 
-    def on_relationship(self, obj_in: UpdateSerializer, obj: ModelType) -> None:
+    def on_relationship(
+        self, obj_in: Dict[str, Any], obj: ModelType, create: bool = True
+    ) -> None:
         pass
 
 
@@ -107,9 +115,10 @@ class UpdateService(Generic[ModelType, UpdateSerializer]):
         serializer: Type[UpdateSerializer],
         obj_id: Union[str, int],
     ) -> ModelType:
-        for key in list(obj_data.keys()):
+        obj_data_cleaned = obj_data.copy()
+        for key in list(obj_data_cleaned.keys()):
             if key not in self.model.__dict__.keys():
-                delattr(obj_data, key)
+                del obj_data_cleaned[key]
 
         try:
             obj = self.model.objects.get(pk=obj_id)
@@ -118,21 +127,21 @@ class UpdateService(Generic[ModelType, UpdateSerializer]):
                 model=f"{self.model.__name__}", pk=str(obj_id)
             )
 
-        if hasattr(self, "on_relationship_update"):
-            self.on_relationship_update(obj_data=obj_data, obj=obj)
+        if hasattr(self, "on_relationship"):
+            self.on_relationship(obj_in=obj_data, obj=obj, create=False)
 
-        obj_in = serializer(data_in=obj_data, data=obj_data)
+        obj_in = serializer(data_in=obj_data_cleaned, data=obj_data_cleaned)
         if not obj_in.is_valid(raise_exception=False):
             raise ObjectInvalidException(f"{self.model.__name__}")
 
         if hasattr(self, "on_pre_update"):
             self.on_pre_update(obj_in, obj)
 
+        obj.save()
         self.model.objects.filter(pk=obj_id).update(**dict(obj_in.validated_data))
         obj = self.model.objects.get(pk=obj_id)
         if hasattr(self, "on_post_update"):
             self.on_post_update(obj)
-        obj.save()
         return obj
 
     def on_pre_update(self, obj_in: UpdateSerializer, obj: ModelType) -> None:
@@ -141,7 +150,9 @@ class UpdateService(Generic[ModelType, UpdateSerializer]):
     def on_post_update(self, obj: ModelType) -> None:
         pass
 
-    def on_relationship_update(self, obj_data: Dict[str, Any], obj: ModelType) -> None:
+    def on_relationship(
+        self, obj_in: Dict[str, Any], obj: ModelType, create: bool = False
+    ) -> None:
         pass
 
 
