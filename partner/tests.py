@@ -250,6 +250,8 @@ class PartnerTestCase(TestCase):
         read_data = res.json()
         assert read_data["person"]["id"] == str(partner_person.person.id)
         assert read_data["partner_id"] == str(partner_person.partner.id)
+        assert not read_data["is_scheduled"]
+        assert read_data["state"] == "active"
 
     def test_partner_person_read__non_owner(self) -> None:
         partner_person = partner_fixtures.create_partner_person(

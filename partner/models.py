@@ -70,6 +70,25 @@ class PartnerPerson(BaseModel):
     def __str__(self) -> str:
         return f"{self.person.name}: [{self.partner.name} {self.person_type}]"
 
+    @property
+    def is_scheduled(self) -> bool:
+        from events.models import PartnerPersonSchedule
+
+        if PartnerPersonSchedule.objects.filter(partner_person_id=self.id).count():
+            return True
+
+        return False
+
+    @property
+    def state(self) -> str:
+        if not self.is_active:
+            return "archived"
+
+        if self.is_active and self.is_scheduled:
+            return "scheduled"
+
+        return "active"
+
 
 class PartnerSMS(BaseModel):
     partner = models.OneToOneField(

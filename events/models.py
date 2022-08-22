@@ -6,7 +6,7 @@ from django.db.models.query import QuerySet
 from core.models import BaseModel
 from events.constants import EventState
 from events.utils import generate_event_number, generate_ticket_number
-from partner.models import Partner, Person
+from partner.models import Partner, PartnerPerson, Person
 from payments.models import Payment
 
 
@@ -29,9 +29,11 @@ class Event(BaseModel):
     )
     poster = models.ImageField(null=False, blank=False, upload_to="media/")
     event_date = models.DateField(null=False, blank=False, auto_now=False)
+    time = models.TimeField(null=False, blank=False, auto_now_add=True)
+    event_end_date = models.DateField(null=False, blank=False, auto_now=False)
+    end_time = models.TimeField(null=False, blank=False, auto_now_add=True)
     event_location = models.CharField(max_length=1024, null=False, blank=False)
     description = models.CharField(max_length=1024, null=False, blank=False)
-    time = models.TimeField(null=False, blank=False, auto_now_add=True)
     partner = models.ForeignKey(
         Partner, on_delete=models.CASCADE, null=False, blank=False
     )
@@ -50,6 +52,10 @@ class Event(BaseModel):
         blank=False,
         default=EventState.PRE_REVIEW,
         choices=EventState.choices,
+    )
+
+    _assigned_ticketing_agents = models.ManyToManyField(
+        PartnerPerson, through="PartnerPersonSchedule"
     )
 
     def __str__(self) -> str:
@@ -90,6 +96,10 @@ class Event(BaseModel):
             return len(tickets_redeemed) / len(tickets)
         except ZeroDivisionError:
             return 0
+
+    @property
+    def assigned_ticketing_agents(self) -> QuerySet[PartnerPerson]:
+        return self._assigned_ticketing_agents.all()
 
 
 class TicketType(BaseModel):
@@ -213,3 +223,13 @@ class ReminderOptIn(BaseModel):
 
     def __str__(self) -> str:
         return f"{self.person.name}'s reminder for {self.event.name}"
+
+
+class PartnerPersonSchedule(BaseModel):
+    partner_person = models.OneToOneField(
+        PartnerPerson, on_delete=models.CASCADE, null=False, blank=False
+    )
+    event = models.ForeignKey(Event, null=False, blank=False, on_delete=models.CASCADE)
+
+    def __str__(self) -> str:
+        return f"{self.partner_person.person.name} is scheduled as TA for {self.event.name}"

@@ -6,6 +6,7 @@ from events.models import (
     Event,
     EventCategory,
     EventPromotion,
+    PartnerPersonSchedule,
     TicketPromotion,
     TicketType,
 )
@@ -28,6 +29,7 @@ def event_fixture(partner_id: Union[str, int] = None) -> dict:
         "name": random_string(),
         "poster": "media/42_EluV6G9.jpg",
         "event_date": (date.today() + timedelta(days=1)).strftime("%Y-%m-%d"),
+        "event_end_date": (date.today() + timedelta(days=1)).strftime("%Y-%m-%d"),
         "event_location": "Nairobi",
         "description": random_string(),
         "partner_id": partner_id
@@ -36,6 +38,7 @@ def event_fixture(partner_id: Union[str, int] = None) -> dict:
         "is_public": False,
         "event_state": "PR",
         "time": (datetime.now() + timedelta(hours=4)).strftime("%H:%M:%S"),
+        "end_time": (datetime.now() + timedelta(days=1)).strftime("%H:%M:%S"),
     }
 
 
@@ -103,3 +106,21 @@ def create_ticket_promo_obj(
 ) -> TicketPromotion:
     data = ticket_promo_fixture(ticket_id=str(ticket_type.id) if ticket_type else None)
     return TicketPromotion.objects.create(**data)
+
+
+def partner_person_schedule_fixture(
+    event_id: Optional[str] = None, partner_person_id: Optional[str] = None
+) -> dict:
+    return {
+        "event_id": event_id or create_event_object().id,
+        "partner_person_id": partner_person_id
+        or partner_fixtures.create_partner_person().id,
+    }
+
+
+def create_partner_person_schedule(
+    event_id: Optional[str] = None, partner_person_id: Optional[str] = None
+) -> PartnerPersonSchedule:
+    return PartnerPersonSchedule.objects.create(
+        **partner_person_schedule_fixture(event_id, partner_person_id)
+    )

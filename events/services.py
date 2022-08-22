@@ -16,6 +16,7 @@ from events.models import (
     Event,
     EventCategory,
     EventPromotion,
+    PartnerPersonSchedule,
     ReminderOptIn,
     TicketPromotion,
     TicketType,
@@ -36,12 +37,33 @@ from partner.models import Partner, Person
 
 class EventService(CRUDService[Event, EventSerializer, EventUpdateSerializer]):
     def on_pre_create(self, obj_in: Dict[str, Any]) -> None:
+        if obj_in.get("partner_person_id", None):
+            del obj_in["partner_person_id"]
         try:
             Partner.objects.get(pk=obj_in["partner_id"])
         except Partner.DoesNotExist:
             raise ObjectNotFoundException("Partner", str(obj_in["partner_id"]))
         except KeyError:
             raise ObjectInvalidException("Event")
+
+    def on_relationship(
+        self, obj_in: Dict[str, Any], obj: Event, create: bool = True
+    ) -> None:
+        if partner_person_ids := obj_in.get("partner_person_id", None):
+            for partner_person_id in partner_person_ids:
+                try:
+                    partner_person_schedule: PartnerPersonSchedule = (
+                        PartnerPersonSchedule.objects.get(
+                            partner_person_id=partner_person_id
+                        )
+                    )
+                    partner_person_schedule.event = obj
+                    partner_person_schedule.save()
+                except PartnerPersonSchedule.DoesNotExist:
+                    partner_person_schedule = PartnerPersonSchedule.objects.create(
+                        event_id=obj.id, partner_person_id=partner_person_id
+                    )
+                    partner_person_schedule.save()
 
     def get_partner_events(self, partner_id: uuid.UUID) -> QuerySet[Event]:
         return Event.objects.filter(partner=partner_id)

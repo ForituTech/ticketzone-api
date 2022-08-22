@@ -43,8 +43,14 @@ class EventTestCase(TestCase):
 
     def test_create_event(self) -> None:
         data = event_fixtures.event_fixture(partner_id=str(self.owner.partner.id))
+        ta_id = str(
+            partner_fixtures.create_partner_person(partner=self.owner.partner).id
+        )
+        data["partner_person_id"] = [ta_id]
         res = self.client.post(f"/{API_VER}/events/events/", data=data, format="json")
         assert res.status_code == status.HTTP_200_OK
+        ta_ids = [ta["id"] for ta in res.json()["assigned_ticketing_agents"]]
+        assert ta_id in ta_ids
 
     def test_create_event__non_owner(self) -> None:
         res = self.ta_client.post(
@@ -56,8 +62,12 @@ class EventTestCase(TestCase):
 
     def test_update_event(self) -> None:
         name = "Test Event Update"
+        ta_id = str(
+            partner_fixtures.create_partner_person(partner=self.owner.partner).id
+        )
         update_data = {
             "name": name,
+            "partner_person_id": [ta_id],
         }
         event = event_fixtures.create_event_object(owner=self.owner.person)
         res = self.client.put(
@@ -65,6 +75,8 @@ class EventTestCase(TestCase):
         )
         assert res.status_code == status.HTTP_200_OK
         assert res.json()["name"] == name
+        ta_ids = [ta["id"] for ta in res.json()["assigned_ticketing_agents"]]
+        assert ta_id in ta_ids
 
     def test_update_event__non_owner(self) -> None:
         name = "Test Event Update"
@@ -84,11 +96,14 @@ class EventTestCase(TestCase):
         assert res.json()["id"] == str(event.id)
 
     def test_list_events(self) -> None:
-        event_fixtures.create_event_object(owner=self.owner.person)
+        event = event_fixtures.create_event_object(owner=self.owner.person)
         event2 = event_fixtures.create_event_object(owner=self.owner.person)
         event_fixtures.create_event_object()
         event2.created_at = date.today() - timedelta(days=1)
         event2.save()
+        partner_person_schedule = event_fixtures.create_partner_person_schedule(
+            event_id=str(event.id)
+        )
 
         res = self.client.get(
             f"/{API_VER}/events/events/?partner_id={self.owner.partner_id}"
@@ -101,6 +116,13 @@ class EventTestCase(TestCase):
             event["created_at"] for event in res.json()["results"]
         ]
         assert returned_events_created_at[0] > returned_events_created_at[1]
+
+        for event_dict in res.json()["results"]:
+            if event_dict["id"] == event.id:
+                assert (
+                    event_dict["assigned_ticketing_agents"]["id"]
+                    == partner_person_schedule.id
+                )
 
     def test_export_events(self) -> None:
         event_fixtures.create_event_object(owner=self.owner.person)

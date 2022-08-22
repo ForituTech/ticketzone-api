@@ -7,6 +7,9 @@ class EventBaseSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=256, required=False)
     poster = serializers.CharField(required=False)
     event_date = serializers.DateField(required=False)
+    time = serializers.TimeField(required=False)
+    event_end_date = serializers.DateField(required=False)
+    end_time = serializers.TimeField(required=False)
     event_location = serializers.CharField(required=False)
     description = serializers.CharField(required=False)
 
@@ -15,14 +18,25 @@ class EventSerializer(BaseSerializer):
     name = serializers.CharField(max_length=256)
     poster = serializers.CharField()
     event_date = serializers.DateField()
+    time = serializers.TimeField()
+    event_end_date = serializers.DateField()
+    end_time = serializers.TimeField()
     event_location = serializers.CharField()
     description = serializers.CharField()
     partner_id = serializers.CharField(max_length=255)
+    partner_person_id = serializers.ListField(
+        child=serializers.CharField(max_length=255), required=False
+    )
 
 
 class EventReadSerializer(InDBBaseSerializer, EventBaseSerializer):
+    from partner.serializers import PartnerPersonReadSerializer
+
     sales = serializers.FloatField()
     event_number = serializers.CharField()
+    assigned_ticketing_agents = serializers.ListField(
+        child=PartnerPersonReadSerializer(), max_length=10
+    )
 
 
 class EventUpdateSerializer(BaseSerializer, EventBaseSerializer):
