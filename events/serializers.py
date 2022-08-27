@@ -5,7 +5,7 @@ from core.serializers import BaseSerializer, InDBBaseSerializer
 
 class EventBaseSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=256, required=False)
-    poster = serializers.CharField(required=False)
+    poster = serializers.ImageField(required=False)
     event_date = serializers.DateField(required=False)
     time = serializers.TimeField(required=False)
     event_end_date = serializers.DateField(required=False)
@@ -16,7 +16,7 @@ class EventBaseSerializer(serializers.Serializer):
 
 class EventSerializer(BaseSerializer):
     name = serializers.CharField(max_length=256)
-    poster = serializers.CharField()
+    poster = serializers.ImageField()
     event_date = serializers.DateField()
     time = serializers.TimeField()
     event_end_date = serializers.DateField()
@@ -24,7 +24,7 @@ class EventSerializer(BaseSerializer):
     event_location = serializers.CharField()
     description = serializers.CharField()
     partner_id = serializers.CharField(max_length=255)
-    partner_person_id = serializers.ListField(
+    partner_person_ids = serializers.ListField(
         child=serializers.CharField(max_length=255), required=False
     )
 
@@ -37,10 +37,13 @@ class EventReadSerializer(InDBBaseSerializer, EventBaseSerializer):
     assigned_ticketing_agents = serializers.ListField(
         child=PartnerPersonReadSerializer(), max_length=10
     )
+    poster_url = serializers.CharField()
 
 
 class EventUpdateSerializer(BaseSerializer, EventBaseSerializer):
-    pass
+    partner_person_ids = serializers.ListField(
+        child=serializers.CharField(max_length=255), required=False
+    )
 
 
 class TicketTypeBaseSerializer(serializers.Serializer):

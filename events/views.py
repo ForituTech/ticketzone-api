@@ -8,6 +8,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, renderer_classes
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.parsers import MultiPartParser
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework_csv.renderers import CSVRenderer
@@ -170,6 +171,7 @@ class EventViewset(AbstractPermissionedView):
         "update": [PartnerOwnerPermissions],
     }
     pagination_class = CustomPagination
+    parser_classes = [MultiPartParser]
 
     @swagger_auto_schema(
         responses={200: EventReadSerializer(many=True)},
@@ -198,7 +200,11 @@ class EventViewset(AbstractPermissionedView):
         request_body=EventBaseSerializer, responses={200: EventReadSerializer}
     )
     def create(self, request: Request) -> Response:
-        event = event_service.create(obj_data=request.data, serializer=EventSerializer)
+        # we're sure this is a query dict because of the parser that
+        # applies to this view
+        event = event_service.create(
+            obj_data=request.data.dict(), serializer=EventSerializer  # type: ignore
+        )
         # TODO: check_self before event creation
         try:
             check_self(request, str(event.partner.owner.id))
@@ -216,7 +222,9 @@ class EventViewset(AbstractPermissionedView):
             raise ObjectNotFoundException("Event", str(pk))
         check_self(request, str(event.partner.owner.id))
         event = event_service.update(
-            obj_data=request.data, serializer=EventUpdateSerializer, obj_id=pk
+            obj_data=request.data.dict(),  # type: ignore
+            serializer=EventUpdateSerializer,
+            obj_id=pk,
         )
         return Response(EventReadSerializer(event).data)
 

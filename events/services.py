@@ -37,8 +37,8 @@ from partner.models import Partner, Person
 
 class EventService(CRUDService[Event, EventSerializer, EventUpdateSerializer]):
     def on_pre_create(self, obj_in: Dict[str, Any]) -> None:
-        if obj_in.get("partner_person_id", None):
-            del obj_in["partner_person_id"]
+        if obj_in.get("partner_person_ids", None):
+            del obj_in["partner_person_ids"]
         try:
             Partner.objects.get(pk=obj_in["partner_id"])
         except Partner.DoesNotExist:
@@ -49,7 +49,9 @@ class EventService(CRUDService[Event, EventSerializer, EventUpdateSerializer]):
     def on_relationship(
         self, obj_in: Dict[str, Any], obj: Event, create: bool = True
     ) -> None:
-        if partner_person_ids := obj_in.get("partner_person_id", None):
+        if partner_person_ids := obj_in.get("partner_person_ids", None):
+            if isinstance(partner_person_ids, str):
+                partner_person_ids = [partner_person_ids]
             for partner_person_id in partner_person_ids:
                 try:
                     partner_person_schedule: PartnerPersonSchedule = (

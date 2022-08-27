@@ -38,7 +38,7 @@ class EventTestCase(TestCase):
         self.ta_client = APIClient(False, **self.ta_auth_header)
 
     def test_create_event__no_data(self) -> None:
-        res = self.client.post(f"/{API_VER}/events/events/", data={}, format="json")
+        res = self.client.post(f"/{API_VER}/events/events/", data={})
         assert res.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_create_event(self) -> None:
@@ -46,8 +46,9 @@ class EventTestCase(TestCase):
         ta_id = str(
             partner_fixtures.create_partner_person(partner=self.owner.partner).id
         )
-        data["partner_person_id"] = [ta_id]
-        res = self.client.post(f"/{API_VER}/events/events/", data=data, format="json")
+        data["partner_person_ids"] = ta_id
+        data["partner_person_ids"] = ta_id
+        res = self.client.post(f"/{API_VER}/events/events/", data=data)
         assert res.status_code == status.HTTP_200_OK
         ta_ids = [ta["id"] for ta in res.json()["assigned_ticketing_agents"]]
         assert ta_id in ta_ids
@@ -56,7 +57,6 @@ class EventTestCase(TestCase):
         res = self.ta_client.post(
             f"/{API_VER}/events/events/",
             data=event_fixtures.event_fixture(),
-            format="json",
         )
         assert res.status_code == status.HTTP_403_FORBIDDEN
 
@@ -67,12 +67,10 @@ class EventTestCase(TestCase):
         )
         update_data = {
             "name": name,
-            "partner_person_id": [ta_id],
+            "partner_person_ids": [ta_id],
         }
         event = event_fixtures.create_event_object(owner=self.owner.person)
-        res = self.client.put(
-            f"/{API_VER}/events/events/{event.id}/", data=update_data, format="json"
-        )
+        res = self.client.put(f"/{API_VER}/events/events/{event.id}/", data=update_data)
         assert res.status_code == status.HTTP_200_OK
         assert res.json()["name"] == name
         ta_ids = [ta["id"] for ta in res.json()["assigned_ticketing_agents"]]
@@ -85,7 +83,7 @@ class EventTestCase(TestCase):
         }
         event = event_fixtures.create_event_object(owner=self.owner.person)
         res = self.ta_client.put(
-            f"/{API_VER}/events/events/{event.id}/", data=update_data, format="json"
+            f"/{API_VER}/events/events/{event.id}/", data=update_data
         )
         assert res.status_code == 403
 
@@ -94,6 +92,7 @@ class EventTestCase(TestCase):
         res = self.client.get(f"/{API_VER}/events/events/{event.id}/")
         assert res.status_code == 200
         assert res.json()["id"] == str(event.id)
+        assert "poster_url" in res.json()
 
     def test_list_events(self) -> None:
         event = event_fixtures.create_event_object(owner=self.owner.person)
