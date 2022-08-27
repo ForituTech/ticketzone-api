@@ -27,7 +27,7 @@ def create_event_category_obj() -> EventCategory:
 def event_fixture(partner_id: Union[str, int] = None) -> dict:
     return {
         "name": random_string(),
-        "poster": "media/42_EluV6G9.jpg",
+        "poster": open("media/42_EluV6G9.jpg", "rb"),
         "event_date": (date.today() + timedelta(days=1)).strftime("%Y-%m-%d"),
         "event_end_date": (date.today() + timedelta(days=1)).strftime("%Y-%m-%d"),
         "event_location": "Nairobi",
@@ -45,6 +45,7 @@ def event_fixture(partner_id: Union[str, int] = None) -> dict:
 def create_event_object(owner: Optional[Person] = None) -> Event:
     data = event_fixture()
     data["partner_id"] = partner_fixtures.create_partner_obj(owner=owner).id
+    data["poster"] = "media/42_EluV6G9.jpg"
     event: Event = Event.objects.create(**data)
     event.save()
     return event

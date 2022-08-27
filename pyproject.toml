@@ -44,6 +44,7 @@ pycryptodome = "^3.14.1"
 pre-commit = "^2.18.1"
 django-filter = "^21.1"
 djangorestframework-csv = "^2.1.1"
+dj-inmemorystorage = "^2.1.0"
 
 [tool.isort]
 profile = "black"
