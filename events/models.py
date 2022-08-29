@@ -4,7 +4,6 @@ from django.db import models
 from django.db.models.query import QuerySet
 
 from core.models import BaseModel
-from eticketing_api import settings
 from events.constants import EventState
 from events.utils import generate_event_number, generate_ticket_number
 from partner.models import Partner, PartnerPerson, Person
@@ -99,12 +98,12 @@ class Event(BaseModel):
             return 0
 
     @property
-    def poster_url(self) -> str:
-        return f"{settings.BASE_S3_URL}{self.poster.url[1:]}"
-
-    @property
     def assigned_ticketing_agents(self) -> QuerySet[PartnerPerson]:
         return self._assigned_ticketing_agents.all()
+
+    @property
+    def ticket_types(self) -> QuerySet["TicketType"]:
+        return self.tickettype_set.all()
 
 
 class TicketType(BaseModel):

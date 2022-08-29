@@ -37,8 +37,6 @@ from partner.models import Partner, Person
 
 class EventService(CRUDService[Event, EventSerializer, EventUpdateSerializer]):
     def on_pre_create(self, obj_in: Dict[str, Any]) -> None:
-        if obj_in.get("partner_person_ids", None):
-            del obj_in["partner_person_ids"]
         try:
             Partner.objects.get(pk=obj_in["partner_id"])
         except Partner.DoesNotExist:
@@ -66,6 +64,22 @@ class EventService(CRUDService[Event, EventSerializer, EventUpdateSerializer]):
                         event_id=obj.id, partner_person_id=partner_person_id
                     )
                     partner_person_schedule.save()
+
+        if ticket_types := obj_in.get("ticket_types", None):
+            TicketType.objects.filter(event_id=obj.id).delete()
+            if isinstance(ticket_types, dict):
+                ticket_types = [ticket_types]
+            for ticket_type in ticket_types:
+                ticket_type_copy = ticket_type.copy()
+                ticket_type_copy["event_id"] = str(obj.id)
+                TicketType.objects.create(**ticket_type_copy)
+
+        if event_promos := obj_in.get("event_promotions", None):
+            EventPromotion.objects.filter(event_id=obj.id).delete()
+            for event_promo in event_promos:
+                event_promo_copy = event_promo.copy()
+                event_promo_copy["event_id"] = obj.id
+                EventPromotion.objects.create(**event_promo_copy)
 
     def get_partner_events(self, partner_id: uuid.UUID) -> QuerySet[Event]:
         return Event.objects.filter(partner=partner_id)

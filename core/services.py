@@ -72,16 +72,18 @@ class CreateService(Generic[ModelType, CreateSerializer]):
     ) -> ModelType:
         obj_data_cleaned = obj_data.copy()
         for key in list(obj_data_cleaned.keys()):
-            if key not in self.model.__dict__.keys():
+            if key not in self.model.__dict__.keys() or isinstance(
+                obj_data_cleaned[key], list
+            ):
                 del obj_data_cleaned[key]
 
         if hasattr(self, "on_pre_create"):
             self.on_pre_create(obj_data_cleaned)
 
-        obj_in = serializer(data_in=obj_data_cleaned, data=obj_data_cleaned)
+        obj_in = serializer(data_in=obj_data.copy(), data=obj_data.copy())
         if not obj_in.is_valid(raise_exception=False):
             raise ObjectInvalidException(self.model.__name__)
-        obj = self.model.objects.create(**dict(obj_in.validated_data))
+        obj = self.model.objects.create(**obj_data_cleaned)
 
         obj.save()
 
@@ -117,7 +119,9 @@ class UpdateService(Generic[ModelType, UpdateSerializer]):
     ) -> ModelType:
         obj_data_cleaned = obj_data.copy()
         for key in list(obj_data_cleaned.keys()):
-            if key not in self.model.__dict__.keys():
+            if key not in self.model.__dict__.keys() or isinstance(
+                obj_data_cleaned[key], list
+            ):
                 del obj_data_cleaned[key]
 
         try:
@@ -130,7 +134,7 @@ class UpdateService(Generic[ModelType, UpdateSerializer]):
         if hasattr(self, "on_relationship"):
             self.on_relationship(obj_in=obj_data, obj=obj, create=False)
 
-        obj_in = serializer(data_in=obj_data_cleaned, data=obj_data_cleaned)
+        obj_in = serializer(data_in=obj_data.copy(), data=obj_data.copy())
         if not obj_in.is_valid(raise_exception=False):
             raise ObjectInvalidException(f"{self.model.__name__}")
 
@@ -138,7 +142,7 @@ class UpdateService(Generic[ModelType, UpdateSerializer]):
             self.on_pre_update(obj_in, obj)
 
         obj.save()
-        self.model.objects.filter(pk=obj_id).update(**dict(obj_in.validated_data))
+        self.model.objects.filter(pk=obj_id).update(**obj_data_cleaned)
         obj = self.model.objects.get(pk=obj_id)
         if hasattr(self, "on_post_update"):
             self.on_post_update(obj)

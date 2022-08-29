@@ -55,6 +55,7 @@ from events.services import (
     ticket_type_promo_service,
     ticket_type_service,
 )
+from events.utils import pre_process_data
 from partner.permissions import (
     LoggedInPermission,
     PartnerMembershipPermissions,
@@ -202,8 +203,9 @@ class EventViewset(AbstractPermissionedView):
     def create(self, request: Request) -> Response:
         # we're sure this is a query dict because of the parser that
         # applies to this view
+        pre_processed_data = pre_process_data(request.data.dict())  # type: ignore
         event = event_service.create(
-            obj_data=request.data.dict(), serializer=EventSerializer  # type: ignore
+            obj_data=pre_processed_data, serializer=EventSerializer
         )
         # TODO: check_self before event creation
         try:
@@ -217,12 +219,13 @@ class EventViewset(AbstractPermissionedView):
         request_body=EventBaseSerializer, responses={200: EventReadSerializer}
     )
     def update(self, request: Request, pk: Union[str, int]) -> Response:
+        pre_processed_data = pre_process_data(request.data.dict())  # type: ignore
         event = event_service.get(pk=pk)
         if not event:
             raise ObjectNotFoundException("Event", str(pk))
         check_self(request, str(event.partner.owner.id))
         event = event_service.update(
-            obj_data=request.data.dict(),  # type: ignore
+            obj_data=pre_processed_data,
             serializer=EventUpdateSerializer,
             obj_id=pk,
         )

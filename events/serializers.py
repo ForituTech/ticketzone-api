@@ -3,55 +3,14 @@ from rest_framework import serializers
 from core.serializers import BaseSerializer, InDBBaseSerializer
 
 
-class EventBaseSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=256, required=False)
-    poster = serializers.ImageField(required=False)
-    event_date = serializers.DateField(required=False)
-    time = serializers.TimeField(required=False)
-    event_end_date = serializers.DateField(required=False)
-    end_time = serializers.TimeField(required=False)
-    event_location = serializers.CharField(required=False)
-    description = serializers.CharField(required=False)
-
-
-class EventSerializer(BaseSerializer):
-    name = serializers.CharField(max_length=256)
-    poster = serializers.ImageField()
-    event_date = serializers.DateField()
-    time = serializers.TimeField()
-    event_end_date = serializers.DateField()
-    end_time = serializers.TimeField()
-    event_location = serializers.CharField()
-    description = serializers.CharField()
-    partner_id = serializers.CharField(max_length=255)
-    partner_person_ids = serializers.ListField(
-        child=serializers.CharField(max_length=255), required=False
-    )
-
-
-class EventReadSerializer(InDBBaseSerializer, EventBaseSerializer):
-    from partner.serializers import PartnerPersonReadSerializer
-
-    sales = serializers.FloatField()
-    event_number = serializers.CharField()
-    assigned_ticketing_agents = serializers.ListField(
-        child=PartnerPersonReadSerializer(), max_length=10
-    )
-    poster_url = serializers.CharField()
-
-
-class EventUpdateSerializer(BaseSerializer, EventBaseSerializer):
-    partner_person_ids = serializers.ListField(
-        child=serializers.CharField(max_length=255), required=False
-    )
-
-
 class TicketTypeBaseSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=256, required=False)
     price = serializers.IntegerField(required=False)
     active = serializers.BooleanField(required=False)
     amsg = serializers.CharField(max_length=256, required=False)
     amount = serializers.IntegerField(required=False)
+    is_visible = serializers.BooleanField(required=False, default=True)
+    use_limit = serializers.IntegerField(required=False, default=1)
 
 
 class TicketTypeSerializer(serializers.Serializer):
@@ -60,6 +19,8 @@ class TicketTypeSerializer(serializers.Serializer):
     active = serializers.BooleanField()
     amsg = serializers.CharField()
     amount = serializers.IntegerField()
+    is_visible = serializers.BooleanField(required=False, default=True)
+    use_limit = serializers.IntegerField(required=False, default=1)
 
 
 class TicketTypeCreateSerializer(BaseSerializer, TicketTypeSerializer):
@@ -70,7 +31,7 @@ class TicketTypeUpdateSerializer(BaseSerializer, TicketTypeBaseSerializer):
     pass
 
 
-class TickeTypeReadSerializer(InDBBaseSerializer, TicketTypeBaseSerializer):
+class TickeTypeReadSerializer(InDBBaseSerializer, TicketTypeSerializer):
     pass
 
 
@@ -83,7 +44,6 @@ class EventPromotionBaseSerializer(serializers.Serializer):
 
 class EventPromotionSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=256)
-    event_id = serializers.CharField(max_length=255)
     promotion_rate = serializers.FloatField()
     expiry = serializers.DateField()
     use_limit = serializers.IntegerField()
@@ -94,11 +54,11 @@ class EventPromotionUpdateSerializer(BaseSerializer, EventPromotionBaseSerialize
 
 
 class EventPromotionCreateSerializer(BaseSerializer, EventPromotionSerializer):
-    pass
+    event_id = serializers.CharField(max_length=255)
 
 
 class EventPromotionReadSerializer(InDBBaseSerializer, EventPromotionSerializer):
-    pass
+    event_id = serializers.CharField(max_length=255)
 
 
 class TicketTypePromotionSerializer(serializers.Serializer):
@@ -153,9 +113,69 @@ class CategoryInnerSerializer(BaseSerializer, CategorySerializer):
     pass
 
 
-class EventWithSales(EventReadSerializer):
+class TicketTypeWithSales(TickeTypeReadSerializer):
     sales = serializers.FloatField()
 
 
-class TicketTypeWithSales(TickeTypeReadSerializer):
+class EventBaseSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=256, required=False)
+    poster = serializers.ImageField(required=False)
+    event_date = serializers.DateField(required=False)
+    time = serializers.TimeField(required=False)
+    event_end_date = serializers.DateField(required=False)
+    end_time = serializers.TimeField(required=False)
+    event_location = serializers.CharField(required=False)
+    description = serializers.CharField(required=False)
+    ticket_types = serializers.ListField(
+        child=TickeTypeReadSerializer(), max_length=100, required=False
+    )
+
+
+class EventSerializer(BaseSerializer):
+    name = serializers.CharField(max_length=256)
+    poster = serializers.ImageField()
+    event_date = serializers.DateField()
+    time = serializers.TimeField()
+    event_end_date = serializers.DateField()
+    end_time = serializers.TimeField()
+    event_location = serializers.CharField()
+    description = serializers.CharField()
+    partner_id = serializers.CharField(max_length=255)
+    partner_person_ids = serializers.ListField(
+        child=serializers.CharField(max_length=255), required=False
+    )
+    ticket_types = serializers.ListField(
+        child=TicketTypeSerializer(), max_length=100, required=False
+    )
+    event_promotions = serializers.ListField(
+        child=EventPromotionSerializer(), max_length=10, required=False
+    )
+
+
+class EventReadSerializer(InDBBaseSerializer, EventBaseSerializer):
+    from partner.serializers import PartnerPersonReadSerializer
+
+    sales = serializers.FloatField()
+    event_number = serializers.CharField()
+    assigned_ticketing_agents = serializers.ListField(
+        child=PartnerPersonReadSerializer(), max_length=10
+    )
+    ticket_types = serializers.ListField(
+        child=TickeTypeReadSerializer(), max_length=100, required=False
+    )
+
+
+class EventUpdateSerializer(BaseSerializer, EventBaseSerializer):
+    partner_person_ids = serializers.ListField(
+        child=serializers.CharField(max_length=255), required=False
+    )
+    ticket_types = serializers.ListField(
+        child=TicketTypeSerializer(), max_length=100, required=False
+    )
+    event_promotions = serializers.ListField(
+        child=EventPromotionSerializer(), max_length=10, required=False
+    )
+
+
+class EventWithSales(EventReadSerializer):
     sales = serializers.FloatField()
