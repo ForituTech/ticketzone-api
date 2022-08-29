@@ -53,14 +53,24 @@ def create_event_object(owner: Optional[Person] = None) -> Event:
 
 def ticket_type_fixture(event_id: Union[str, int] = None, use_limit: int = 1) -> dict:
     return {
-        "name": "VIP",
+        "name": random_string(),
         "price": 12000,
         "event_id": event_id if event_id else str(create_event_object().id),
         "active": True,
-        "amsg": "Open Soon",
+        "amsg": random_string(),
         "amount": 1200,
         "is_visible": False,
         "use_limit": use_limit,
+    }
+
+
+def ticket_type_min_fixture(use_limit: int = 1) -> dict:
+    return {
+        "name": random_string(),
+        "price": 12000,
+        "active": True,
+        "amsg": random_string(),
+        "amount": 1200,
     }
 
 
@@ -79,8 +89,17 @@ def create_ticket_type_obj(
 
 def event_promo_fixture(event_id: Optional[str] = None) -> dict:
     return {
-        "name": "10poff",
+        "name": random_string(),
         "event_id": event_id if event_id else str(create_event_object().id),
+        "promotion_rate": 10,
+        "expiry": (datetime.today() + timedelta(days=10)).strftime("%Y-%m-%d"),
+        "use_limit": 10,
+    }
+
+
+def event_promo_min_fixture() -> dict:
+    return {
+        "name": random_string(),
         "promotion_rate": 10,
         "expiry": (datetime.today() + timedelta(days=10)).strftime("%Y-%m-%d"),
         "use_limit": 10,

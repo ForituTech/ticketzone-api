@@ -1,3 +1,4 @@
+import json
 from datetime import date, timedelta
 from random import randint
 from typing import Any, Dict
@@ -46,12 +47,34 @@ class EventTestCase(TestCase):
         ta_id = str(
             partner_fixtures.create_partner_person(partner=self.owner.partner).id
         )
-        data["partner_person_ids"] = ta_id
-        data["partner_person_ids"] = ta_id
+        data["partner_person_ids"] = json.dumps([ta_id])
+        ticket_types = [
+            event_fixtures.ticket_type_min_fixture(),
+            event_fixtures.ticket_type_min_fixture(),
+        ]
+        data["ticket_types"] = json.dumps(ticket_types)
+        ticket_type_names = [tt["name"] for tt in ticket_types]
+
+        event_promos = [
+            event_fixtures.event_promo_min_fixture(),
+            event_fixtures.event_promo_min_fixture(),
+        ]
+        data["event_promotions"] = json.dumps(event_promos)
+
         res = self.client.post(f"/{API_VER}/events/events/", data=data)
         assert res.status_code == status.HTTP_200_OK
         ta_ids = [ta["id"] for ta in res.json()["assigned_ticketing_agents"]]
         assert ta_id in ta_ids
+        tt_names = [tt["name"] for tt in res.json()["ticket_types"]]
+        for tt_name in tt_names:
+            assert tt_name in ticket_type_names
+
+        promo_res = self.client.get(
+            f"/{API_VER}/events/event/promo/?event_id={res.json()['id']}"
+        )
+
+        assert promo_res.status_code == 200
+        assert promo_res.json()["count"] == 2
 
     def test_create_event__non_owner(self) -> None:
         res = self.ta_client.post(
@@ -65,9 +88,21 @@ class EventTestCase(TestCase):
         ta_id = str(
             partner_fixtures.create_partner_person(partner=self.owner.partner).id
         )
+        ticket_types = [
+            event_fixtures.ticket_type_min_fixture(),
+            event_fixtures.ticket_type_min_fixture(),
+        ]
+        ticket_type_names = [tt["name"] for tt in ticket_types]
+
+        event_promos = [
+            event_fixtures.event_promo_min_fixture(),
+            event_fixtures.event_promo_min_fixture(),
+        ]
         update_data = {
             "name": name,
-            "partner_person_ids": [ta_id],
+            "partner_person_ids": json.dumps([ta_id]),
+            "ticket_types": json.dumps(ticket_types),
+            "event_promotions": json.dumps(event_promos),
         }
         event = event_fixtures.create_event_object(owner=self.owner.person)
         res = self.client.put(f"/{API_VER}/events/events/{event.id}/", data=update_data)
@@ -75,6 +110,16 @@ class EventTestCase(TestCase):
         assert res.json()["name"] == name
         ta_ids = [ta["id"] for ta in res.json()["assigned_ticketing_agents"]]
         assert ta_id in ta_ids
+        tt_names = [tt["name"] for tt in res.json()["ticket_types"]]
+        for tt_name in tt_names:
+            assert tt_name in ticket_type_names
+
+        promo_res = self.client.get(
+            f"/{API_VER}/events/event/promo/?event_id={res.json()['id']}"
+        )
+
+        assert promo_res.status_code == 200
+        assert promo_res.json()["count"] == 2
 
     def test_update_event__non_owner(self) -> None:
         name = "Test Event Update"
@@ -92,7 +137,6 @@ class EventTestCase(TestCase):
         res = self.client.get(f"/{API_VER}/events/events/{event.id}/")
         assert res.status_code == 200
         assert res.json()["id"] == str(event.id)
-        assert "poster_url" in res.json()
 
     def test_list_events(self) -> None:
         event = event_fixtures.create_event_object(owner=self.owner.person)
