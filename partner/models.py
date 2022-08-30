@@ -1,9 +1,10 @@
 from datetime import date, timedelta
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 from django.db import models
 
 from core.models import BaseModel
+from core.utils import generate_agent_number
 from partner.constants import PartnerPromotionPeriod, PersonType
 
 
@@ -40,6 +41,9 @@ class Partner(BaseModel):
 
 
 class PartnerPerson(BaseModel):
+    person_number = models.CharField(
+        null=False, blank=False, max_length=255, default=generate_agent_number
+    )
     person = models.OneToOneField(
         Person,
         on_delete=models.CASCADE,
@@ -58,7 +62,7 @@ class PartnerPerson(BaseModel):
         choices=PersonType.choices,
         null=False,
         blank=False,
-        default=PersonType.CUSTOMER,
+        default=PersonType.TICKETING_AGENT,
     )
     is_active = models.BooleanField(
         verbose_name="Is the member active", null=False, blank=False, default=True
@@ -88,6 +92,17 @@ class PartnerPerson(BaseModel):
             return "scheduled"
 
         return "active"
+
+    @classmethod
+    @property
+    def search_vector(cls) -> List[str]:
+        return [
+            "person_number",
+            "person_type",
+            "person__name",
+            "person__email",
+            "person__phone_number",
+        ]
 
 
 class PartnerSMS(BaseModel):

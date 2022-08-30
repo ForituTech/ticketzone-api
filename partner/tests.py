@@ -12,7 +12,7 @@ from events.models import Person, Ticket
 from owners.fixtures import owner_fixtures
 from partner.constants import PersonType
 from partner.fixtures import partner_fixtures
-from partner.models import Partner, PartnerSMS
+from partner.models import Partner, PartnerPerson, PartnerSMS
 from partner.services import partner_service, person_service
 from partner.tasks import reconcile_payments, send_out_promos, send_out_reminders
 from partner.utils import random_password, verify_otp, verify_password
@@ -163,7 +163,6 @@ class PartnerTestCase(TestCase):
 
     def test_partner_person_create(self) -> None:
         partner_person_data = partner_fixtures.partner_person_fixture()
-        partner_person_data["person"] = partner_fixtures.person_fixture()
         partner_person_data["partner_id"] = str(partner_person_data["partner_id"])
 
         res = self.authed_client.post(
@@ -253,6 +252,50 @@ class PartnerTestCase(TestCase):
         assert not read_data["is_scheduled"]
         assert read_data["state"] == "active"
 
+    def test_partner_person_list(self) -> None:
+        partner_person = partner_fixtures.create_partner_person(
+            person_type=PersonType.TICKETING_AGENT, partner=self.owner.partner
+        )
+        partner_person2 = partner_fixtures.create_partner_person(
+            person_type=PersonType.TICKETING_AGENT, partner=self.owner.partner
+        )
+        partner_fixtures.create_partner_person(
+            person_type=PersonType.TICKETING_AGENT, partner=self.owner.partner
+        )
+        event = event_fixtures.create_event_object(self.owner.person)
+        event_fixtures.create_partner_person_schedule(
+            event_id=str(event.id), partner_person_id=str(partner_person.id)
+        )
+        event_fixtures.create_partner_person_schedule(
+            event_id=str(event.id), partner_person_id=str(partner_person.id)
+        )
+
+        res = self.authed_client.get(
+            f"/{API_VER}/partner/partnership/person/?search="
+            f"{partner_person.person.email}"
+        )
+
+        assert res.status_code == 200
+        read_data = res.json()
+        read_person_ids = [person["id"] for person in read_data["results"]]
+        assert str(partner_person.id) in read_person_ids
+        assert str(partner_person2.id) not in read_person_ids
+
+        res = self.authed_client.get(
+            f"/{API_VER}/partner/partnership/person/?" "ordering=-state&person_type=TA"
+        )
+
+        assert res.status_code == 200
+        read_data = res.json()
+        # We need to be sure the returned data is ordered
+        # by state, which means, repeated states on persons
+        # need to follow each other, eg:
+        # active, active, scheduled
+        # a fail state would look something like:
+        # scheduled, active scheduled
+        returned_states = [person["state"] for person in read_data["results"]]
+        assert sorted(returned_states) == returned_states
+
     def test_partner_person_read__non_owner(self) -> None:
         partner_person = partner_fixtures.create_partner_person(
             person_type=PersonType.TICKETING_AGENT
@@ -263,6 +306,18 @@ class PartnerTestCase(TestCase):
         )
 
         assert res.status_code == 403
+
+    def test_partner_person_delete(self) -> None:
+        partner_person = partner_fixtures.create_partner_person(
+            partner=self.owner.partner, person_type=PersonType.TICKETING_AGENT
+        )
+
+        res = self.authed_client.delete(
+            f"/{API_VER}/partner/partnership/person/{partner_person.id}/",
+        )
+        assert res.status_code == 200
+        with self.assertRaises(PartnerPerson.DoesNotExist):
+            PartnerPerson.objects.get(id=partner_person.id)
 
     def test_deactivated_user_raises_access_denied(self) -> None:
         self.owner.is_active = False

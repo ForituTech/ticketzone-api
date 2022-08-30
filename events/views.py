@@ -73,7 +73,7 @@ paginator.page_size = 15
 @api_view(["GET"])
 def highlighted_events(request: Request) -> Response:
     events = sorted(
-        event_service.get_filtered(paginator=paginator, request=request, limit=5),
+        event_service.get_filtered(limit=5),
         key=lambda event: (-1 * event.sales),
     )
     paginated_events = paginator.paginate_queryset(events, request=request)  # type: ignore
@@ -92,12 +92,8 @@ def highlighted_events(request: Request) -> Response:
 def redeem_promo_code(request: Request, code: str) -> Response:
     filters = {"name": code}
     target_ids = PromoVerifyInnerSerializer(request.data).data["target_ids"]
-    ticket_promos = ticket_type_promo_service.get_filtered(
-        paginator=paginator, request=request, filters=filters
-    )
-    event_promos = event_promo_service.get_filtered(
-        paginator=paginator, request=request, filters=filters
-    )
+    ticket_promos = ticket_type_promo_service.get_filtered(filters=filters)
+    event_promos = event_promo_service.get_filtered(filters=filters)
     if not len(ticket_promos) and not len(event_promos):
         raise HttpErrorException(
             status_code=HTTPStatus.NOT_FOUND,
@@ -126,7 +122,7 @@ def redeem_promo_code(request: Request, code: str) -> Response:
 @swagger_auto_schema(method="get", responses={200: CategorySerializer(many=True)})
 @api_view(["GET"])
 def list_categories(request: Request) -> Response:
-    categories = category_service.get_filtered(paginator=paginator, request=request)
+    categories = category_service.get_filtered()
     return Response(CategorySerializer(categories, many=True).data)
 
 
@@ -180,9 +176,7 @@ class EventViewset(AbstractPermissionedView):
     )
     def list(self, request: Request) -> Response:
         filters = request.query_params.dict()
-        events = event_service.get_filtered(
-            paginator=paginator, request=request, filters=filters
-        )
+        events = event_service.get_filtered(filters=filters)
         paginated_events = paginator.paginate_queryset(events, request=request)
         return paginator.get_paginated_response(
             EventReadSerializer(paginated_events, many=True).data
@@ -252,9 +246,7 @@ class TicketTypeViewSet(AbstractPermissionedView):
                 status_code=status.HTTP_403_FORBIDDEN,
                 code=ErrorCodes.GENERIC_TICKET_TYPE_LISTING,
             )
-        ticket_types = ticket_type_service.get_filtered(
-            paginator=paginator, request=request, filters=filters
-        )
+        ticket_types = ticket_type_service.get_filtered(filters=filters)
         paginated_tickets = paginator.paginate_queryset(ticket_types, request=request)
         return paginator.get_paginated_response(
             TickeTypeReadSerializer(paginated_tickets, many=True).data
@@ -333,9 +325,7 @@ class TicketTypePromotionViewset(AbstractPermissionedView):
     def list(self, request: Request) -> Response:
         filters = request.query_params.dict()
         filters["ticket__event__partner__owner_id"] = get_request_user_id(request)
-        ticket_promos = ticket_type_promo_service.get_filtered(
-            paginator=paginator, request=request, filters=filters
-        )
+        ticket_promos = ticket_type_promo_service.get_filtered(filters=filters)
         ticket_promos_page = paginator.paginate_queryset(ticket_promos, request=request)
         return paginator.get_paginated_response(
             TicketTypePromotionReadSerializer(ticket_promos_page, many=True).data
@@ -385,9 +375,7 @@ class EventPromotionViewset(AbstractPermissionedView):
     def list(self, request: Request) -> Response:
         filters = request.query_params.dict()
         filters["event__partner__owner_id"] = get_request_user_id(request)
-        event_promos = event_promo_service.get_filtered(
-            paginator=paginator, request=request, filters=filters
-        )
+        event_promos = event_promo_service.get_filtered(filters=filters)
         event_promos_list = paginator.paginate_queryset(event_promos, request=request)
         return paginator.get_paginated_response(
             EventPromotionReadSerializer(event_promos_list, many=True).data

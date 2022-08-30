@@ -26,10 +26,10 @@ def random_phone_number() -> str:
 
 def person_fixture() -> dict:
     return {
-        "name": "Nelson Mongare",
-        "email": "nelsonmongare@protonmail.com",
+        "name": random_string(),
+        "email": f"{random_string()[:5]}@{random_string()[:4]}.com",
         "phone_number": f"+{random_phone_number()}",
-        "hashed_password": (random_password()),
+        "hashed_password": random_password(),
     }
 
 
@@ -84,7 +84,7 @@ def partner_person_fixture(
 ) -> dict:
     return {
         "partner_id": str(create_partner_obj().id),
-        "person_id": str(create_person_obj().id),
+        "person": person_fixture(),
         "person_type": person_type.value,
     }
 

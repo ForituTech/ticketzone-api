@@ -3,6 +3,7 @@ from typing import (
     Any,
     Dict,
     Generic,
+    List,
     Optional,
     Protocol,
     Type,
@@ -14,8 +15,6 @@ from typing import (
 from django.contrib.postgres.search import SearchQuery, SearchVector
 from django.db.models import Model
 from django.db.models.query import QuerySet
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.request import Request
 
 from core.error_codes import ErrorCodes
 from core.exceptions import (
@@ -204,12 +203,11 @@ class ReadService(Generic[ModelType]):
     def get_filtered(
         self,
         *,
-        paginator: PageNumberPagination,
-        request: Request,
         filters: Optional[dict[str, Any]] = None,
-        limit: Optional[int] = None,
+        limit: Optional[int] = 100,
     ) -> QuerySet[ModelType]:
         order_by_fields = ["created_at"]
+        query = self.model.objects
         if filters:
             if "ordering" in filters:
                 order_by_fields = filters["ordering"].split(",")
@@ -219,17 +217,15 @@ class ReadService(Generic[ModelType]):
             if "per_page" in filters:
                 filters.pop("per_page")
             if "search" in filters:
-                return self.search(search_term=filters["search"], filters=filters)
+                query = self.search(search_term=filters["search"], query=query)
 
-            return self.model.objects.filter(**filters).order_by(*order_by_fields)[
-                :limit
-            ]
-        return self.model.objects.all().order_by(*order_by_fields)[:limit]
+        if hasattr(self, "modify_query"):
+            query = self.modify_query(query, order_by_fields, filters)  # type: ignore
+
+        return query.filter(**filters or {}).order_by(*order_by_fields)[:limit]
 
     @no_type_check  # TODO: FIX
-    def search(
-        self, *, search_term: str, filters: Optional[dict[str, Any]] = None
-    ) -> QuerySet[ModelType]:
+    def search(self, *, search_term: str, query: QuerySet) -> QuerySet[ModelType]:
         if hasattr(self.model, "search_vector") and len(self.model.search_vector) > 0:
             unpacked_vector = None
             for vector in self.model.search_vector:
@@ -237,31 +233,22 @@ class ReadService(Generic[ModelType]):
                     unpacked_vector = SearchVector(vector)
                     continue
                 unpacked_vector += SearchVector(vector)
-            query = SearchQuery(search_term)
+            search_query = SearchQuery(search_term)
 
-            order_by_fields = ["id"]
-            if filters:
-                if "ordering" in filters:
-                    order_by_fields = filters["ordering"].split(",")
-                    filters.pop("ordering")
-                if "search" in filters:
-                    filters.pop("search")
-                return (
-                    self.model.objects.annotate(search=unpacked_vector)
-                    .filter(search=query)
-                    .order_by(*order_by_fields)
-                    .filter(**filters)
-                )
-            return (
-                self.model.objects.annotate(search=unpacked_vector)
-                .filter(search=query)
-                .order_by(*order_by_fields)
-            )
+            return query.annotate(search=unpacked_vector).filter(search=search_query)
         else:
             raise HttpErrorException(
                 status_code=HTTPStatus.BAD_REQUEST,
                 code=ErrorCodes.TARGET_MODEL_HAS_NO_SEARCH_VECTOR,
             )
+
+    def modify_query(
+        self,
+        query: QuerySet,
+        order_fields: Optional[List] = None,
+        filters: Optional[dict] = None,
+    ) -> QuerySet:
+        return query
 
 
 class CRUDService(

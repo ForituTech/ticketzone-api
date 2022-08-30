@@ -141,6 +141,15 @@ def partner_person_schedule_fixture(
 def create_partner_person_schedule(
     event_id: Optional[str] = None, partner_person_id: Optional[str] = None
 ) -> PartnerPersonSchedule:
-    return PartnerPersonSchedule.objects.create(
-        **partner_person_schedule_fixture(event_id, partner_person_id)
-    )
+    try:
+        schedule: PartnerPersonSchedule = PartnerPersonSchedule.objects.get(
+            partner_person_id=partner_person_id  # type: ignore
+        )
+        event_id = event_id if event_id else str(create_event_object().id)
+        schedule.event_id = event_id
+        schedule.save()
+        return schedule
+    except PartnerPersonSchedule.DoesNotExist:
+        return PartnerPersonSchedule.objects.create(
+            **partner_person_schedule_fixture(event_id, partner_person_id)
+        )

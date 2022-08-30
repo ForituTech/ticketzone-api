@@ -103,20 +103,29 @@ class UserPasswordResetSerializer(serializers.Serializer):
 
 
 class PartnerPersonBaseSerializer(serializers.Serializer):
+    person_number = serializers.CharField(required=False)
     person_type = serializers.CharField(required=False, max_length=255)
     is_active = serializers.BooleanField(required=False)
     is_hidden = serializers.BooleanField(required=False)
     is_scheduled = serializers.BooleanField(required=False)
     state = serializers.CharField(required=False, max_length=255)
-
-
-class PartnerPersonCreateSerializer(BaseSerializer, PartnerPersonBaseSerializer):
-    person_id = serializers.CharField(max_length=255)
+    person = PersonSerializer()
     partner_id = serializers.CharField(max_length=255)
 
 
-class PartnerPersonUpdateSerializer(BaseSerializer, PartnerPersonBaseSerializer):
+class PartnerPersonCreateSerializer(BaseSerializer, PartnerPersonBaseSerializer):
     pass
+
+
+class PartnerPersonUpdateSerializer(BaseSerializer):
+    person_number = serializers.CharField(required=False)
+    person_type = serializers.CharField(required=False, max_length=255)
+    is_active = serializers.BooleanField(required=False)
+    is_hidden = serializers.BooleanField(required=False)
+    is_scheduled = serializers.BooleanField(required=False)
+    state = serializers.CharField(required=False, max_length=255)
+    person = PersonSerializer(required=False)
+    partner_id = serializers.CharField(max_length=255, required=False)
 
 
 class PartnerPersonSerializer(BaseSerializer, PartnerPersonBaseSerializer):
@@ -125,7 +134,7 @@ class PartnerPersonSerializer(BaseSerializer, PartnerPersonBaseSerializer):
 
 
 class PartnerPersonReadSerializer(InDBBaseSerializer, PartnerPersonBaseSerializer):
-    person = PersonReadSerializer()
+    person = PersonReadSerializer()  # type: ignore
     partner_id = serializers.CharField(max_length=255)
 
 
