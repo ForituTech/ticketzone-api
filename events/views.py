@@ -3,7 +3,7 @@ from http import HTTPStatus
 from typing import Union
 from uuid import UUID
 
-from django.http import StreamingHttpResponse
+from django.http import QueryDict, StreamingHttpResponse
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, renderer_classes
@@ -203,7 +203,9 @@ class EventViewset(AbstractPermissionedView):
     def create(self, request: Request) -> Response:
         # we're sure this is a query dict because of the parser that
         # applies to this view
-        pre_processed_data = pre_process_data(request.data.dict())  # type: ignore
+        pre_processed_data = pre_process_data(
+            request.data.dict() if isinstance(request.data, QueryDict) else request.data
+        )
         event = event_service.create(
             obj_data=pre_processed_data, serializer=EventSerializer
         )
@@ -219,7 +221,9 @@ class EventViewset(AbstractPermissionedView):
         request_body=EventBaseSerializer, responses={200: EventReadSerializer}
     )
     def update(self, request: Request, pk: Union[str, int]) -> Response:
-        pre_processed_data = pre_process_data(request.data.dict())  # type: ignore
+        pre_processed_data = pre_process_data(
+            request.data.dict() if isinstance(request.data, QueryDict) else request.data
+        )
         event = event_service.get(pk=pk)
         if not event:
             raise ObjectNotFoundException("Event", str(pk))

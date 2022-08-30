@@ -100,12 +100,14 @@ class EventTestCase(TestCase):
         ]
         update_data = {
             "name": name,
-            "partner_person_ids": json.dumps([ta_id]),
-            "ticket_types": json.dumps(ticket_types),
-            "event_promotions": json.dumps(event_promos),
+            "partner_person_ids": [ta_id],
+            "ticket_types": ticket_types,
+            "event_promotions": event_promos,
         }
         event = event_fixtures.create_event_object(owner=self.owner.person)
-        res = self.client.put(f"/{API_VER}/events/events/{event.id}/", data=update_data)
+        res = self.client.put(
+            f"/{API_VER}/events/events/{event.id}/", data=update_data, format="json"
+        )
         assert res.status_code == status.HTTP_200_OK
         assert res.json()["name"] == name
         ta_ids = [ta["id"] for ta in res.json()["assigned_ticketing_agents"]]
