@@ -2,7 +2,7 @@
 
 from django.db import migrations, models
 
-import events.utils
+import core.utils
 
 
 class Migration(migrations.Migration):
@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             model_name="event",
             name="event_number",
             field=models.CharField(
-                default=events.utils.generate_event_number, max_length=255
+                default=core.utils.generate_event_number, max_length=255
             ),
         ),
     ]

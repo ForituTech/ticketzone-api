@@ -60,9 +60,7 @@ def read_ticket_by_hash(request: Request, hash: str) -> Response:
     filters = {
         "hash": hash,
     }
-    tickets = ticket_service.get_filtered(
-        paginator=paginator, request=request, filters=filters
-    )
+    tickets = ticket_service.get_filtered(filters=filters)
     if len(tickets) > 1:
         raise HttpErrorException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
@@ -110,9 +108,7 @@ class TicketViewSet(AbstractPermissionedView):
     def list(self, request: Request) -> Response:
         filters = request.query_params.dict()
         filters["ticket_type__event__partner__owner_id"] = get_request_user_id(request)
-        tickets = ticket_service.get_filtered(
-            paginator=paginator, request=request, filters=filters
-        )
+        tickets = ticket_service.get_filtered(filters=filters)
         tickets_paginated = paginator.paginate_queryset(tickets, request=request)
         return paginator.get_paginated_response(
             TicketReadSerializer(tickets_paginated, many=True).data

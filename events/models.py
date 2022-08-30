@@ -4,8 +4,8 @@ from django.db import models
 from django.db.models.query import QuerySet
 
 from core.models import BaseModel
+from core.utils import generate_event_number, generate_ticket_number
 from events.constants import EventState
-from events.utils import generate_event_number, generate_ticket_number
 from partner.models import Partner, PartnerPerson, Person
 from payments.models import Payment
 

@@ -161,9 +161,7 @@ def partner_ranked_events(request: Request) -> Response:
 @permission_classes([PartnerMembershipPermissions])
 def partner_event_ticket_with_sales(request: Request, event_id: str) -> Response:
     filters = {"event_id": event_id}
-    ticket_types = ticket_type_service.get_filtered(
-        paginator=paginator, request=request, filters=filters
-    )
+    ticket_types = ticket_type_service.get_filtered(filters=filters)
     return Response(TicketTypeWithSales(ticket_types, many=True).data)
 
 
@@ -259,6 +257,7 @@ class PartnerPersonViewset(AbstractPermissionedView):
         "create": [PartnerOwnerPermissions],
         "update": [PartnerOwnerPermissions],
         "list": [PartnerOwnerPermissions],
+        "delete": [PartnerOwnerPermissions],
     }
     pagination_class = CustomPagination
 
@@ -295,13 +294,15 @@ class PartnerPersonViewset(AbstractPermissionedView):
     def list(self, request: Request) -> Response:
         filters = request.query_params.dict()
         filters["partner_id"] = get_request_partner_id(request)
-        people = partner_person_service.get_filtered(
-            paginator=paginator, request=request, filters=filters
-        )
+        people = partner_person_service.get_filtered(filters=filters)
         paginated_people = paginator.paginate_queryset(people, request)
         return paginator.get_paginated_response(
             PartnerPersonReadSerializer(paginated_people, many=True).data
         )
+
+    def delete(self, request: Request, pk: Union[str, int]) -> Response:
+        partner_person_service.remove(obj_id=pk)
+        return Response({"OK": f"object {pk} deleted"})
 
 
 class PartnerSMSPackageViewset(AbstractPermissionedView):
@@ -367,9 +368,7 @@ class PartnerPromotionViewset(AbstractPermissionedView):
     def list(self, request: Request) -> Response:
         filters = request.query_params.dict() or {}
         filters["partner_id"] = get_request_partner_id(request)
-        promos = partner_promo_service.get_filtered(
-            paginator=paginator, request=request, filters=filters
-        )
+        promos = partner_promo_service.get_filtered(filters=filters)
         paginated_promos = paginator.paginate_queryset(promos, request)
         return paginator.get_paginated_response(
             PartnerPromoReadSerializer(paginated_promos, many=True).data

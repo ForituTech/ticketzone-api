@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from django.db.models.query import QuerySet
 from rest_framework.request import Request
@@ -215,12 +215,47 @@ class PartnerPersonService(
     ]
 ):
     def on_pre_create(self, obj_in: Dict[str, Any]) -> None:
-        obj_in["person_id"] = str(
-            person_service.create(
-                obj_data=obj_in["person"], serializer=PersonCreateSerializer
-            ).id
-        )
-        del obj_in["person"]
+        if person := obj_in.get("person", None):
+            person["hashed_password"] = hash_password(person["hashed_password"])
+            obj_in["person_id"] = str(
+                person_service.create(
+                    obj_data=person, serializer=PersonCreateSerializer
+                ).id
+            )
+            del obj_in["person"]
+
+    def on_relationship(
+        self, obj_in: Dict[str, Any], obj: PartnerPerson, create: bool = True
+    ) -> None:
+        if not create:
+            if person := obj_in.get("person", None):
+                if "hashed_password" in person:
+                    person_service.update(
+                        obj_data=person,
+                        serializer=PersonUpdateSerializer,
+                        obj_id=str(obj.person.id),
+                    )
+                del obj_in["person"]
+
+    def modify_query(
+        self,
+        query: QuerySet,
+        order_fields: Optional[List] = None,
+        filters: Optional[dict] = None,
+    ) -> QuerySet:
+        if order_fields:
+            if "state" in order_fields:
+                order_fields.append("partnerpersonschedule")
+                order_fields.append("is_active")
+                del order_fields[order_fields.index("state")]
+            if "-state" in order_fields:
+                order_fields.append("-partnerpersonschedule")
+                order_fields.append("-is_active")
+                del order_fields[order_fields.index("-state")]
+        return query
+
+    def on_pre_delete(self, obj: PartnerPerson) -> None:
+        Person.objects.filter(id=obj.person_id).delete()
 
 
 partner_person_service = PartnerPersonService(PartnerPerson)
