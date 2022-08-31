@@ -184,7 +184,7 @@ class ReadService(Generic[ModelType]):
 
     def clean_filters(self, filters: Optional[dict] = None) -> None:
         if filters:
-            for key, value in filters.items():
+            for key, value in list(filters.items()):
                 if value is None or value == "":
                     del filters[key]
 
