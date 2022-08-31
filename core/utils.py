@@ -25,7 +25,7 @@ def generate_ticket_number() -> str:
 
 def generate_event_number() -> str:
     date_ = date.today()
-    return f"evnt-{date_.year}{date_.month}{date_.day}-{random_string(6)}".upper()
+    return f"agnt-{date_.year}{date_.month}{date_.day}-{random_string(6)}".upper()
 
 
 def _stream_model_data(

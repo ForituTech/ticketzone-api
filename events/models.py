@@ -82,7 +82,7 @@ class Event(BaseModel):
         return total_sales
 
     @property
-    def redemtion_rate(self) -> float:
+    def redemption_rate(self) -> float:
         filters = {
             "ticket_type__event_id": self.id,
         }
@@ -90,12 +90,17 @@ class Event(BaseModel):
             "ticket_type__event_id": self.id,
             "redeemed": True,
         }
-        tickets: QuerySet[Ticket] = Ticket.objects.filter(**filters)
-        tickets_redeemed: QuerySet[Ticket] = Ticket.objects.filter(**filters_redeemed)
+        tickets = Ticket.objects.filter(**filters).count()
+        tickets_redeemed = Ticket.objects.filter(**filters_redeemed).count()
         try:
-            return len(tickets_redeemed) / len(tickets)
+            return (tickets_redeemed / tickets) * 100
         except ZeroDivisionError:
             return 0
+
+    @property
+    def tickets_sold(self) -> int:
+        filters = {"ticket_type__event_id": self.id}
+        return Ticket.objects.filter(**filters).count()
 
     @property
     def assigned_ticketing_agents(self) -> QuerySet[PartnerPerson]:

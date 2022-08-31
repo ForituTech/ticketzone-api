@@ -182,6 +182,12 @@ class ReadService(Generic[ModelType]):
     def __init__(self, model: Type[ModelType]):
         self.model = model
 
+    def clean_filters(self, filters: Optional[dict] = None) -> None:
+        if filters:
+            for key, value in filters.items():
+                if value is None or value == "":
+                    del filters[key]
+
     def get(self, *args: Any, **kwargs: Any) -> Optional[ModelType]:
         try:
             obj = self.model.objects.get(*args, **kwargs)
@@ -195,6 +201,7 @@ class ReadService(Generic[ModelType]):
         *,
         filters: Optional[dict[str, Any]] = None,
     ) -> QuerySet[ModelType]:
+        self.clean_filters(filters)
         order_by_fields = ["created_at"]
         if not filters:
             filters = {}
@@ -206,6 +213,7 @@ class ReadService(Generic[ModelType]):
         filters: Optional[dict[str, Any]] = None,
         limit: Optional[int] = 100,
     ) -> QuerySet[ModelType]:
+        self.clean_filters(filters)
         order_by_fields = ["created_at"]
         query = self.model.objects
         if filters:

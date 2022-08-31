@@ -136,9 +136,21 @@ class EventTestCase(TestCase):
 
     def test_read_event(self) -> None:
         event = event_fixtures.create_event_object(owner=self.owner.person)
+        ticket = ticket_fixtures.create_ticket_obj(event=event)
+        ticket2 = ticket_fixtures.create_ticket_obj(event=event)
+        ticket3 = ticket_fixtures.create_ticket_obj(event=event)
+        ticket2.redeemed = True
+        ticket2.save()
+        ticket3.redeemed = True
+        ticket3.save()
+        sales = ticket.payment.amount + ticket2.payment.amount + ticket3.payment.amount
+
         res = self.client.get(f"/{API_VER}/events/events/{event.id}/")
         assert res.status_code == 200
         assert res.json()["id"] == str(event.id)
+        assert res.json()["tickets_sold"] == 3
+        assert int(res.json()["redemption_rate"]) == 66
+        assert res.json()["sales"] == sales
 
     def test_list_events(self) -> None:
         event = event_fixtures.create_event_object(owner=self.owner.person)
@@ -214,7 +226,7 @@ class EventTestCase(TestCase):
         assert res.json()["name"] == name
 
     def test_event_search(self) -> None:
-        event = event_fixtures.create_event_object()
+        event = event_fixtures.create_event_object(owner=self.owner.person)
         event_fixtures.create_event_object()
         res = self.client.get(
             f"/{API_VER}/events/events/?search={event.event_location}%20{event.name}/"
@@ -238,7 +250,7 @@ class EventTestCase(TestCase):
         assert res.json()["count"] == 0
 
     def test_event_filter_by_category(self) -> None:
-        event = event_fixtures.create_event_object()
+        event = event_fixtures.create_event_object(owner=self.owner.person)
         category = event_fixtures.create_event_category_obj()
         event.category = category
         event.save()
@@ -248,7 +260,7 @@ class EventTestCase(TestCase):
         assert res.json()["count"] == 1
 
     def test_event_filter(self) -> None:
-        event = event_fixtures.create_event_object()
+        event = event_fixtures.create_event_object(owner=self.owner.person)
         res = self.client.get(
             f"/{API_VER}/events/events/?event_date={event.event_date}"
         )
