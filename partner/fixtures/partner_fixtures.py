@@ -33,6 +33,14 @@ def person_fixture() -> dict:
     }
 
 
+def person_fixture_no_password() -> dict:
+    return {
+        "name": random_string(),
+        "email": f"{random_string()[:5]}@{random_string()[:4]}.com",
+        "phone_number": f"+{random_phone_number()}",
+    }
+
+
 partner_banking_info_fixture = {
     "bank_code": random_string(),
     "bank_account_number": random_string(),
