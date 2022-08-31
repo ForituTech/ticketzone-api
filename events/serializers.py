@@ -163,6 +163,7 @@ class EventReadSerializer(InDBBaseSerializer, EventBaseSerializer):
     ticket_types = serializers.ListField(
         child=TickeTypeReadSerializer(), max_length=100, required=False
     )
+    event_state = serializers.CharField()
 
 
 class EventUpdateSerializer(BaseSerializer, EventBaseSerializer):
