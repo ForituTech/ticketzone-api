@@ -41,10 +41,12 @@ class PersonService(
     CRUDService[Person, PersonCreateSerializer, PersonUpdateSerializer]
 ):
     def on_pre_create(self, obj_in: Dict[str, Any]) -> None:
-        obj_in["hashed_password"] = hash_password(obj_in["hashed_password"])
+        if "hashed_password" in obj_in:
+            obj_in["hashed_password"] = hash_password(obj_in["hashed_password"])
 
-    def on_pre_update(self, obj_in: PersonUpdateSerializer, obj: Person) -> None:
-        obj_in.hashed_password = hash_password(obj_in.hashed_password)  # type: ignore
+    def on_pre_update(self, obj_in: dict, obj: Person) -> None:
+        if "hashed_password" in obj_in:
+            obj_in["hashed_password"] = hash_password(obj_in["hashed_password"])
 
     def get_user_by_phonenumber(
         self, request: Request
@@ -216,7 +218,6 @@ class PartnerPersonService(
 ):
     def on_pre_create(self, obj_in: Dict[str, Any]) -> None:
         if person := obj_in.get("person", None):
-            person["hashed_password"] = hash_password(person["hashed_password"])
             obj_in["person_id"] = str(
                 person_service.create(
                     obj_data=person, serializer=PersonCreateSerializer
@@ -224,18 +225,14 @@ class PartnerPersonService(
             )
             del obj_in["person"]
 
-    def on_relationship(
-        self, obj_in: Dict[str, Any], obj: PartnerPerson, create: bool = True
-    ) -> None:
-        if not create:
-            if person := obj_in.get("person", None):
-                if "hashed_password" in person:
-                    person_service.update(
-                        obj_data=person,
-                        serializer=PersonUpdateSerializer,
-                        obj_id=str(obj.person.id),
-                    )
-                del obj_in["person"]
+    def on_pre_update(self, obj_in: dict, obj: PartnerPerson) -> None:
+        if person := obj_in.get("person", None):
+            person_service.update(
+                obj_data=person,
+                serializer=PersonUpdateSerializer,
+                obj_id=str(obj.person.id),
+            )
+            del obj_in["person"]
 
     def modify_query(
         self,
@@ -277,10 +274,8 @@ class PartnerPromoService(
         PartnerPromotion, PartnerPromoCreateSerializer, PartnerPromoUpdateSerializer
     ]
 ):
-    def on_pre_update(
-        self, obj_in: PartnerPromoUpdateSerializer, obj: PartnerPromotion
-    ) -> None:
-        if obj_in.message:
+    def on_pre_update(self, obj_in: dict, obj: PartnerPromotion) -> None:
+        if obj_in["message"]:
             obj.verified = False
             obj.save()
 

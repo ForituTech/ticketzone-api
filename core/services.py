@@ -44,7 +44,7 @@ class ServiceInterface(Protocol[ModelType]):
     def on_post_create(self, obj: ModelType) -> None:
         pass
 
-    def on_pre_update(self, obj_in: UpdateSerializer, obj: ModelType) -> None:
+    def on_pre_update(self, obj_in: Dict[Any, Any], obj: ModelType) -> None:
         pass
 
     def on_post_update(self, obj: ModelType) -> None:
@@ -138,7 +138,7 @@ class UpdateService(Generic[ModelType, UpdateSerializer]):
             raise ObjectInvalidException(f"{self.model.__name__}")
 
         if hasattr(self, "on_pre_update"):
-            self.on_pre_update(obj_in, obj)
+            self.on_pre_update(obj_data_cleaned, obj)
 
         obj.save()
         self.model.objects.filter(pk=obj_id).update(**obj_data_cleaned)
@@ -147,7 +147,7 @@ class UpdateService(Generic[ModelType, UpdateSerializer]):
             self.on_post_update(obj)
         return obj
 
-    def on_pre_update(self, obj_in: UpdateSerializer, obj: ModelType) -> None:
+    def on_pre_update(self, obj_in: Dict[Any, Any], obj: ModelType) -> None:
         pass
 
     def on_post_update(self, obj: ModelType) -> None:

@@ -168,6 +168,7 @@ class EventTestCase(TestCase):
                     event_dict["assigned_ticketing_agents"]["id"]
                     == partner_person_schedule.id
                 )
+            assert "event_state" in event_dict
 
     def test_export_events(self) -> None:
         event_fixtures.create_event_object(owner=self.owner.person)
