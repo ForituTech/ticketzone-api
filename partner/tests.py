@@ -204,12 +204,8 @@ class PartnerTestCase(TestCase):
         assert res.status_code == 422
 
     def test_partner_person_update(self) -> None:
-        partner_person = partner_fixtures.create_partner_person(
-            person_type=PersonType.TICKETING_AGENT
-        )
-        update_data = {
-            "person_type": PersonType.PARTNER_MEMBER,
-        }
+        partner_person = partner_fixtures.create_partner_person()
+        update_data = {"person": partner_fixtures.person_fixture_no_password()}
 
         res = self.authed_client.put(
             f"/{API_VER}/partner/partnership/person/{partner_person.id}/",
@@ -218,7 +214,7 @@ class PartnerTestCase(TestCase):
         )
 
         assert res.status_code == 200
-        assert res.json()["person_type"] == PersonType.PARTNER_MEMBER.value
+        assert res.json()["person"]["name"] == update_data["person"]["name"]
 
     def test_partner_person_update__non_owner(self) -> None:
         partner_person = partner_fixtures.create_partner_person(
