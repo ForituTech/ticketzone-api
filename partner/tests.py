@@ -356,7 +356,7 @@ class PartnerTestCase(TestCase):
 
         assert res.status_code == 200
         assert "rate" in res.json()
-        assert res.json()["rate"] == 0.5
+        assert res.json()["rate"] == 50.0
 
         partner = partner_fixtures.create_partner_obj()
         event2 = event_fixtures.create_event_object(owner=partner.owner)

@@ -63,7 +63,10 @@ from partner.permissions import (
     check_self,
     get_request_user_id,
 )
-from partner.utils import get_user_from_access_token
+from partner.utils import (
+    get_request_membership_or_ownership,
+    get_user_from_access_token,
+)
 
 paginator = PageNumberPagination()
 paginator.page_size = 15
@@ -175,7 +178,12 @@ class EventViewset(AbstractPermissionedView):
         query_serializer=DefaultQuerySerialzier,
     )
     def list(self, request: Request) -> Response:
+        try:
+            partner_id = get_request_membership_or_ownership(request)[0]
+        except HttpErrorException:
+            partner_id = ""
         filters = request.query_params.dict()
+        filters["partner_id"] = partner_id
         events = event_service.get_filtered(filters=filters)
         paginated_events = paginator.paginate_queryset(events, request=request)
         return paginator.get_paginated_response(

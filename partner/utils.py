@@ -9,6 +9,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from phonenumbers import NumberParseException, carrier
 from phonenumbers.phonenumberutil import number_type
+from rest_framework.request import Request
 
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException
@@ -141,6 +142,30 @@ def get_user_from_access_token(token: str) -> Person:
     except JWTError:
         raise broken_token_exception
     return user
+
+
+def get_request_membership_or_ownership(request: Request) -> Tuple[str, str]:
+    non_existant_partneship_exception = HttpErrorException(
+        status_code=404, code=ErrorCodes.NO_PARTNERSHIP
+    )
+
+    from partner.permissions import get_request_user_id
+
+    user_id = get_request_user_id(request)
+
+    try:
+        partner = Partner.objects.get(owner_id=user_id)  # type: ignore
+        membership = PersonType.OWNER.value
+    except Partner.DoesNotExist:
+        try:
+            person: PartnerPerson = PartnerPerson.objects.get(
+                person=user_id  # type: ignore
+            )
+            membership = person.person_type
+            partner = person.partner
+        except PartnerPerson.DoesNotExist:
+            raise non_existant_partneship_exception
+    return (str(partner.id), membership)
 
 
 def validate_phonenumber(number: str) -> bool:

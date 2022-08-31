@@ -155,15 +155,17 @@ class EventSerializer(BaseSerializer):
 class EventReadSerializer(InDBBaseSerializer, EventBaseSerializer):
     from partner.serializers import PartnerPersonReadSerializer
 
-    sales = serializers.FloatField()
     event_number = serializers.CharField()
+    event_state = serializers.CharField()
+    tickets_sold = serializers.IntegerField()
+    redemption_rate = serializers.FloatField()
+    sales = serializers.FloatField()
     assigned_ticketing_agents = serializers.ListField(
         child=PartnerPersonReadSerializer(), max_length=10
     )
     ticket_types = serializers.ListField(
         child=TickeTypeReadSerializer(), max_length=100, required=False
     )
-    event_state = serializers.CharField()
 
 
 class EventUpdateSerializer(BaseSerializer, EventBaseSerializer):

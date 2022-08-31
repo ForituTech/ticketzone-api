@@ -165,7 +165,7 @@ class PartnerService(CRUDService[Partner, PartnerSerializer, PartnerUpdateSerial
         }
         events: QuerySet[Event] = Event.objects.filter(**filters)
         try:
-            return sum([event.redemtion_rate for event in events]) / len(events)
+            return sum([event.redemption_rate for event in events]) / len(events)
         except ZeroDivisionError:
             return 0
 
