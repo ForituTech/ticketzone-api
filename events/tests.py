@@ -7,6 +7,7 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from core.utils import random_string
 from eticketing_api import settings
 from events.constants import EventState
 from events.fixtures import event_fixtures
@@ -84,7 +85,7 @@ class EventTestCase(TestCase):
         assert res.status_code == status.HTTP_403_FORBIDDEN
 
     def test_update_event(self) -> None:
-        name = "Test Event Update"
+        name = random_string()
         ta_id = str(
             partner_fixtures.create_partner_person(partner=self.owner.partner).id
         )
@@ -122,6 +123,13 @@ class EventTestCase(TestCase):
 
         assert promo_res.status_code == 200
         assert promo_res.json()["count"] == 2
+
+        res = self.client.put(
+            f"/{API_VER}/events/events/{event.id}/",
+            data={"event_date": 2},
+            format="json",
+        )
+        assert res.status_code == 422
 
     def test_update_event__non_owner(self) -> None:
         name = "Test Event Update"
@@ -161,6 +169,7 @@ class EventTestCase(TestCase):
         partner_person_schedule = event_fixtures.create_partner_person_schedule(
             event_id=str(event.id)
         )
+        ticket_fixtures.create_ticket_obj(event=event)
 
         res = self.client.get(
             f"/{API_VER}/events/events/?partner_id={self.owner.partner_id}"
@@ -181,6 +190,14 @@ class EventTestCase(TestCase):
                     == partner_person_schedule.id
                 )
             assert "event_state" in event_dict
+
+        res = self.client.get(
+            f"/{API_VER}/events/events/?partner_id={self.owner.partner_id}"
+            "&ordering=-sales"
+        )
+        assert res.status_code == 200
+        returned_sales_figures = [event["sales"] for event in res.json()["results"]]
+        assert sorted(returned_sales_figures) == returned_sales_figures
 
     def test_export_events(self) -> None:
         event_fixtures.create_event_object(owner=self.owner.person)

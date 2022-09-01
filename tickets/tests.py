@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from django.test import Client, TestCase
 from rest_framework.test import APIClient
 
+from core.utils import random_string
 from eticketing_api import settings
 from events.fixtures import event_fixtures
 from partner.constants import PersonType
@@ -58,6 +59,9 @@ class TicketTestCase(TestCase):
         assert ticket_from_db.hash
         assert ticket_from_db.hash == compute_ticket_hash(ticket_from_db)
 
+        res = self.li_client.post(f"/{API_VER}/tickets/", data={}, format="json")
+        assert res.status_code == 422
+
     def test_create_ticket__not_self(self) -> None:
         ticket_data = ticket_fixtures.ticket_fixture()
 
@@ -84,6 +88,16 @@ class TicketTestCase(TestCase):
 
         res = self.client.get(f"/{API_VER}/tickets/?per_page=1")
         res.status_code == 200
+
+        res = self.client.get(f"/{API_VER}/tickets/?per_page=a")
+        res.status_code == 422
+
+        res = self.client.get(f"/{API_VER}/tickets/?ticket_type__event_id=1")
+        assert res.status_code == 422
+
+        res = self.client.get(f"/{API_VER}/tickets/?ordering=-{random_string()}")
+        # sort fields should be cleaned
+        assert res.status_code == 200
 
     def test_tickets_export(self) -> None:
         event = event_fixtures.create_event_object(self.owner.person)

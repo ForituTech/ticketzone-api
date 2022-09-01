@@ -57,6 +57,7 @@ class Event(BaseModel):
     _assigned_ticketing_agents = models.ManyToManyField(
         PartnerPerson, through="PartnerPersonSchedule"
     )
+    _sales_absolute = 0.0
 
     def __str__(self) -> str:
         return self.name
@@ -74,12 +75,19 @@ class Event(BaseModel):
 
     @property
     def sales(self) -> float:
+        if self._sales_absolute:
+            return self._sales_absolute
         filters = {"ticket_type__event_id": self.id}
         tickets: QuerySet[Ticket] = Ticket.objects.filter(**filters)
         total_sales = 0.0
         for ticket in tickets:
             total_sales += ticket.payment.amount
         return total_sales
+
+    @sales.setter
+    def sales(self, value: float) -> None:
+        if value:
+            self._sales_absolute = value
 
     @property
     def redemption_rate(self) -> float:

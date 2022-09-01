@@ -1,7 +1,8 @@
 import uuid
 from datetime import date
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
+from django.db.models import Sum
 from django.db.models.query import QuerySet
 from rest_framework import status
 
@@ -80,6 +81,18 @@ class EventService(CRUDService[Event, EventSerializer, EventUpdateSerializer]):
                 event_promo_copy = event_promo.copy()
                 event_promo_copy["event_id"] = obj.id
                 EventPromotion.objects.create(**event_promo_copy)
+
+    def modify_query(
+        self,
+        query: QuerySet,
+        order_fields: Optional[List] = None,
+        filters: Optional[dict] = None,
+    ) -> QuerySet:
+        if order_fields:
+            if "-sales" in order_fields or "sales" in order_fields:
+                query = query.annotate(sales=Sum("tickettype__ticket__payment__amount"))
+
+        return query
 
     def get_partner_events(self, partner_id: uuid.UUID) -> QuerySet[Event]:
         return Event.objects.filter(partner=partner_id)

@@ -13,8 +13,10 @@ from typing import (
 )
 
 from django.contrib.postgres.search import SearchQuery, SearchVector
+from django.core.exceptions import FieldError, ValidationError
 from django.db.models import Model
 from django.db.models.query import QuerySet
+from rest_framework.exceptions import ValidationError as ValidationErrDRF
 
 from core.error_codes import ErrorCodes
 from core.exceptions import (
@@ -80,8 +82,10 @@ class CreateService(Generic[ModelType, CreateSerializer]):
             self.on_pre_create(obj_data_cleaned)
 
         obj_in = serializer(data_in=obj_data.copy(), data=obj_data.copy())
-        if not obj_in.is_valid(raise_exception=False):
-            raise ObjectInvalidException(self.model.__name__)
+        try:
+            obj_in.is_valid(raise_exception=True)
+        except ValidationErrDRF as exc:
+            raise ObjectInvalidException(self.model.__name__, extra=str(exc))
         obj = self.model.objects.create(**obj_data_cleaned)
 
         obj.save()
@@ -134,8 +138,10 @@ class UpdateService(Generic[ModelType, UpdateSerializer]):
             self.on_relationship(obj_in=obj_data, obj=obj, create=False)
 
         obj_in = serializer(data_in=obj_data.copy(), data=obj_data.copy())
-        if not obj_in.is_valid(raise_exception=False):
-            raise ObjectInvalidException(f"{self.model.__name__}")
+        try:
+            obj_in.is_valid(raise_exception=True)
+        except ValidationErrDRF as exc:
+            raise ObjectInvalidException(f"{self.model.__name__}", extra=str(exc))
 
         if hasattr(self, "on_pre_update"):
             self.on_pre_update(obj_data_cleaned, obj)
@@ -182,11 +188,19 @@ class ReadService(Generic[ModelType]):
     def __init__(self, model: Type[ModelType]):
         self.model = model
 
-    def clean_filters(self, filters: Optional[dict] = None) -> None:
+    def _clean_filters(self, filters: Optional[dict] = None) -> None:
         if filters:
             for key, value in list(filters.items()):
                 if value is None or value == "":
                     del filters[key]
+
+    def _clean_sort_fields(self, order_by_fields: List) -> None:
+        invalid_indexes = []
+        for index, value in enumerate(order_by_fields):
+            if value.strip("-") not in self.model.__dict__.keys():
+                invalid_indexes.append(index)
+        for index in invalid_indexes:
+            del order_by_fields[index]
 
     def get(self, *args: Any, **kwargs: Any) -> Optional[ModelType]:
         try:
@@ -201,7 +215,7 @@ class ReadService(Generic[ModelType]):
         *,
         filters: Optional[dict[str, Any]] = None,
     ) -> QuerySet[ModelType]:
-        self.clean_filters(filters)
+        self._clean_filters(filters)
         order_by_fields = ["created_at"]
         if not filters:
             filters = {}
@@ -213,7 +227,7 @@ class ReadService(Generic[ModelType]):
         filters: Optional[dict[str, Any]] = None,
         limit: Optional[int] = 100,
     ) -> QuerySet[ModelType]:
-        self.clean_filters(filters)
+        self._clean_filters(filters)
         order_by_fields = ["created_at"]
         query = self.model.objects
         if filters:
@@ -223,14 +237,35 @@ class ReadService(Generic[ModelType]):
             if "page" in filters:
                 filters.pop("page")
             if "per_page" in filters:
-                filters.pop("per_page")
+                try:
+                    limit = int(filters.pop("per_page"))
+                except ValueError as e:
+                    raise HttpErrorException(
+                        422, code=ErrorCodes.UNPROCESSABLE_FILTER, extra=str(e)
+                    )
             if "search" in filters:
                 query = self.search(search_term=filters["search"], query=query)
 
         if hasattr(self, "modify_query"):
             query = self.modify_query(query, order_by_fields, filters)  # type: ignore
 
-        return query.filter(**filters or {}).order_by(*order_by_fields)[:limit]
+        self._clean_sort_fields(order_by_fields)
+
+        try:
+            query: QuerySet = query.filter(**filters or {})  # type: ignore
+        except ValidationError as e:
+            raise HttpErrorException(
+                422, code=ErrorCodes.UNPROCESSABLE_FILTER, extra=str(e)
+            )
+
+        try:
+            query = query.order_by(*order_by_fields)  # type: ignore
+        except FieldError as exc:
+            raise HttpErrorException(
+                422, code=ErrorCodes.UNPROCESSABLE_FILTER, extra=str(exc)
+            )
+
+        return query[:limit]  # type: ignore
 
     @no_type_check  # TODO: FIX
     def search(self, *, search_term: str, query: QuerySet) -> QuerySet[ModelType]:
