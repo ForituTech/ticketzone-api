@@ -397,6 +397,7 @@ class PartnerTestCase(TestCase):
 
         assert res.status_code == 200
         assert "sales" in res.json()[0]
+        assert res.json()[0]["sales"] == 1
 
     def test_partner_promo_optin(self) -> None:
         partner = partner_fixtures.create_partner_obj()

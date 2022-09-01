@@ -136,15 +136,11 @@ class TicketType(BaseModel):
         return "{0} - {1}".format(self.event.name, self.name)
 
     @property
-    def sales(self) -> float:
+    def sales(self) -> int:
         filters = {
             "ticket_type__id": self.id,
         }
-        tickets: QuerySet[Ticket] = Ticket.objects.filter(**filters)
-        sales = 0.0
-        for ticket in tickets:
-            sales += ticket.payment.amount
-        return sales
+        return Ticket.objects.filter(**filters).count()
 
 
 class EventPromotion(BaseModel):

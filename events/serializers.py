@@ -114,7 +114,7 @@ class CategoryInnerSerializer(BaseSerializer, CategorySerializer):
 
 
 class TicketTypeWithSales(TickeTypeReadSerializer):
-    sales = serializers.FloatField()
+    sales = serializers.IntegerField()
 
 
 class EventBaseSerializer(serializers.Serializer):
