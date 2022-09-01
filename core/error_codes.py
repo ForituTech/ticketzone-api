@@ -26,6 +26,7 @@ class ErrorCodes(enum.Enum):
     TARGET_MODEL_HAS_NO_SEARCH_VECTOR = "The target model does not have a search vector"
     TICKET_TYPE_OBJECT_DELETED = "Ticket type object sucessfully deleted"
     UNPAID_FOR_TICKET = "A ticket with an unverified payment cannot be redeemed"
+    UNPROCESSABLE_FILTER = "Some of the filters passed could not be processed: {}"
     UNPROCESSABLE_TOKEN = (
         "The token in the request could not be decoded or had missing data"
     )
