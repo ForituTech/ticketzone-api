@@ -85,6 +85,9 @@ class EventService(CRUDService[Event, EventSerializer, EventUpdateSerializer]):
             TicketType.objects.exclude(
                 name__in=accessed_tt_names, event_id=str(obj.id)
             ).update(active=False)
+            TicketType.objects.filter(name__in=accessed_tt_names, active=False).update(
+                active=True
+            )
 
         if event_promos := obj_in.get("event_promotions", None):
             EventPromotion.objects.filter(event_id=obj.id).delete()
