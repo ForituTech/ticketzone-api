@@ -57,7 +57,7 @@ jobs:
       - name: Run System Checks
         run: poetry run ./manage.py check
 
-  Unit-Tests:
+  Unit-Tests-1:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -111,4 +111,116 @@ jobs:
           poetry install --no-root
       - name: Run Tests
         run: |
-          poetry run ./manage.py test
+          poetry run ./manage.py test payments notifications owners tickets
+  
+  Unit-Tests-2:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: github_actions
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready 
+          --health-interval 10s 
+          --health-timeout 5s 
+          --health-retries 5
+
+      redis:
+        image: redis:6
+        env:
+          REDIS_HOST: redis
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Setup poetry
+        uses: Gr1N/setup-poetry@v7
+        with:
+          poetry-version: 1.1.12
+
+      - name: Setup cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install wkhtmltopdf
+          poetry install --no-root
+      - name: Run Tests
+        run: |
+          poetry run ./manage.py test events
+  
+  Unit-Tests-3:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: github_actions
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready 
+          --health-interval 10s 
+          --health-timeout 5s 
+          --health-retries 5
+
+      redis:
+        image: redis:6
+        env:
+          REDIS_HOST: redis
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Setup poetry
+        uses: Gr1N/setup-poetry@v7
+        with:
+          poetry-version: 1.1.12
+
+      - name: Setup cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install wkhtmltopdf
+          poetry install --no-root
+      - name: Run Tests
+        run: |
+          poetry run ./manage.py test partner

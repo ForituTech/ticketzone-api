@@ -292,6 +292,31 @@ class PartnerTestCase(TestCase):
         returned_states = [person["state"] for person in read_data["results"]]
         assert sorted(returned_states) == returned_states
 
+    def test_partner_person_export(self) -> None:
+        partner_person = partner_fixtures.create_partner_person(
+            person_type=PersonType.TICKETING_AGENT, partner=self.owner.partner
+        )
+        partner_person2 = partner_fixtures.create_partner_person(
+            person_type=PersonType.TICKETING_AGENT, partner=self.owner.partner
+        )
+
+        res = self.authed_client.get(f"/{API_VER}/partner/partnership/person/export/")
+        assert res.status_code == 200
+        fields = ["person_number", "person.name", "person.email", "state"]
+        returned_text = str(res.getvalue())
+        for field in fields:
+            assert field in returned_text
+        assert partner_person.person.name in returned_text
+        assert partner_person2.person.name in returned_text
+
+        res = self.authed_client.get(
+            f"/{API_VER}/partner/partnership/person/export/?fields=state"
+        )
+        assert res.status_code == 200
+        returned_text = str(res.getvalue())
+        assert "state" in returned_text
+        assert "person_number" not in returned_text
+
     def test_partner_person_read__non_owner(self) -> None:
         partner_person = partner_fixtures.create_partner_person(
             person_type=PersonType.TICKETING_AGENT

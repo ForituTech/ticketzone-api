@@ -9,9 +9,10 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, renderer_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import JSONParser, MultiPartParser
+from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework_csv.renderers import CSVRenderer
+from rest_framework_csv.renderers import CSVStreamingRenderer, PaginatedCSVRenderer
 
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException, ObjectNotFoundException
@@ -21,7 +22,7 @@ from core.serializers import (
     EventCountSerializer,
     VerifyActionSerializer,
 )
-from core.utils import _stream_model_data
+from core.utils import get_selected_fields, stream_model_data
 from core.views import AbstractPermissionedView
 from eticketing_api import settings
 from events.serializers import (
@@ -75,11 +76,10 @@ paginator.page_size = 15
 @swagger_auto_schema(method="get", responses={200: EventReadSerializer(many=True)})
 @api_view(["GET"])
 def highlighted_events(request: Request) -> Response:
-    events = sorted(
-        event_service.get_filtered(limit=5),
-        key=lambda event: (-1 * event.sales),
+    events = event_service.get_filtered(
+        filters={"ordering": "sales"}, limit=5, paginator=paginator
     )
-    paginated_events = paginator.paginate_queryset(events, request=request)  # type: ignore
+    paginated_events = paginator.paginate_queryset(events, request=request)
     return paginator.get_paginated_response(
         EventReadSerializer(paginated_events, many=True).data
     )
@@ -95,8 +95,8 @@ def highlighted_events(request: Request) -> Response:
 def redeem_promo_code(request: Request, code: str) -> Response:
     filters = {"name": code}
     target_ids = PromoVerifyInnerSerializer(request.data).data["target_ids"]
-    ticket_promos = ticket_type_promo_service.get_filtered(filters=filters)
-    event_promos = event_promo_service.get_filtered(filters=filters)
+    ticket_promos = ticket_type_promo_service.get_all(filters=filters)
+    event_promos = event_promo_service.get_all(filters=filters)
     if not len(ticket_promos) and not len(event_promos):
         raise HttpErrorException(
             status_code=HTTPStatus.NOT_FOUND,
@@ -148,14 +148,16 @@ def get_total_events_for_partner(request: Request, partner_id: str) -> Response:
 @swagger_auto_schema(method="get")
 @api_view(["GET"])
 @permission_classes([PartnerOwnerPermissions])
-@renderer_classes([CSVRenderer])
+@renderer_classes([CSVStreamingRenderer])
 def export_events(request: Request) -> StreamingHttpResponse:
     # This is dependent on djangos default lazy loading
     # behaviour
+    fields = ["event_number", "name", "event_date", "sales"]
+    request.accepted_renderer.header = get_selected_fields(request) or fields
     tickets = event_service.get_all()
     response = StreamingHttpResponse(
         request.accepted_renderer.render(
-            _stream_model_data(queryset=tickets, serializer=EventReadSerializer)
+            stream_model_data(queryset=tickets, serializer=EventReadSerializer)
         ),
         status=200,
         content_type="text/csv",
@@ -172,6 +174,7 @@ class EventViewset(AbstractPermissionedView):
     }
     pagination_class = CustomPagination
     parser_classes = [MultiPartParser, JSONParser]
+    renderer_classes = (JSONRenderer, PaginatedCSVRenderer)
 
     @swagger_auto_schema(
         responses={200: EventReadSerializer(many=True)},
@@ -184,7 +187,7 @@ class EventViewset(AbstractPermissionedView):
             partner_id = ""
         filters = request.query_params.dict()
         filters["partner_id"] = partner_id
-        events = event_service.get_filtered(filters=filters)
+        events = event_service.get_filtered(filters=filters, paginator=paginator)
         paginated_events = paginator.paginate_queryset(events, request=request)
         return paginator.get_paginated_response(
             EventReadSerializer(paginated_events, many=True).data
@@ -254,7 +257,9 @@ class TicketTypeViewSet(AbstractPermissionedView):
                 status_code=status.HTTP_403_FORBIDDEN,
                 code=ErrorCodes.GENERIC_TICKET_TYPE_LISTING,
             )
-        ticket_types = ticket_type_service.get_filtered(filters=filters)
+        ticket_types = ticket_type_service.get_filtered(
+            filters=filters, paginator=paginator
+        )
         paginated_tickets = paginator.paginate_queryset(ticket_types, request=request)
         return paginator.get_paginated_response(
             TickeTypeReadSerializer(paginated_tickets, many=True).data
@@ -333,7 +338,9 @@ class TicketTypePromotionViewset(AbstractPermissionedView):
     def list(self, request: Request) -> Response:
         filters = request.query_params.dict()
         filters["ticket__event__partner__owner_id"] = get_request_user_id(request)
-        ticket_promos = ticket_type_promo_service.get_filtered(filters=filters)
+        ticket_promos = ticket_type_promo_service.get_filtered(
+            filters=filters, paginator=paginator
+        )
         ticket_promos_page = paginator.paginate_queryset(ticket_promos, request=request)
         return paginator.get_paginated_response(
             TicketTypePromotionReadSerializer(ticket_promos_page, many=True).data
@@ -383,7 +390,9 @@ class EventPromotionViewset(AbstractPermissionedView):
     def list(self, request: Request) -> Response:
         filters = request.query_params.dict()
         filters["event__partner__owner_id"] = get_request_user_id(request)
-        event_promos = event_promo_service.get_filtered(filters=filters)
+        event_promos = event_promo_service.get_filtered(
+            filters=filters, paginator=paginator
+        )
         event_promos_list = paginator.paginate_queryset(event_promos, request=request)
         return paginator.get_paginated_response(
             EventPromotionReadSerializer(event_promos_list, many=True).data

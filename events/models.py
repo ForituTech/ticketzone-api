@@ -116,7 +116,7 @@ class Event(BaseModel):
 
     @property
     def ticket_types(self) -> QuerySet["TicketType"]:
-        return self.tickettype_set.all()
+        return self.tickettype_set.filter(active=True)
 
 
 class TicketType(BaseModel):

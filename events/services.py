@@ -67,13 +67,24 @@ class EventService(CRUDService[Event, EventSerializer, EventUpdateSerializer]):
                     partner_person_schedule.save()
 
         if ticket_types := obj_in.get("ticket_types", None):
-            TicketType.objects.filter(event_id=obj.id).delete()
             if isinstance(ticket_types, dict):
                 ticket_types = [ticket_types]
+            accessed_tt_names = []
             for ticket_type in ticket_types:
-                ticket_type_copy = ticket_type.copy()
-                ticket_type_copy["event_id"] = str(obj.id)
-                TicketType.objects.create(**ticket_type_copy)
+                filters = {"name": ticket_type["name"], "event_id": str(obj.id)}
+                try:
+                    TicketType.objects.get(**filters)
+                    TicketType.objects.filter(**filters).update(**ticket_type)
+                    accessed_tt_names.append(ticket_type["name"])
+                except TicketType.DoesNotExist:
+                    ticket_type_copy = ticket_type.copy()
+                    ticket_type_copy["event_id"] = str(obj.id)
+                    TicketType.objects.create(**ticket_type_copy)
+                    accessed_tt_names.append(ticket_type["name"])
+
+            TicketType.objects.exclude(
+                name__in=accessed_tt_names, event_id=str(obj.id)
+            ).update(active=False)
 
         if event_promos := obj_in.get("event_promotions", None):
             EventPromotion.objects.filter(event_id=obj.id).delete()

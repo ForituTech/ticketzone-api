@@ -16,7 +16,7 @@ from partner.models import Person
 
 def event_category_fixture() -> Dict[str, str]:
     return {
-        "name": "musical",
+        "name": random_string(),
     }
 
 
@@ -39,13 +39,17 @@ def event_fixture(partner_id: Union[str, int] = None) -> dict:
         "event_state": "PR",
         "time": (datetime.now() + timedelta(hours=4)).strftime("%H:%M:%S"),
         "end_time": (datetime.now() + timedelta(days=1)).strftime("%H:%M:%S"),
+        "category_id": str(create_event_category_obj().id),
     }
 
 
-def create_event_object(owner: Optional[Person] = None) -> Event:
+def create_event_object(
+    owner: Optional[Person] = None, state: Optional[str] = "PR"
+) -> Event:
     data = event_fixture()
     data["partner_id"] = partner_fixtures.create_partner_obj(owner=owner).id
     data["poster"] = "media/42_EluV6G9.jpg"
+    data["event_state"] = state
     event: Event = Event.objects.create(**data)
     event.save()
     return event

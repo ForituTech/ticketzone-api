@@ -39,6 +39,7 @@ urlpatterns = [
     ),
     path("reset/password/", view=views.reset_password, name="password-reset"),
     path("verify/otp/", view=views.verify_otp, name="verify-otp"),
+    path("partnership/person/export/", view=views.export_agents, name="export_agents"),
 ]
 
 urlpatterns += router.urls

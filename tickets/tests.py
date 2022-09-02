@@ -99,6 +99,32 @@ class TicketTestCase(TestCase):
         # sort fields should be cleaned
         assert res.status_code == 200
 
+    def test_ticket_pagination(self) -> None:
+        event = event_fixtures.create_event_object(self.owner.person)
+        ticket_type = event_fixtures.create_ticket_type_obj(event=event)
+        for _ in range(0, 20):
+            payment = payment_fixtures.create_payment_object()
+            ticket_fixtures.create_ticket_obj(ticket_type, payment)
+
+        res1 = self.client.get(f"/{API_VER}/tickets/?page=1&per_page=5")
+        assert res1.status_code == 200
+        assert len(res1.json()["results"]) == 5
+        assert res1.json()["next"]
+        returned_ticket_dates = [
+            ticket["created_at"] for ticket in res1.json()["results"]
+        ]
+
+        res2 = self.client.get(f"/{API_VER}/tickets/?page=2&per_page=5")
+        assert res2.status_code == 200
+        assert len(res2.json()["results"]) == 5
+        assert res2.json()["next"]
+        returned_ticket_dates.extend(
+            [ticket["created_at"] for ticket in res2.json()["results"]]
+        )
+
+        # dependent on the default sorting being created_at
+        assert sorted(returned_ticket_dates) == returned_ticket_dates
+
     def test_tickets_export(self) -> None:
         event = event_fixtures.create_event_object(self.owner.person)
         ticket_type = event_fixtures.create_ticket_type_obj(event=event)
@@ -108,6 +134,15 @@ class TicketTestCase(TestCase):
 
         res = self.client.get(f"/{API_VER}/tickets/export/csv/")
         assert res.status_code == 200
+        fields = [
+            "created_at",
+            "ticket_number",
+            "ticket_type.event.name",
+            "payment.amount",
+        ]
+        returned_text = str(res.getvalue())
+        for field in fields:
+            assert field in returned_text
 
     def test_ticket_list__non_owner(self) -> None:
         event = event_fixtures.create_event_object(self.person)
