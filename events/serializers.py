@@ -15,7 +15,7 @@ class TicketTypeBaseSerializer(serializers.Serializer):
 
 class TicketTypeSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=256)
-    price = serializers.IntegerField()
+    price = serializers.FloatField()
     active = serializers.BooleanField()
     amsg = serializers.CharField()
     amount = serializers.IntegerField()
@@ -129,6 +129,7 @@ class EventBaseSerializer(serializers.Serializer):
     ticket_types = serializers.ListField(
         child=TickeTypeReadSerializer(), max_length=100, required=False
     )
+    category_id = serializers.CharField(required=False, max_length=255)
 
 
 class EventSerializer(BaseSerializer):
@@ -141,6 +142,7 @@ class EventSerializer(BaseSerializer):
     event_location = serializers.CharField()
     description = serializers.CharField()
     partner_id = serializers.CharField(max_length=255)
+    category_id = serializers.CharField(required=False, max_length=255)
     partner_person_ids = serializers.ListField(
         child=serializers.CharField(max_length=255), required=False
     )

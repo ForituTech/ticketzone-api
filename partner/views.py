@@ -1,12 +1,14 @@
 from http import HTTPStatus
 from typing import Union
 
+from django.http import StreamingHttpResponse
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, renderer_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework_csv.renderers import CSVStreamingRenderer
 
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException
@@ -16,6 +18,7 @@ from core.serializers import (
     PromoOptinCountSerializer,
     VerifyActionSerializer,
 )
+from core.utils import get_selected_fields, stream_model_data
 from core.views import AbstractPermissionedView
 from eticketing_api import settings
 from events.serializers import EventWithSales, TicketTypeWithSales
@@ -161,7 +164,9 @@ def partner_ranked_events(request: Request) -> Response:
 @permission_classes([PartnerMembershipPermissions])
 def partner_event_ticket_with_sales(request: Request, event_id: str) -> Response:
     filters = {"event_id": event_id}
-    ticket_types = ticket_type_service.get_filtered(filters=filters)
+    ticket_types = ticket_type_service.get_filtered(
+        filters=filters, paginator=paginator
+    )
     return Response(TicketTypeWithSales(ticket_types, many=True).data)
 
 
@@ -181,6 +186,25 @@ def partner_promo_optin(request: Request, partner_id: str) -> Response:
 def partner_promo_optin_count(request: Request, partner_id: str) -> Response:
     count = partner_service.promo_optin_count(partner_id)
     return Response({"count": count})
+
+
+@swagger_auto_schema(method="get")
+@api_view(["GET"])
+@permission_classes([PartnerOwnerPermissions])
+@renderer_classes([CSVStreamingRenderer])
+def export_agents(request: Request) -> StreamingHttpResponse:
+    fields = ["person_number", "person.name", "person.email", "state"]
+    request.accepted_renderer.header = get_selected_fields(request) or fields
+    people = partner_person_service.get_all(filters={"person_type": "TA"})
+    response = StreamingHttpResponse(
+        request.accepted_renderer.render(
+            stream_model_data(queryset=people, serializer=PartnerPersonReadSerializer)
+        ),
+        status=200,
+        content_type="text/csv",
+    )
+    response["Content-Disposition"] = 'attachment; filename="tickets.csv"'
+    return response
 
 
 class PersonViewSet(AbstractPermissionedView):
@@ -294,7 +318,9 @@ class PartnerPersonViewset(AbstractPermissionedView):
     def list(self, request: Request) -> Response:
         filters = request.query_params.dict()
         filters["partner_id"] = get_request_partner_id(request)
-        people = partner_person_service.get_filtered(filters=filters)
+        people = partner_person_service.get_filtered(
+            filters=filters, paginator=paginator
+        )
         paginated_people = paginator.paginate_queryset(people, request)
         return paginator.get_paginated_response(
             PartnerPersonReadSerializer(paginated_people, many=True).data
@@ -368,7 +394,9 @@ class PartnerPromotionViewset(AbstractPermissionedView):
     def list(self, request: Request) -> Response:
         filters = request.query_params.dict() or {}
         filters["partner_id"] = get_request_partner_id(request)
-        promos = partner_promo_service.get_filtered(filters=filters)
+        promos = partner_promo_service.get_filtered(
+            filters=filters, paginator=paginator
+        )
         paginated_promos = paginator.paginate_queryset(promos, request)
         return paginator.get_paginated_response(
             PartnerPromoReadSerializer(paginated_promos, many=True).data

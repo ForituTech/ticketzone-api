@@ -4,15 +4,16 @@ from django.http import StreamingHttpResponse
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view, permission_classes, renderer_classes
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework_csv.renderers import CSVRenderer
+from rest_framework_csv.renderers import CSVStreamingRenderer, PaginatedCSVRenderer
 
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException
 from core.pagination import CustomPagination
 from core.serializers import DefaultQuerySerialzier
-from core.utils import _stream_model_data
+from core.utils import get_selected_fields, stream_model_data
 from core.views import AbstractPermissionedView
 from partner.permissions import (
     LoggedInPermission,
@@ -60,7 +61,7 @@ def read_ticket_by_hash(request: Request, hash: str) -> Response:
     filters = {
         "hash": hash,
     }
-    tickets = ticket_service.get_filtered(filters=filters)
+    tickets = ticket_service.get_filtered(filters=filters, paginator=paginator)
     if len(tickets) > 1:
         raise HttpErrorException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
@@ -77,12 +78,14 @@ def read_ticket_by_hash(request: Request, hash: str) -> Response:
 @swagger_auto_schema(method="get")
 @api_view(["GET"])
 @permission_classes([TicketingAgentPermissions])
-@renderer_classes([CSVRenderer])
+@renderer_classes([CSVStreamingRenderer])
 def export_tickets(request: Request) -> StreamingHttpResponse:
+    fields = ["created_at", "ticket_number", "ticket_type.event.name", "payment.amount"]
+    request.accepted_renderer.header = get_selected_fields(request) or fields
     tickets = ticket_service.get_all()
     response = StreamingHttpResponse(
         request.accepted_renderer.render(
-            _stream_model_data(queryset=tickets, serializer=TicketReadSerializer)
+            stream_model_data(queryset=tickets, serializer=TicketReadSerializer)
         ),
         status=200,
         content_type="text/csv",
@@ -100,6 +103,7 @@ class TicketViewSet(AbstractPermissionedView):
         "update": [TicketingAgentPermissions],
     }
     pagination_class = CustomPagination
+    renderer_classes = (JSONRenderer, PaginatedCSVRenderer)
 
     @swagger_auto_schema(
         responses={200: TicketReadSerializer(many=True)},
@@ -108,7 +112,7 @@ class TicketViewSet(AbstractPermissionedView):
     def list(self, request: Request) -> Response:
         filters = request.query_params.dict()
         filters["ticket_type__event__partner__owner_id"] = get_request_user_id(request)
-        tickets = ticket_service.get_filtered(filters=filters)
+        tickets = ticket_service.get_filtered(filters=filters, paginator=paginator)
         tickets_paginated = paginator.paginate_queryset(tickets, request=request)
         return paginator.get_paginated_response(
             TicketReadSerializer(tickets_paginated, many=True).data

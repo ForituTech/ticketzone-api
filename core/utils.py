@@ -1,10 +1,11 @@
 import random
 import string
 from datetime import date
-from typing import Generator, Type
+from typing import Generator, List, Type
 
 from django.core.paginator import Paginator
 from django.db.models.query import QuerySet
+from rest_framework.request import Request
 from rest_framework.serializers import Serializer
 
 
@@ -13,9 +14,13 @@ def random_string(len: int = 10) -> str:
     return "".join(random.choice(letters) for i in range(len))
 
 
+def random_float() -> float:
+    return random.uniform(0, 999)
+
+
 def generate_agent_number() -> str:
     date_ = date.today()
-    return f"evnt-{date_.year}{date_.month}{date_.day}-{random_string(6)}".upper()
+    return f"agnt-{date_.year}{date_.month}{date_.day}-{random_string(6)}".upper()
 
 
 def generate_ticket_number() -> str:
@@ -25,10 +30,10 @@ def generate_ticket_number() -> str:
 
 def generate_event_number() -> str:
     date_ = date.today()
-    return f"agnt-{date_.year}{date_.month}{date_.day}-{random_string(6)}".upper()
+    return f"evnt-{date_.year}{date_.month}{date_.day}-{random_string(6)}".upper()
 
 
-def _stream_model_data(
+def stream_model_data(
     *, queryset: QuerySet, serializer: Type[Serializer], chunk_size: int = 100
 ) -> Generator:
     # This util leverages djangos default pagintion class
@@ -38,3 +43,10 @@ def _stream_model_data(
     paged_queryset = Paginator(queryset, chunk_size)
     for page in paged_queryset.page_range:
         yield from serializer(paged_queryset.page(page).object_list, many=True).data
+
+
+def get_selected_fields(request: Request) -> List:
+    if fields := request.query_params.dict().get("fields", None):
+        if isinstance(fields, str):
+            return fields.split(",")
+    return []

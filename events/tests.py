@@ -7,7 +7,7 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.utils import random_string
+from core.utils import random_float, random_string
 from eticketing_api import settings
 from events.constants import EventState
 from events.fixtures import event_fixtures
@@ -86,10 +86,12 @@ class EventTestCase(TestCase):
 
     def test_update_event(self) -> None:
         name = random_string()
+        event = event_fixtures.create_event_object(owner=self.owner.person)
         ta_id = str(
             partner_fixtures.create_partner_person(partner=self.owner.partner).id
         )
         ticket_types = [
+            event_fixtures.ticket_type_min_fixture(),
             event_fixtures.ticket_type_min_fixture(),
             event_fixtures.ticket_type_min_fixture(),
         ]
@@ -105,7 +107,6 @@ class EventTestCase(TestCase):
             "ticket_types": ticket_types,
             "event_promotions": event_promos,
         }
-        event = event_fixtures.create_event_object(owner=self.owner.person)
         res = self.client.put(
             f"/{API_VER}/events/events/{event.id}/", data=update_data, format="json"
         )
@@ -130,6 +131,46 @@ class EventTestCase(TestCase):
             format="json",
         )
         assert res.status_code == 422
+
+    def test_update_event_ticket_types(self) -> None:
+        event = event_fixtures.create_event_object(owner=self.owner.person)
+        tt1: TicketType = event_fixtures.create_ticket_type_obj(event=event)
+        tt2: TicketType = event_fixtures.create_ticket_type_obj(event=event)
+        tt3: TicketType = event_fixtures.create_ticket_type_obj(event=event)
+
+        tt1_dict = {
+            "name": tt1.name,
+            "price": tt1.price + random_float(),
+            "active": True,
+            "amsg": random_string(),
+            "amount": 1200,
+        }
+        tt2_dict = {
+            "name": tt2.name,
+            "price": tt2.price + random_float(),
+            "active": True,
+            "amsg": random_string(),
+            "amount": 1200,
+        }
+        ttnew_dict = event_fixtures.ticket_type_min_fixture()
+        update_data = {"ticket_types": [tt1_dict, tt2_dict, ttnew_dict]}
+
+        res = self.client.put(
+            f"/{API_VER}/events/events/{event.id}/", data=update_data, format="json"
+        )
+        assert res.status_code == 200
+        tt3.refresh_from_db()
+        assert not tt3.active
+        assert len(res.json()["ticket_types"]) == 3
+        tt_ids = [tt["id"] for tt in res.json()["ticket_types"]]
+        assert str(tt1.id) in tt_ids
+        assert str(tt2.id) in tt_ids
+        assert str(tt3.id) not in tt_ids
+        for tt in res.json()["ticket_types"]:
+            if tt["id"] == str(tt1.id):
+                assert tt["price"] == int(tt1_dict["price"])  # type: ignore
+            if tt["id"] == str(tt2.id):
+                assert tt["price"] == int(tt2_dict["price"])  # type: ignore
 
     def test_update_event__non_owner(self) -> None:
         name = "Test Event Update"
@@ -159,6 +200,7 @@ class EventTestCase(TestCase):
         assert res.json()["tickets_sold"] == 3
         assert int(res.json()["redemption_rate"]) == 66
         assert res.json()["sales"] == sales
+        assert "created_at" in str(res.getvalue())
 
     def test_list_events(self) -> None:
         event = event_fixtures.create_event_object(owner=self.owner.person)
@@ -208,6 +250,10 @@ class EventTestCase(TestCase):
 
         res = self.client.get(f"/{API_VER}/events/export/csv/")
         assert res.status_code == 200
+        fields = ["event_number", "name", "event_date", "sales"]
+        returned_text = str(res.getvalue())
+        for field in fields:
+            assert field in returned_text
 
     def test_create_ticket_type(self) -> None:
         event = event_fixtures.create_event_object(owner=self.owner.person)

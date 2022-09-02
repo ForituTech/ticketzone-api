@@ -17,6 +17,7 @@ from django.core.exceptions import FieldError, ValidationError
 from django.db.models import Model
 from django.db.models.query import QuerySet
 from rest_framework.exceptions import ValidationError as ValidationErrDRF
+from rest_framework.pagination import PageNumberPagination
 
 from core.error_codes import ErrorCodes
 from core.exceptions import (
@@ -226,6 +227,7 @@ class ReadService(Generic[ModelType]):
         *,
         filters: Optional[dict[str, Any]] = None,
         limit: Optional[int] = 100,
+        paginator: Optional[PageNumberPagination] = None,
     ) -> QuerySet[ModelType]:
         self._clean_filters(filters)
         order_by_fields = ["created_at"]
@@ -251,6 +253,9 @@ class ReadService(Generic[ModelType]):
 
         self._clean_sort_fields(order_by_fields)
 
+        if paginator:
+            paginator.page_size = limit
+
         try:
             query: QuerySet = query.filter(**filters or {})  # type: ignore
         except ValidationError as e:
@@ -265,7 +270,7 @@ class ReadService(Generic[ModelType]):
                 422, code=ErrorCodes.UNPROCESSABLE_FILTER, extra=str(exc)
             )
 
-        return query[:limit]  # type: ignore
+        return query  # type: ignore
 
     @no_type_check  # TODO: FIX
     def search(self, *, search_term: str, query: QuerySet) -> QuerySet[ModelType]:
