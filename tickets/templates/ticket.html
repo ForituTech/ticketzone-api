@@ -1,226 +1,227 @@
-html>
+<html>
   <head>
     <style>
     {% if evn %}
-    @import url('https://fonts.googleapis.com/css?family=Oswald');
+    @import url("https://fonts.googleapis.com/css2?family=Karla&family=Overpass&display=swap")
     {% endif %}
     * {
         margin: 0;
         padding: 0;
-        border: 0;
-        box-sizing: border-box
-    }
+        box-sizing: border-box;
+      }
 
-    body {
-        background-color: #dadde6;
-        font-family: arial
-    }
+      body,
+      html {
+        height: 100vh;
+        display: grid;
+        font-family: "Overpass" sans-serif;
+        background: #aad4e5;
+        color: black;
+        font-size: 8px;
+        letter-spacing: 0.1em;
+      }
 
-    .fl-left {
-        float: left
-    }
+      .ticket {
+        margin: auto;
+        display: flex;
+        background: white;
+        box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px;
+      }
 
-    .fl-right {
-        float: right
-    }
+      .left {
+        display: flex;
+      }
 
-    h1 {
-        text-transform: uppercase;
-        font-weight: 900;
-        border-left: 10px solid #fec500;
-        padding-left: 10px;
-        margin-bottom: 30px
-    }
-
-    .row {
-        overflow: hidden
-    }
-
-    .card {
-        display: table-row;
-        width: 49%;
-        background-color: #fff;
-        color: #989898;
-        margin-bottom: 10px;
-        font-family: 'Oswald', sans-serif;
-        text-transform: uppercase;
-        border-radius: 4px;
-        position: relative;
-        width: 90%;
-        margin-left: 5%;
-        margin-top: 5%;
-    }
-
-    .card+.card {
-        margin-left: 2%
-    }
-
-    .date {
-        display: table-cell;
-        width: 25%;
-        position: relative;
-        text-align: center;
-        border-right: 2px dashed #dadde6
-    }
-
-    .date:before,
-    .date:after {
-        content: "";
-        display: block;
-        width: 30px;
-        height: 30px;
-        background-color: #DADDE6;
-        position: absolute;
-        top: -15px;
-        right: -15px;
-        z-index: 1;
-        border-radius: 50%
-    }
-
-    .date:after {
-        top: auto;
-        bottom: -15px
-    }
-
-    .date time {
-        display: block;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        -webkit-transform: translate(-50%, -50%);
-        -ms-transform: translate(-50%, -50%);
-        transform: translate(-50%, -50%)
-    }
-
-    .date time span {
-        display: block
-    }
-
-    .date time span:first-child {
-        color: #2b2b2b;
-        font-weight: 600;
-        font-size: 250%
-    }
-
-    .date time span:last-child {
-        text-transform: uppercase;
-        font-weight: 600;
-        margin-top: -10px
-    }
-
-    .card-cont {
-        display: table-cell;
-        width: 75%;
-        padding: 10px 10px 30px 50px;
-        font-size: x-large;
-    }
-
-    .card-cont h3 {
-        color: #3C3C3C;
-        font-size: 130%
-    }
-
-    .row:last-child .card:last-of-type .card-cont h3 {
-        text-decoration: line-through
-    }
-
-    .card-cont>div {
-        display: table-row
-    }
-
-    .card-cont .even-date i,
-    .card-cont .even-info i,
-    .card-cont .even-date time,
-    .card-cont .even-info p {
-        display: table-cell
-    }
-
-    .card-cont .even-date i,
-    .card-cont .even-info i {
-        padding: 5% 5% 0 0
-    }
-
-    .card-cont .even-info p {
-        padding: 30px 50px 0 0
-    }
-
-    .card-cont .even-date time span {
-        display: block
-    }
-
-    .card-cont a {
-        display: block;
-        text-decoration: none;
-        width: 80px;
-        height: 30px;
-        background-color: #D8DDE0;
-        color: #fff;
-        text-align: center;
-        line-height: 30px;
-        border-radius: 2px;
-        position: absolute;
-        right: 10px;
-        bottom: 10px
-    }
-
-    .row:last-child .card:first-child .card-cont a {
-        background-color: #037FDD
-    }
-
-    .row:last-child .card:last-child .card-cont a {
-        background-color: #F8504C
-    }
-
-    @media screen and (max-width: 860px) {
-        .card {
-            display: block;
-            float: none;
-            width: 100%;
-            margin-bottom: 10px
-        }
-        .card+.card {
-            margin-left: 0
-        }
-        .card-cont .even-date,
-        .card-cont .even-info {
-            font-size: 75%
-        }
-    }
-
-    body {
+      .image {
+        height: 250px;
+        width: 250px;
         background-image: url("data:image/png;base64,{{poster}}");
-    }
+        background-size: contain;
+        opacity: 0.85;
+      }
+
+      .admit-one {
+        position: absolute;
+        color: darkgray;
+        height: 250px;
+        padding: 0 10px;
+        letter-spacing: 0.15em;
+        display: flex;
+        text-align: center;
+        justify-content: space-around;
+        writing-mode: vertical-rl;
+        transform: rotate(-180deg);
+      }
+
+      .admit-one span:nth-child(2) {
+        color: white;
+        font-weight: 700;
+      }
+
+      .left .ticket-number {
+        height: 250px;
+        width: 250px;
+        display: flex;
+        justify-content: flex-end;
+        align-items: flex-end;
+        padding: 5px;
+      }
+
+      .ticket-info {
+        padding: 10px 30px;
+        display: flex;
+        flex-direction: column;
+        text-align: center;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .date {
+        border-top: 1px solid gray;
+        border-bottom: 1px solid gray;
+        padding: 5px 0;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+      }
+
+      .date span {
+        width: 100px;
+      }
+
+      .date span:first-child {
+        text-align: left;
+      }
+
+      .date span:last-child {
+        text-align: right;
+      }
+
+      .date .june-29 {
+        color: #d83565;
+        font-size: 20px;
+      }
+
+      .show-name {
+        font-size: 32px;
+        color: #d83565;
+      }
+
+      .show-name h1 {
+        font-size: 48px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        color: #4a437e;
+      }
+
+      .time {
+        padding: 10px 0;
+        color: #4a437e;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        font-weight: 700;
+      }
+
+      .time span {
+        font-weight: 400;
+        color: gray;
+      }
+
+      .left .time {
+        font-size: 16px;
+      }
+
+
+      .location {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        width: 100%;
+        padding-top: 8px;
+        border-top: 1px solid gray;
+      }
+
+      .location .separator {
+        font-size: 20px;
+      }
+
+      .right {
+        width: 180px;
+        border-left: 1px dashed #404040;
+      }
+
+      .right .admit-one {
+        color: darkgray;
+      }
+
+      .right .admit-one span:nth-child(2) {
+        color: gray;
+      }
+
+      .right .right-info-container {
+        height: 250px;
+        padding: 10px 10px 10px 35px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        align-items: center;
+      }
+
+      .right .show-name h1 {
+        font-size: 12px;
+      }
+
+      .barcode {
+        height: 100px;
+      }
+
+      .barcode img {
+        height: 100%;
+      }
+
+      .right .ticket-number {
+        color: gray;
+      }
   </style>
   </head>
   <body>
-    <section class="container">
-        <div class="row">
-          <article class="card fl-left">
-            <section class="date">
-              <time>
-                <span>{{date.0}}</span><span>{{date.1}}</span>
-              </time>
-            </section>
-            <section class="card-cont" style="float: left;">
-              <small>{{ticket_type.event.partner.name}}</small>
-              <h3>{{ticket_type.event.event_location}}</h3>
-              <div class="even-date">
-               <i class="fa fa-calendar"></i>
-               <time>
-                 <span>{{ticket_type.event.time}}</span>
-               </time>
-              </div>
-              <div class="even-info">
-                <i class="fa fa-map-marker"></i>
-                <p>
-                  {{ticket_type.event.description}}
-                </p>
-              </div>
-            </section>
-
-            <img src="data:image/png;base64,{{image}}" alt="QRCode" style="float: right;"/>
-          </article>
+    <div class="ticket">
+      <div class="left">
+        <div class="image">
         </div>
-      </div>     
+        <div class="ticket-info">
+          <p class="date">
+            <span class="june-29">{{date.0}}</span>
+            <span>{{date.1}}</span>
+          </p>
+          <div class="show-name">
+            <h1>{{ticket_type.event.name}}</h1>
+          </div>
+          <div class="time">
+            <p>{{ticket_type.event.time}}<span>TO</span>{{ticket_type.event.end_time}}</p>
+          </div>
+          <p class="location"><span>{{ticket_type.event.event_location}}</span></p>
+        </div>
+      </div>
+      <div class="right">
+        <div class="right-info-container">
+          <div class="show-name">
+            <h1>{{ticket_type.event.name}}</h1>
+          </div>
+          <div class="time">
+            <span class="june-29">{{date.0}} {{date.1}}</span>
+          </div>
+          <div class="barcode">
+            <img src="data:image/png;base64,{{image}}" alt="QRCode" style="float: right;"/>
+          </div>
+          <p class="ticket-number">
+            #{{ticket.ticket_number}}
+          </p>
+        </div>
+      </div>
+    </div>   
   </body>
 </html>

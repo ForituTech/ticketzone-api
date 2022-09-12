@@ -208,12 +208,13 @@ CELERY_RESULT_BACKEND = "django-db"
 CELERY_BROKER_URL = os.environ["BROKER_URL"]
 
 # EMail
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_USE_TLS = True
-EMAIL_HOST = "smtp.mail.yahoo.com"
-EMAIL_PORT = 995
-EMAIL_HOST_USER = "me@gmail.com"
-EMAIL_HOST_PASSWORD = "password"
-DEFAULT_FROM_EMAIL = "tickets@kibali.com"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_HOST_USER = "nellymogesh2@gmail.com"
+EMAIL_HOST_PASSWORD = os.environ["EMAIL_HOST_PASSWORD"]
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
 PUSHER_INSTANCE_ID = "test"
@@ -223,7 +224,8 @@ AFRICAS_TALKING_USERNAME = "test"
 AFRICAS_TALKING_KEY = "test"
 
 DEFAULT_TICKET_TEMPLATE = "tickets/templates/ticket.html"
-TICKET_EMAIL_TITLE = ""
+TICKET_EMAIL_TITLE = "Your ticket is here :) !"
+TICKET_EMAIL_BODY = "Hi {} :), your ticket is here! The attachment on this email has all the relevant details"
 
 REMINDER_SMS = "Hi {} :), just reminding you that {} is in the next 24 hrs ! Wohoo!"
 

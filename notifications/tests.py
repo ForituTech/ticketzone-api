@@ -16,7 +16,6 @@ from notifications.tasks import cleanup_notifications
 from notifications.utils import send_push_notification, send_sms, send_ticket_email
 from partner.fixtures import partner_fixtures
 from tickets.fixtures import ticket_fixtures
-from tickets.utils import generate_ticket_html
 
 
 class NotificationsTestCase(TestCase):
@@ -53,9 +52,9 @@ class NotificationsTestCase(TestCase):
 
         mock_email_service.assert_called_with(
             subject=settings.TICKET_EMAIL_TITLE,
-            to=ticket.payment.person.email,
+            to=(ticket.payment.person.email,),
             attachments=[ANY],
-            body=generate_ticket_html(ticket),
+            body=settings.TICKET_EMAIL_BODY.format(ticket.payment.person.name),
         )
 
         mock_email_object.send.return_value = 0
