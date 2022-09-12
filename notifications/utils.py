@@ -13,7 +13,7 @@ from notifications.models import Notification
 from notifications.pusher import pusher_client
 from notifications.sms import sms_client
 from partner.models import Person
-from tickets.utils import generate_ticket_html, generate_ticket_pdf
+from tickets.utils import generate_ticket_pdf
 
 retries = 0
 
@@ -82,15 +82,17 @@ def send_ticket_email(
     if retry == 5:
         return False
     ticket: Ticket = Ticket.objects.get(pk=ticket_id)
+    ticket_pdf = generate_ticket_pdf(ticket)
+    ticket_pdf.seek(0)
     email = EmailMessage(
         subject=settings.TICKET_EMAIL_TITLE,
-        to=ticket.payment.person.email,
-        attachments=[generate_ticket_pdf(ticket)],
-        body=generate_ticket_html(ticket),
+        to=(ticket.payment.person.email,),
+        attachments=[(ticket.__str__(), ticket_pdf.read(), "application/pdf")],
+        body=settings.TICKET_EMAIL_BODY.format(ticket.payment.person.name),
     )
     email.content_subtype = "html"
-    failed = email.send(fail_silently=True)
-    if failed:
+    sent = email.send(fail_silently=True)
+    if not sent:
         send_ticket_email.apply_async(
             args=(
                 ticket_id,
@@ -105,6 +107,8 @@ def send_ticket_email(
             channel=NotificationsChannels.EMAIL.value,
             has_data=True,
         )
+        ticket.sent = True
+        ticket.save()
     else:
         retry -= 1
     return True
