@@ -1,2 +1,5 @@
 libpcre2-16-0
+libxrender1
+libxext6
+libfontconfig1
 wkhtmltopdf
