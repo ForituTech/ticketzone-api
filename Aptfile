@@ -8,4 +8,7 @@ libxext-dev
 libfontconfig1-dev 
 libfreetype6-dev 
 fontconfig
+libpcre2-16-0
+libxrender1
+libxext6
 wkhtmltopdf
