@@ -80,7 +80,10 @@ def generate_ticket_pdf(ticket: Ticket) -> Any:
         },
     )
     temp_file = NamedTemporaryFile(mode="w+b")
-    ticket_pdf_data = pdfkit.from_string(ticket_html)
+    config = None
+    if os.environ.get("ENV") == "staging":
+        config = pdfkit.configuration(wkhtmltopdf="./bin/wkhtmltopdf")
+    ticket_pdf_data = pdfkit.from_string(ticket_html, configuration=config)
     temp_file.name = f"{ticket.__str__()}"
     temp_file.write(ticket_pdf_data)
     temp_file.seek(0)
