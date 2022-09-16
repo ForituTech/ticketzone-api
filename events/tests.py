@@ -69,6 +69,7 @@ class EventTestCase(TestCase):
         tt_names = [tt["name"] for tt in res.json()["ticket_types"]]
         for tt_name in tt_names:
             assert tt_name in ticket_type_names
+        assert res.json()["category"]["name"]
 
         promo_res = self.client.get(
             f"/{API_VER}/events/event/promo/?event_id={res.json()['id']}"
