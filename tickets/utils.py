@@ -40,7 +40,8 @@ def compute_ticket_hash(ticket: Ticket) -> str:
 
 def generate_ticket_qr(ticket: Ticket) -> str:
     qr = qrcode.QRCode()
-    qr.add_data(ticket.hash if ticket.hash else compute_ticket_hash(ticket))
+    ticket.hash = compute_ticket_hash(ticket)
+    qr.add_data(ticket.hash)
     image = qr.make_image(fill="black")
     buffer: BytesIO = BytesIO()
     image.save(buffer, format="PNG")
