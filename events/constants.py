@@ -1,3 +1,5 @@
+import enum
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -8,3 +10,8 @@ class EventState(models.TextChoices):
     PRE_CLOSED = "PC", _("PRE_CLOSED")
     CLOSED = "CD", _("CLOSED")
     ARCHIVED = "AD", _("ARCHIVED")
+
+
+class TicketValidityStates(str, enum.Enum):
+    VALID = "VALID"
+    INVALID = "INVALID"
