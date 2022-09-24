@@ -8,6 +8,7 @@ from django.db.models.query import QuerySet
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorException
 from core.services import CRUDService
+from events.services import event_service
 from payments.constants import PaymentStates
 from tickets.models import Ticket
 from tickets.serializers import TicketCreateSerializer, TicketUpdateInnerSerializer
@@ -60,6 +61,27 @@ class TicketService(
             .filter(ticket_type__event__partner_id=partner_id)
             .filter(created_at__gte=last_week)
         )
+
+    def get_by_hash(self, hash: str, person_id: str) -> Ticket:
+        filters = {
+            "hash": hash,
+            "ticket_type__event__id__in": event_service.get_ta_assigned_events(
+                person_id
+            ),
+        }
+        try:
+            ticket = ticket_service.get(**filters)
+        except Ticket.MultipleObjectsReturned:
+            raise HttpErrorException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                code=ErrorCodes.MULTIPLE_TICKETS_ONE_HASH,
+            )
+        if not ticket:
+            raise HttpErrorException(
+                status_code=HTTPStatus.NOT_FOUND,
+                code=ErrorCodes.UNRESOLVABLE_HASH,
+            )
+        return ticket
 
     def send(self, ticket: Ticket) -> bool:
         pass

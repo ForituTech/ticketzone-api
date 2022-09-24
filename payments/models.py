@@ -19,7 +19,7 @@ class Payment(BaseModel):
     # mapping from payment provider ids to internal relations
     transaction_id = models.CharField(max_length=256, null=True, blank=True)
     state = models.CharField(
-        max_length=255, null=False, blank=False, default=PaymentStates.PENDIGN.value
+        max_length=255, null=False, blank=False, default=PaymentStates.PENDING.value
     )
     verified = models.BooleanField(null=False, blank=False, default=False)
     reconciled = models.BooleanField(null=False, blank=False, default=False)

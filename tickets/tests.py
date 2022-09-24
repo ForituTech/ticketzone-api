@@ -37,6 +37,14 @@ class TicketTestCase(TestCase):
         self.li_client: Client = APIClient(
             enforce_csrf_checks=False, **self.li_authed_header
         )
+        # ticketing agent
+        self.ta = partner_fixtures.create_partner_person(
+            person_type=PersonType.TICKETING_AGENT, partner=self.owner.partner
+        )
+        self.ta_client = APIClient(
+            enforce_csrf_checks=False,
+            **{settings.AUTH_HEADER: create_auth_token(self.ta.person)},
+        )
 
     def test_create_ticket(self) -> None:
         event = event_fixtures.create_event_object(self.person)
@@ -57,7 +65,6 @@ class TicketTestCase(TestCase):
 
         ticket_from_db: Ticket = Ticket.objects.get(pk=returned_ticket["id"])
         assert ticket_from_db.hash
-        assert ticket_from_db.hash == compute_ticket_hash(ticket_from_db)
 
         res = self.li_client.post(f"/{API_VER}/tickets/", data={}, format="json")
         assert res.status_code == 422
@@ -169,17 +176,38 @@ class TicketTestCase(TestCase):
         assert "poster" in res.json()["ticket_type"]["event"]
 
     def test_ticket_read_by_hash(self) -> None:
-        event = event_fixtures.create_event_object(self.person)
+        event = event_fixtures.create_event_object(self.owner.person)
         ticket_type = event_fixtures.create_ticket_type_obj(event=event)
+        event_fixtures.create_partner_person_schedule(
+            event_id=str(event.id), partner_person_id=str(self.ta.id)
+        )
         payment = payment_fixtures.create_payment_object(self.person)
         ticket = ticket_fixtures.create_ticket_obj(ticket_type, payment)
         ticket.hash = compute_ticket_hash(ticket)
         ticket.save()
 
-        res = self.client.get(f"/{API_VER}/tickets/by/hash/{ticket.hash}/")
+        res = self.ta_client.get(f"/{API_VER}/tickets/by/hash/{ticket.hash}/")
 
         assert res.status_code == 200
         assert res.json()["id"] == str(ticket.id)
+
+        # read should fail on unrelated events
+        event2 = event_fixtures.create_event_object(self.owner.person)
+        ticket_type2 = event_fixtures.create_ticket_type_obj(event=event2)
+        event_fixtures.create_partner_person_schedule(event_id=str(event2.id))
+        payment2 = payment_fixtures.create_payment_object(self.person)
+        ticket2 = ticket_fixtures.create_ticket_obj(ticket_type2, payment2)
+        ticket2.hash = compute_ticket_hash(ticket2)
+        ticket2.save()
+
+        res = self.ta_client.get(f"/{API_VER}/tickets/by/hash/{ticket2.hash}/")
+
+        assert res.status_code == 404
+
+        # should be visible to the event owner
+        res = self.client.get(f"/{API_VER}/tickets/by/hash/{ticket2.hash}/")
+
+        assert res.status_code == 200
 
     def test_ticket_read_by_hash__invalid_hash(self) -> None:
         res = self.client.get(f"/{API_VER}/tickets/by/hash/{123}/")

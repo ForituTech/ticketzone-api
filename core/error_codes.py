@@ -20,6 +20,7 @@ class ErrorCodes(enum.Enum):
     MULTIPLE_USERS_SAME_PHONENUMBER = (
         "Internal Error: The server returned multiple people with a single phonenumer"
     )
+    NO_MEMBERSHIP = "The given person isn't associated to a partner"
     NO_PARTNERSHIP = "The given person has no partner"
     PROMO_NOT_FOUND = "The promotion code was not found"
     REDEEMED_TICKET = "The current ticket has already been redeemed"

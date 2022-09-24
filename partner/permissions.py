@@ -25,6 +25,10 @@ NO_PARTNERSHIP_EXCEPTION = HttpErrorException(
     code=ErrorCodes.NO_PARTNERSHIP,
 )
 
+NO_MEMBERSHIP_EXCEPTION = HttpErrorException(
+    status_code=401, code=ErrorCodes.NO_MEMBERSHIP
+)
+
 
 def check_self(request: Request, pk: Union[str, int]) -> bool:
     token_key = settings.AUTH_HEADER
@@ -70,6 +74,38 @@ def get_request_partner_id(request: Request) -> str:
     user_data = decode_access_token(request.META[token_key])
 
     return user_data["partner"]
+
+
+def get_request_person(request: Request) -> PartnerPerson:
+    user_id = get_request_user_id(request)
+    partner_id = get_request_partner_id(request)
+
+    try:
+        person: PartnerPerson = PartnerPerson.objects.get(
+            person_id=user_id, partner_id=partner_id
+        )
+        if not person.is_active:
+            raise ACCESS_DENIED_EXCEPTION
+        return person
+    except PartnerPerson.DoesNotExist:
+        raise NO_MEMBERSHIP_EXCEPTION
+
+
+def get_request_person_id(request: Request) -> str:
+    user_id = get_request_user_id(request)
+    partner_id = get_request_partner_id(request)
+
+    try:
+        person: PartnerPerson = PartnerPerson.objects.get(
+            person_id=user_id, partner_id=partner_id
+        )
+        if not person.is_active:
+            raise ACCESS_DENIED_EXCEPTION
+        return str(person.person_id)
+    except PartnerPerson.DoesNotExist:
+        if not Partner.objects.filter(**{"owner_id": user_id, "pk": partner_id}):
+            raise NO_MEMBERSHIP_EXCEPTION
+        return user_id
 
 
 def check_permissions(request: Request, person_type: PersonType) -> bool:

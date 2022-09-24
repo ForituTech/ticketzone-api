@@ -1,6 +1,6 @@
 import uuid
 from datetime import date
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from django.db.models import Sum
 from django.db.models.query import QuerySet
@@ -108,8 +108,8 @@ class EventService(CRUDService[Event, EventSerializer, EventUpdateSerializer]):
 
         return query
 
-    def get_partner_events(self, partner_id: uuid.UUID) -> QuerySet[Event]:
-        return Event.objects.filter(partner=partner_id)
+    def get_partner_events(self, partner_id: Union[uuid.UUID, str]) -> QuerySet[Event]:
+        return Event.objects.filter(partner=partner_id)  # type: ignore
 
     def get_partner_events_count(self, partner_id: uuid.UUID) -> int:
         return Event.objects.filter(partner=partner_id).count()
@@ -132,6 +132,18 @@ class EventService(CRUDService[Event, EventSerializer, EventUpdateSerializer]):
             person_id=person_id,
             event_id=event_id,
         )
+
+    def get_ta_assigned_events(self, person_id: str) -> List[str]:
+        events_schedules = PartnerPersonSchedule.objects.filter(
+            partner_person__person_id=person_id
+        )
+        if not events_schedules:
+            event_tickets = TicketType.objects.filter(
+                **{"event__partner__owner_id": person_id}
+            )
+        return [
+            str(schedule.event_id) for schedule in events_schedules or event_tickets
+        ]
 
     # def get_event_promotions()
 

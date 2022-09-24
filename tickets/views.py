@@ -22,6 +22,7 @@ from partner.permissions import (
     TicketingAgentPermissions,
     check_self_no_partnership,
     get_request_partner_id,
+    get_request_person_id,
     get_request_user_id,
 )
 from tickets.serializers import (
@@ -58,21 +59,9 @@ def redeem_ticket(request: Request, pk: str) -> Response:
 @api_view(["GET"])
 @permission_classes([TicketingAgentPermissions])
 def read_ticket_by_hash(request: Request, hash: str) -> Response:
-    filters = {
-        "hash": hash,
-    }
-    tickets = ticket_service.get_filtered(filters=filters, paginator=paginator)
-    if len(tickets) > 1:
-        raise HttpErrorException(
-            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            code=ErrorCodes.MULTIPLE_TICKETS_ONE_HASH,
-        )
-    if len(tickets) == 0:
-        raise HttpErrorException(
-            status_code=HTTPStatus.NOT_FOUND,
-            code=ErrorCodes.UNRESOLVABLE_HASH,
-        )
-    return Response(TicketReadSerializer(tickets[0]).data)
+    person_id = get_request_person_id(request)
+    ticket = ticket_service.get_by_hash(hash, person_id)
+    return Response(TicketReadSerializer(ticket).data)
 
 
 @swagger_auto_schema(method="get")
