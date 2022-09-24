@@ -46,6 +46,8 @@ class TicketService(
             )
 
         ticket.uses += 1
+        if ticket.uses >= ticket.ticket_type.use_limit:
+            ticket.redeemed = True
 
         ticket.save()
         return ticket

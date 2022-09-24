@@ -229,6 +229,7 @@ class TicketTestCase(TestCase):
 
         assert res.status_code == 200
         assert res.json()["uses"] == 1
+        assert res.json()["redeemed"]
 
     def test_ticket_multiple_redeem(self) -> None:
         event = event_fixtures.create_event_object(self.person)
