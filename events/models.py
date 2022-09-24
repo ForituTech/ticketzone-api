@@ -5,8 +5,9 @@ from django.db.models.query import QuerySet
 
 from core.models import BaseModel
 from core.utils import generate_event_number, generate_ticket_number
-from events.constants import EventState
+from events.constants import EventState, TicketValidityStates
 from partner.models import Partner, PartnerPerson, Person
+from payments.constants import PaymentStates
 from payments.models import Payment
 
 
@@ -226,6 +227,16 @@ class Ticket(BaseModel):
             "ticket_type__name",
             "ticket_type__event__name",
         ]
+
+    @property
+    def valid(self) -> str:
+        if (
+            self.payment.state != PaymentStates.PAID.value
+            or self.uses >= self.ticket_type.use_limit
+        ):
+            return TicketValidityStates.INVALID.value
+
+        return TicketValidityStates.VALID.value
 
 
 class ReminderOptIn(BaseModel):
