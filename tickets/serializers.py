@@ -35,6 +35,7 @@ class PaymentLiteSerializer(serializers.Serializer):
 class EventLiteSerializer(serializers.Serializer):
     event_number = serializers.CharField()
     name = serializers.CharField(max_length=255)
+    poster = serializers.CharField()
 
 
 class TicketTypeLiteSerializer(serializers.Serializer):

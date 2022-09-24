@@ -166,6 +166,7 @@ class TicketTestCase(TestCase):
 
         assert res.status_code == 200
         assert res.json()["id"] == str(ticket.id)
+        assert "poster" in res.json()["ticket_type"]["event"]
 
     def test_ticket_read_by_hash(self) -> None:
         event = event_fixtures.create_event_object(self.person)
