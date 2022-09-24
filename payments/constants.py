@@ -2,7 +2,7 @@ from enum import Enum
 
 
 class PaymentStates(Enum):
-    PENDIGN = "PENDIGN"
+    PENDING = "PENDING"
     PAID = "PAID"
     UNDERPAID = "UNDERPAID"
     OVERPAID = "OVERPAID"

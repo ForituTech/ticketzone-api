@@ -32,7 +32,7 @@ def compute_ticket_hash(ticket: Ticket) -> str:
     ticket_dict.update(event.__dict__)
     ticket_dict.update({"now": datetime.now()})
     str_to_be_hashed: str = ""
-    for value in ticket_dict:
+    for value in ticket_dict.values():
         str_to_be_hashed += str(value)
 
     return hashlib.md5(str_to_be_hashed.encode("UTF-8")).hexdigest()
