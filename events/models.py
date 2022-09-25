@@ -230,11 +230,18 @@ class Ticket(BaseModel):
 
     @property
     def valid(self) -> str:
-        if (
-            self.payment.state != PaymentStates.PAID.value
-            or self.uses >= self.ticket_type.use_limit
-        ):
-            return TicketValidityStates.INVALID.value
+        allowed_payment_states = [
+            PaymentStates.PAID.value,
+            PaymentStates.OVERPAID.value,
+        ]
+        payment_validity_map = {
+            PaymentStates.UNDERPAID.value: TicketValidityStates.UNDERPAID,
+            PaymentStates.PENDING.value: TicketValidityStates.UNPAID,
+        }
+        if self.payment.state not in allowed_payment_states:
+            return payment_validity_map[self.payment.state]
+        if self.uses >= self.ticket_type.use_limit:
+            return TicketValidityStates.REDEEMED.value
 
         return TicketValidityStates.VALID.value
 
