@@ -252,7 +252,7 @@ class TicketTestCase(TestCase):
 
         assert res.status_code == 200
         assert res.json()["uses"] == 2
-        assert res.json()["valid"] == "INVALID"
+        assert res.json()["valid"] == "REDEEMED"
 
         res = self.client.post(f"/{API_VER}/tickets/redeem/{ticket.id}/")
 

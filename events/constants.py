@@ -1,4 +1,4 @@
-import enum
+from enum import Enum
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -12,6 +12,8 @@ class EventState(models.TextChoices):
     ARCHIVED = "AD", _("ARCHIVED")
 
 
-class TicketValidityStates(str, enum.Enum):
+class TicketValidityStates(str, Enum):
     VALID = "VALID"
-    INVALID = "INVALID"
+    UNDERPAID = "UNDERPAID"
+    UNPAID = "UNPAID"
+    REDEEMED = "REDEEMED"
