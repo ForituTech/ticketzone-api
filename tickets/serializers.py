@@ -60,3 +60,16 @@ class CountAtDate(serializers.Serializer):
 
 class TotalSalesOverTime(serializers.Serializer):
     data = serializers.ListField(child=CountAtDate())  # type: ignore
+
+
+class TicketScanBaseSerializer(serializers.Serializer):
+    agent_id = serializers.CharField(max_length=255)
+    ticket_id = serializers.CharField(max_length=255)
+
+
+class TicketScanCreateSerializer(TicketScanBaseSerializer, BaseSerializer):
+    pass
+
+
+class TicketScanSerializer(InDBBaseSerializer, TicketScanBaseSerializer):
+    ticket = TicketReadSerializer()

@@ -1,1 +1,1 @@
-from events.models import Ticket  # noqa
+from events.models import Ticket, TicketScan  # noqa

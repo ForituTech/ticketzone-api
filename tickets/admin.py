@@ -4,7 +4,7 @@ from django.contrib import admin
 
 from eticketing_api import settings
 from notifications.utils import send_ticket_email
-from tickets.models import Ticket
+from tickets.models import Ticket, TicketScan
 
 
 @admin.action(description="Send Ticket(s)")
@@ -27,3 +27,4 @@ class TicketAdminConfig(admin.ModelAdmin):
 
 
 admin.site.register(Ticket, TicketAdminConfig)
+admin.site.register(TicketScan)

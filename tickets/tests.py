@@ -12,7 +12,6 @@ from partner.fixtures.partner_fixtures import create_auth_token
 from partner.utils import create_access_token_lite
 from payments.fixtures import payment_fixtures
 from tickets.fixtures import ticket_fixtures
-from tickets.models import Ticket
 from tickets.utils import (
     compute_ticket_hash,
     generate_ticket_qr,
@@ -41,42 +40,10 @@ class TicketTestCase(TestCase):
         self.ta = partner_fixtures.create_partner_person(
             person_type=PersonType.TICKETING_AGENT, partner=self.owner.partner
         )
-        self.ta_client = APIClient(
+        self.ta_client: Client = APIClient(
             enforce_csrf_checks=False,
             **{settings.AUTH_HEADER: create_auth_token(self.ta.person)},
         )
-
-    def test_create_ticket(self) -> None:
-        event = event_fixtures.create_event_object(self.person)
-        ticket_type = event_fixtures.create_ticket_type_obj(event=event)
-        payment = payment_fixtures.create_payment_object(self.person)
-
-        ticket_data = ticket_fixtures.ticket_fixture(
-            ticket_type_id=str(ticket_type.id), payment_id=str(payment.id)
-        )
-
-        res = self.li_client.post(
-            f"/{API_VER}/tickets/", data=ticket_data, format="json"
-        )
-        assert res.status_code == 200
-        returned_ticket = res.json()
-        assert returned_ticket["ticket_type_id"] == str(ticket_type.id)
-        assert returned_ticket["payment_id"] == str(payment.id)
-
-        ticket_from_db: Ticket = Ticket.objects.get(pk=returned_ticket["id"])
-        assert ticket_from_db.hash
-
-        res = self.li_client.post(f"/{API_VER}/tickets/", data={}, format="json")
-        assert res.status_code == 422
-
-    def test_create_ticket__not_self(self) -> None:
-        ticket_data = ticket_fixtures.ticket_fixture()
-
-        res = self.li_client.post(
-            f"/{API_VER}/tickets/", data=ticket_data, format="json"
-        )
-
-        assert res.status_code == 403
 
     def test_ticket_list(self) -> None:
         event = event_fixtures.create_event_object(self.owner.person)
@@ -225,11 +192,45 @@ class TicketTestCase(TestCase):
         ticket.payment.state = "PAID"
         ticket.payment.save()
 
-        res = self.client.post(f"/{API_VER}/tickets/redeem/{ticket.id}/")
+        res = self.ta_client.post(f"/{API_VER}/tickets/redeem/{ticket.id}/")
 
         assert res.status_code == 200
         assert res.json()["uses"] == 1
         assert res.json()["redeemed"]
+
+        scans_res = self.ta_client.get(f"/{API_VER}/tickets/scan/records/")
+        assert scans_res.status_code == 200
+        scan_records = scans_res.json()["results"]
+        scan_record_ticket_ids = [record["ticket"]["id"] for record in scan_records]
+        assert str(ticket.id) in scan_record_ticket_ids
+
+    def test_fetch_scan_records(self) -> None:
+        event = event_fixtures.create_event_object(self.person)
+        ticket_type = event_fixtures.create_ticket_type_obj(event=event)
+        payment = payment_fixtures.create_payment_object(self.person)
+        ticket = ticket_fixtures.create_ticket_obj(ticket_type, payment)
+        ticket.hash = compute_ticket_hash(ticket)
+        ticket.save()
+        ticket.payment.state = "PAID"
+        ticket.payment.save()
+
+        res = self.ta_client.post(f"/{API_VER}/tickets/redeem/{ticket.id}/")
+
+        assert res.status_code == 200
+
+        scans_res = self.ta_client.get(f"/{API_VER}/tickets/scan/records/")
+        assert scans_res.status_code == 200
+        scan_records = scans_res.json()["results"]
+        scan_record_ticket_ids = [record["ticket"]["id"] for record in scan_records]
+        assert str(ticket.id) in scan_record_ticket_ids
+
+        scans_res = self.ta_client.get(
+            f"/{API_VER}/tickets/scan/records/?search={ticket.payment.person.name}"
+        )
+        assert scans_res.status_code == 200
+        scan_records = scans_res.json()["results"]
+        scan_record_ticket_ids = [record["ticket"]["id"] for record in scan_records]
+        assert str(ticket.id) in scan_record_ticket_ids
 
     def test_ticket_multiple_redeem(self) -> None:
         event = event_fixtures.create_event_object(self.person)
@@ -243,12 +244,12 @@ class TicketTestCase(TestCase):
         ticket.payment.state = "PAID"
         ticket.payment.save()
 
-        res = self.client.post(f"/{API_VER}/tickets/redeem/{ticket.id}/")
+        res = self.ta_client.post(f"/{API_VER}/tickets/redeem/{ticket.id}/")
 
         assert res.status_code == 200
         assert res.json()["uses"] == 1
 
-        res = self.client.post(f"/{API_VER}/tickets/redeem/{ticket.id}/")
+        res = self.ta_client.post(f"/{API_VER}/tickets/redeem/{ticket.id}/")
 
         assert res.status_code == 200
         assert res.json()["uses"] == 2

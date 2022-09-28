@@ -61,37 +61,6 @@ class EventPromotionReadSerializer(InDBBaseSerializer, EventPromotionSerializer)
     event_id = serializers.CharField(max_length=255)
 
 
-class TicketTypePromotionSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=256)
-    ticket_id = serializers.CharField(max_length=255)
-    promotion_rate = serializers.FloatField()
-    expiry = serializers.DateField()
-
-
-class TicketTypePromotionBaseSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=256, required=False)
-    promotion_rate = serializers.FloatField(required=False)
-    expiry = serializers.DateField(required=False)
-
-
-class TicketTypePromotionCreateSerializer(
-    BaseSerializer, TicketTypePromotionSerializer
-):
-    pass
-
-
-class TicketTypePromotionUpdateSerializer(
-    BaseSerializer, TicketTypePromotionBaseSerializer
-):
-    pass
-
-
-class TicketTypePromotionReadSerializer(
-    InDBBaseSerializer, TicketTypePromotionSerializer
-):
-    pass
-
-
 class PromoVerifySerializer(BaseSerializer):
     target_ids = serializers.ListField(child=serializers.CharField(max_length=255))
 

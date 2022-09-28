@@ -1,7 +1,5 @@
 import json
 from datetime import date, timedelta
-from random import randint
-from typing import Any, Dict
 
 from django.test import TestCase
 from rest_framework import status
@@ -256,12 +254,6 @@ class EventTestCase(TestCase):
         for field in fields:
             assert field in returned_text
 
-    def test_create_ticket_type(self) -> None:
-        event = event_fixtures.create_event_object(owner=self.owner.person)
-        data = event_fixtures.ticket_type_fixture(event_id=str(event.id))
-        res = self.client.post(f"/{API_VER}/events/tickets/", data=data, format="json")
-        assert res.status_code == status.HTTP_200_OK
-
     def test_list_ticket_types__generic(self) -> None:
         res = self.client.get(f"/{API_VER}/events/tickets/")
         assert res.status_code == status.HTTP_403_FORBIDDEN
@@ -274,20 +266,6 @@ class EventTestCase(TestCase):
         res = self.client.get(f"/{API_VER}/events/tickets/?event_id={event1.id}")
         assert res.status_code == status.HTTP_200_OK
         assert res.json()["count"] == 1
-
-    def test_update_ticket_type(self) -> None:
-        ticket: TicketType = event_fixtures.create_ticket_type_obj(
-            owner=self.owner.person
-        )
-        name = "Test VIP ticket"
-        data = {
-            "name": name,
-        }
-        res = self.client.put(
-            f"/{API_VER}/events/tickets/{ticket.id}/", data=data, format="json"
-        )
-        assert res.status_code == status.HTTP_200_OK
-        assert res.json()["name"] == name
 
     def test_event_search(self) -> None:
         event = event_fixtures.create_event_object(owner=self.owner.person)
@@ -431,133 +409,6 @@ class EventTestCase(TestCase):
         )
 
         assert res.status_code == 403
-
-    def test_ticket_promo_create(self) -> None:
-        ticket_type = event_fixtures.create_ticket_type_obj(owner=self.owner.person)
-        ticket_promo_data = event_fixtures.ticket_promo_fixture(str(ticket_type.id))
-
-        res = self.client.post(
-            f"/{API_VER}/events/ticket/promo/", data=ticket_promo_data, format="json"
-        )
-
-        assert res.status_code == 200
-        assert res.json()["ticket_id"] == str(ticket_type.id)
-
-    def test_ticket_promo_create__non_self(self) -> None:
-        ticket_promo_data = event_fixtures.ticket_promo_fixture()
-
-        res = self.client.post(
-            f"/{API_VER}/events/ticket/promo/", data=ticket_promo_data, format="json"
-        )
-
-        assert res.status_code == 403
-
-    def test_ticket_promo_create__non_owner(self) -> None:
-        ticket_promo_data = event_fixtures.ticket_promo_fixture()
-
-        res = self.ta_client.post(
-            f"/{API_VER}/events/ticket/promo/", data=ticket_promo_data, format="json"
-        )
-
-        assert res.status_code == 403
-
-    def test_ticket_promo_list(self) -> None:
-        ticket_type = event_fixtures.create_ticket_type_obj(owner=self.owner.person)
-        event_fixtures.create_ticket_promo_obj(ticket_type)
-        event_fixtures.create_ticket_promo_obj()
-
-        res = self.client.get(f"/{API_VER}/events/ticket/promo/")
-
-        assert res.status_code == 200
-        assert res.json()["count"] == 1
-
-    def test_ticket_promo_update(self) -> None:
-        ticket_type = event_fixtures.create_ticket_type_obj(owner=self.owner.person)
-        ticket_promo = event_fixtures.create_ticket_promo_obj(ticket_type)
-        rate = randint(11, 30)
-
-        update_data = {
-            "promotion_rate": rate,
-        }
-
-        res = self.client.put(
-            f"/{API_VER}/events/ticket/promo/{ticket_promo.id}/",
-            data=update_data,
-            format="json",
-        )
-
-        assert res.status_code == 200
-        assert res.json()["promotion_rate"] == rate
-
-    def test_ticket_promo_update__non_self(self) -> None:
-        ticket_promo = event_fixtures.create_ticket_promo_obj()
-        rate = randint(11, 30)
-
-        update_data = {
-            "promotion_rate": rate,
-        }
-
-        res = self.client.put(
-            f"/{API_VER}/events/ticket/promo/{ticket_promo.id}/",
-            data=update_data,
-            format="json",
-        )
-
-        assert res.status_code == 403
-
-    def test_ticket_promo_update__non_owner(self) -> None:
-        ticket_type = event_fixtures.create_ticket_type_obj(owner=self.owner.person)
-        ticket_promo = event_fixtures.create_ticket_promo_obj(ticket_type)
-        rate = randint(11, 30)
-
-        update_data = {
-            "promotion_rate": rate,
-        }
-
-        res = self.ta_client.put(
-            f"/{API_VER}/events/ticket/promo/{ticket_promo.id}/",
-            data=update_data,
-            format="json",
-        )
-
-        assert res.status_code == 403
-
-    def test_code_redemption(self) -> None:
-        ticket_type = event_fixtures.create_ticket_type_obj(owner=self.owner.person)
-        ticket_promo = event_fixtures.create_ticket_promo_obj(ticket_type)
-
-        data = {
-            "target_ids": [str(ticket_type.id)],
-        }
-
-        res = self.client.post(
-            f"/{API_VER}/events/redeem/code/{ticket_promo.name}/",
-            data=data,
-            format="json",
-        )
-
-        assert res.status_code == 200
-        assert eval(res.json())[0]["rate"] == ticket_promo.promotion_rate
-
-    def test_code_redemption__no_pre_targeting(self) -> None:
-        ticket_type = event_fixtures.create_ticket_type_obj(owner=self.owner.person)
-        ticket_promo = event_fixtures.create_ticket_promo_obj(ticket_type)
-        pre_use_limit_value = ticket_promo.use_limit
-
-        data: Dict[str, Any] = {
-            "target_ids": [],
-        }
-
-        res = self.client.post(
-            f"/{API_VER}/events/redeem/code/{ticket_promo.name}/",
-            data=data,
-            format="json",
-        )
-
-        assert res.status_code == 200
-        ticket_promo.refresh_from_db()
-        assert ticket_promo.use_limit == pre_use_limit_value
-        assert not eval(res.json())
 
     def test_list_categories(self) -> None:
         event_fixtures.create_event_category_obj()

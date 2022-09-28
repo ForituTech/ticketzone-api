@@ -4,7 +4,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from core.views import AbstractPermissionedView
-from partner.permissions import LoggedInPermission, check_self
+from partner.permissions import LoggedInPermission, get_request_user_id
 from payments.serilaizers import (
     PaymentCreateSerializer,
     PaymentReadSerializer,
@@ -26,13 +26,8 @@ class PaymentsViewSet(AbstractPermissionedView):
         request_body=PaymentSerializer, responses={200: PaymentReadSerializer}
     )
     def create(self, request: Request) -> Response:
+        request.data["person_id"] = get_request_user_id(request)
         payment = payment_service.create(
             obj_data=request.data, serializer=PaymentCreateSerializer
         )
-        # TODO: check_self should happend before creation
-        try:
-            check_self(request, str(payment.person_id))
-        except Exception as exc:
-            payment.delete()
-            raise exc
         return Response(PaymentReadSerializer(payment).data)
