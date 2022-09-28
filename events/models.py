@@ -246,6 +246,27 @@ class Ticket(BaseModel):
         return TicketValidityStates.VALID.value
 
 
+class TicketScan(BaseModel):
+    ticket = models.ForeignKey(
+        Ticket, on_delete=models.CASCADE, null=False, blank=False
+    )
+    agent = models.ForeignKey(
+        PartnerPerson, on_delete=models.CASCADE, null=False, blank=False
+    )
+
+    @classmethod
+    @property
+    def search_vector(cls) -> List[str]:
+        return [
+            "ticket__ticket_number",
+            "ticket__payment__person__name",
+            "ticket__payment__person__email",
+            "ticket__payment__person__phone_number",
+            "ticket__ticket_type__name",
+            "ticket__ticket_type__event__name",
+        ]
+
+
 class ReminderOptIn(BaseModel):
     person = models.ForeignKey(
         Person, on_delete=models.CASCADE, null=False, blank=False

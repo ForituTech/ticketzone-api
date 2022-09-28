@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from http import HTTPStatus
 
+from django.db import transaction
 from django.db.models import Count
 from django.db.models.functions import TruncDay
 from django.db.models.query import QuerySet
@@ -10,8 +11,12 @@ from core.exceptions import HttpErrorException
 from core.services import CRUDService
 from events.services import event_service
 from payments.constants import PaymentStates
-from tickets.models import Ticket
-from tickets.serializers import TicketCreateSerializer, TicketUpdateInnerSerializer
+from tickets.models import Ticket, TicketScan
+from tickets.serializers import (
+    TicketCreateSerializer,
+    TicketScanCreateSerializer,
+    TicketUpdateInnerSerializer,
+)
 from tickets.utils import compute_ticket_hash
 
 
@@ -27,9 +32,9 @@ class TicketService(
             obj.hash = hash
             obj.save()
 
-    def redeem(self, pk: str) -> Ticket:
+    def redeem(self, pk: str, agent_id: str) -> Ticket:
         try:
-            ticket: Ticket = Ticket.objects.get(pk=pk)
+            ticket: Ticket = Ticket.objects.select_for_update().get(pk=pk)
         except Ticket.DoesNotExist:
             raise HttpErrorException(
                 status_code=HTTPStatus.NOT_FOUND, code=ErrorCodes.INVALID_TICKET_ID
@@ -45,11 +50,13 @@ class TicketService(
                 code=ErrorCodes.REDEEMED_TICKET,
             )
 
-        ticket.uses += 1
+        with transaction.atomic():
+            ticket.uses += 1
         if ticket.uses >= ticket.ticket_type.use_limit:
             ticket.redeemed = True
 
         ticket.save()
+        TicketScan.objects.create(agent_id=agent_id, ticket_id=ticket.id)
         return ticket
 
     def counts_over_time(self, partner_id: str) -> QuerySet:
@@ -90,3 +97,12 @@ class TicketService(
 
 
 ticket_service = TicketService(Ticket)
+
+
+class TicketScansService(
+    CRUDService[TicketScan, TicketScanCreateSerializer, TicketScanCreateSerializer]
+):
+    pass
+
+
+ticket_scan_service = TicketScansService(TicketScan)

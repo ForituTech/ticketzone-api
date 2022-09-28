@@ -108,6 +108,16 @@ def get_request_person_id(request: Request) -> str:
         return user_id
 
 
+def get_request_partner_person_id(request: Request) -> str:
+    """
+    NOTE: This should only be used with permissions guarded
+        endpoints
+    """
+    user_id = get_request_person_id(request)
+    partner_id = get_request_partner_id(request)
+    return str(PartnerPerson.objects.get(person_id=user_id, partner_id=partner_id).id)
+
+
 def check_permissions(request: Request, person_type: PersonType) -> bool:
     token_key = settings.AUTH_HEADER
     if token_key not in request.META:

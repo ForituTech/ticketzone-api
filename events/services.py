@@ -19,7 +19,6 @@ from events.models import (
     EventPromotion,
     PartnerPersonSchedule,
     ReminderOptIn,
-    TicketPromotion,
     TicketType,
 )
 from events.serializers import (
@@ -29,8 +28,6 @@ from events.serializers import (
     EventSerializer,
     EventUpdateSerializer,
     TicketTypeCreateSerializer,
-    TicketTypePromotionCreateSerializer,
-    TicketTypePromotionUpdateSerializer,
     TicketTypeUpdateSerializer,
 )
 from partner.models import Partner, Person
@@ -207,34 +204,6 @@ class EventPromotionService(
 
 
 event_promo_service = EventPromotionService(EventPromotion)
-
-
-class TicketTypePromotionService(
-    CRUDService[
-        TicketPromotion,
-        TicketTypePromotionCreateSerializer,
-        TicketTypePromotionUpdateSerializer,
-    ]
-):
-    def on_pre_create(self, obj_in: Dict[str, Any]) -> None:
-        try:
-            TicketType.objects.get(pk=obj_in["ticket_id"])
-        except TicketType.DoesNotExist:
-            raise ObjectNotFoundException("TicketType", pk=str(obj_in["ticket_id"]))
-        except KeyError:
-            raise ObjectInvalidException("TicketTypePromotion")
-
-    def redeem(self, promo: TicketPromotion) -> bool:
-        if not promo.use_limit:
-            return False
-        if promo.expiry < date.today():
-            return False
-        promo.use_limit -= 1
-        promo.save()
-        return True
-
-
-ticket_type_promo_service = TicketTypePromotionService(TicketPromotion)
 
 
 class CategoryService(

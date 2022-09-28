@@ -9,5 +9,8 @@ def pre_process_data(data: dict) -> dict:
             try:
                 data[key] = json.loads(data[key])
             except JSONDecodeError:
-                data[key] = literal_eval(data[key])
+                try:
+                    data[key] = literal_eval(data[key])
+                except ValueError:
+                    pass
     return data
