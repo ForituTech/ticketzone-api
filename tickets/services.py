@@ -51,12 +51,19 @@ class TicketService(
             )
 
         with transaction.atomic():
+            ticket = Ticket.objects.select_for_update().get(pk=pk)
             ticket.uses += 1
-        if ticket.uses >= ticket.ticket_type.use_limit:
-            ticket.redeemed = True
+            if ticket.uses >= ticket.ticket_type.use_limit:
+                ticket.redeemed = True
+            ticket.save()
 
-        ticket.save()
-        TicketScan.objects.create(agent_id=agent_id, ticket_id=ticket.id)
+        scans: QuerySet[TicketScan] = TicketScan.objects.filter(
+            ticket_id=pk, agent_id=agent_id, redeem_triggered=False  # type: ignore
+        )
+        for scan in scans:
+            scan.redeem_triggered = True
+            scan.save()
+
         return ticket
 
     def counts_over_time(self, partner_id: str) -> QuerySet:
@@ -71,7 +78,7 @@ class TicketService(
             .filter(created_at__gte=last_week)
         )
 
-    def get_by_hash(self, hash: str, person_id: str) -> Ticket:
+    def get_by_hash(self, hash: str, person_id: str, agent_id: str) -> Ticket:
         filters = {
             "hash": hash,
             "ticket_type__event__id__in": event_service.get_ta_assigned_events(
@@ -90,6 +97,8 @@ class TicketService(
                 status_code=HTTPStatus.NOT_FOUND,
                 code=ErrorCodes.UNRESOLVABLE_HASH,
             )
+
+        TicketScan.objects.create(agent_id=agent_id, ticket_id=str(ticket.id))
         return ticket
 
     def send(self, ticket: Ticket) -> bool:

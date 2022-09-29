@@ -253,6 +253,7 @@ class TicketScan(BaseModel):
     agent = models.ForeignKey(
         PartnerPerson, on_delete=models.CASCADE, null=False, blank=False
     )
+    redeem_triggered = models.BooleanField(default=False, null=False, blank=False)
 
     @classmethod
     @property

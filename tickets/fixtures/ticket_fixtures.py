@@ -1,8 +1,9 @@
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from events.fixtures import event_fixtures
-from events.models import Event, TicketType
-from partner.models import Person
+from events.models import Event, TicketScan, TicketType
+from partner.fixtures.partner_fixtures import create_partner_person
+from partner.models import Partner, Person
 from payments.fixtures import payment_fixtures
 from payments.models import Payment
 from tickets.models import Ticket
@@ -38,3 +39,27 @@ def create_ticket_obj(
     ticket: Ticket = Ticket.objects.create(**ticket_data)
     ticket.save()
     return ticket
+
+
+def ticket_scan_fixture(
+    agent_id: Optional[str] = None,
+    ticket_id: Optional[str] = None,
+    partner: Optional[Partner] = None,
+    person: Optional[Person] = None,
+) -> Dict[str, Any]:
+    return {
+        "agent_id": agent_id
+        or str(create_partner_person(partner=partner, person=person).id),
+        "ticket_id": ticket_id or str(create_ticket_obj().id),
+    }
+
+
+def create_ticket_scan_obj(
+    agent_id: Optional[str] = None,
+    ticket_id: Optional[str] = None,
+    partner: Optional[Partner] = None,
+    person: Optional[Person] = None,
+) -> TicketScan:
+    return TicketScan.objects.create(
+        **ticket_scan_fixture(agent_id, ticket_id, partner, person)
+    )
