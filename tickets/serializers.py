@@ -65,6 +65,7 @@ class TotalSalesOverTime(serializers.Serializer):
 class TicketScanBaseSerializer(serializers.Serializer):
     agent_id = serializers.CharField(max_length=255)
     ticket_id = serializers.CharField(max_length=255)
+    redeem_triggered = serializers.BooleanField(default=False)
 
 
 class TicketScanCreateSerializer(TicketScanBaseSerializer, BaseSerializer):

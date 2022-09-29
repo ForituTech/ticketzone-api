@@ -58,8 +58,9 @@ def redeem_ticket(request: Request, pk: str) -> Response:
 @api_view(["GET"])
 @permission_classes([TicketingAgentPermissions])
 def read_ticket_by_hash(request: Request, hash: str) -> Response:
+    agent_id = get_request_partner_person_id(request)
     person_id = get_request_person_id(request)
-    ticket = ticket_service.get_by_hash(hash, person_id)
+    ticket = ticket_service.get_by_hash(hash, person_id, agent_id)
     return Response(TicketReadSerializer(ticket).data)
 
 
