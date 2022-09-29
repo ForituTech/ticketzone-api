@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from http import HTTPStatus
+from typing import Optional
 
 from django.db import transaction
 from django.db.models import Count
@@ -57,10 +58,14 @@ class TicketService(
                 ticket.redeemed = True
             ticket.save()
 
-        scans: QuerySet[TicketScan] = TicketScan.objects.filter(
-            ticket_id=pk, agent_id=agent_id, redeem_triggered=False  # type: ignore
+        scan: Optional[TicketScan] = (
+            TicketScan.objects.filter(
+                ticket_id=pk, agent_id=agent_id, redeem_triggered=False  # type: ignore
+            )
+            .order_by("created_at")
+            .first()
         )
-        for scan in scans:
+        if scan:
             scan.redeem_triggered = True
             scan.save()
 
