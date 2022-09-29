@@ -34,7 +34,7 @@ class TicketService(
 
     def redeem(self, pk: str, agent_id: str) -> Ticket:
         try:
-            ticket: Ticket = Ticket.objects.select_for_update().get(pk=pk)
+            ticket: Ticket = Ticket.objects.get(pk=pk)
         except Ticket.DoesNotExist:
             raise HttpErrorException(
                 status_code=HTTPStatus.NOT_FOUND, code=ErrorCodes.INVALID_TICKET_ID
