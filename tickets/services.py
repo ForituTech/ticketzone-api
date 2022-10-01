@@ -103,7 +103,11 @@ class TicketService(
                 code=ErrorCodes.UNRESOLVABLE_HASH,
             )
 
-        TicketScan.objects.create(agent_id=agent_id, ticket_id=str(ticket.id))
+        if not TicketScan.objects.filter(
+            agent_id=agent_id, ticket_id=str(ticket.id)  # type: ignore
+        ).exists():
+            TicketScan.objects.create(agent_id=agent_id, ticket_id=str(ticket.id))
+
         return ticket
 
     def send(self, ticket: Ticket) -> bool:

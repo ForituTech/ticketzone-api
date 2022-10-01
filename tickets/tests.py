@@ -180,6 +180,7 @@ class TicketTestCase(TestCase):
             f"/{API_VER}/tickets/scan/records/?ticket_id__in{[str(ticket.id)]}"
         )
         assert scans_res.status_code == 200
+        assert scans_res.json()["count"] == 1
         scan_records = scans_res.json()["results"]
         scan_record_ticket_ids = [record["ticket"]["id"] for record in scan_records]
         assert str(ticket.id) in scan_record_ticket_ids
