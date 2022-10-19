@@ -1,227 +1,169 @@
 <html>
   <head>
     <style>
-    {% if evn %}
-    @import url("https://fonts.googleapis.com/css2?family=Karla&family=Overpass&display=swap")
-    {% endif %}
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body,
-      html {
-        height: 100vh;
-        display: grid;
-        font-family: "Overpass" sans-serif;
-        background: #aad4e5;
-        color: black;
-        font-size: 8px;
-        letter-spacing: 0.1em;
-      }
-
-      .ticket {
-        margin: auto;
-        display: flex;
-        background: white;
-        box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px;
-      }
-
-      .left {
-        display: flex;
-      }
-
-      .image {
-        height: 250px;
-        width: 250px;
-        background-image: url("data:image/png;base64,{{poster}}");
-        background-size: contain;
-        opacity: 0.85;
-      }
-
-      .admit-one {
-        position: absolute;
-        color: darkgray;
-        height: 250px;
-        padding: 0 10px;
-        letter-spacing: 0.15em;
-        display: flex;
-        text-align: center;
-        justify-content: space-around;
-        writing-mode: vertical-rl;
-        transform: rotate(-180deg);
-      }
-
-      .admit-one span:nth-child(2) {
-        color: white;
-        font-weight: 700;
-      }
-
-      .left .ticket-number {
-        height: 250px;
-        width: 250px;
-        display: flex;
-        justify-content: flex-end;
-        align-items: flex-end;
-        padding: 5px;
-      }
-
-      .ticket-info {
-        padding: 10px 30px;
-        display: flex;
-        flex-direction: column;
-        text-align: center;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .date {
-        border-top: 1px solid gray;
-        border-bottom: 1px solid gray;
-        padding: 5px 0;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        justify-content: space-around;
-      }
-
-      .date span {
-        width: 100px;
-      }
-
-      .date span:first-child {
-        text-align: left;
-      }
-
-      .date span:last-child {
-        text-align: right;
-      }
-
-      .date .june-29 {
-        color: #d83565;
-        font-size: 20px;
-      }
-
-      .show-name {
-        font-size: 32px;
-        color: #d83565;
-      }
-
-      .show-name h1 {
-        font-size: 48px;
-        font-weight: 700;
-        letter-spacing: 0.1em;
-        color: #4a437e;
-      }
-
-      .time {
-        padding: 10px 0;
-        color: #4a437e;
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        font-weight: 700;
-      }
-
-      .time span {
-        font-weight: 400;
-        color: gray;
-      }
-
-      .left .time {
-        font-size: 16px;
-      }
-
-
-      .location {
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        width: 100%;
-        padding-top: 8px;
-        border-top: 1px solid gray;
-      }
-
-      .location .separator {
-        font-size: 20px;
-      }
-
-      .right {
-        width: 180px;
-        border-left: 1px dashed #404040;
-      }
-
-      .right .admit-one {
-        color: darkgray;
-      }
-
-      .right .admit-one span:nth-child(2) {
-        color: gray;
-      }
-
-      .right .right-info-container {
-        height: 250px;
-        padding: 10px 10px 10px 35px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-around;
-        align-items: center;
-      }
-
-      .right .show-name h1 {
-        font-size: 12px;
-      }
-
-      .barcode {
-        height: 100px;
-      }
-
-      .barcode img {
-        height: 100%;
-      }
-
-      .right .ticket-number {
-        color: gray;
-      }
+    body {
+      background-color: #2b2b2b;
+      font-family: "Montserrat", "Helvetica Neue", "Open Sans", "Arial";
+      font-weight: 300;
+      overflow-x: hidden;
+    }
+    .container-fluid {
+      display: flex;
+      justify-content: center;
+      position: relative;
+      margin-top: 40%;
+      transform: scale(3);
+    }
+    .ticket {
+      border-radius: 4px;
+      display: inline-block;
+      max-width: 320px;
+      text-align: left;
+      text-transform: uppercase;
+      width: 100%;
+    }
+    .ticket.dark {
+      background-color: #161616;
+      color: white;
+    }
+    .ticket.light {
+      background-color: white;
+      color: #161616;
+    }
+    .ticket.light .ticket-body {
+      border-color: #161616;
+    }
+    .ticket-head {
+      background-position: center;
+      background-size: cover;
+      border-radius: 4px 4px 0 0;
+      color: white;
+      height: 140px;
+      position: relative;
+    }
+    .ticket-head .from-to {
+      position: absolute;
+      left: 40%;
+      top: 50%;
+      transform: translateY(-50%) translateX(-50%);
+      font-size: 24px;
+      font-weight: 600;
+      width: 100%;
+      z-index: 2;
+    }
+    .ticket-head .icon {
+      display: inline-block;
+      margin: 0 40px;
+      transform: rotate(135deg) translate(25%, 25%);
+    }
+    .ticket-body {
+      border-bottom: 1px dashed white;
+      padding: 15px 45px;
+      position: relative;
+    }
+    .ticket-body p {
+      color: #A2A2A2;
+      font-size: 12px;
+    }
+    .ticket-body .flight-info {
+      margin-top: 15px;
+    }
+    .ticket-body .flight-date {
+      font-size: 12px;
+      margin-top: 15px;
+    }
+    .ticket-body:before,
+    .ticket-body:after {
+      background-color: #2b2b2b;
+      border-radius: 100%;
+      content: "";
+      height: 15px;
+      position: absolute;
+      top: 100%;
+      width: 20px;
+    }
+    .ticket-body:before {
+      left: 0;
+      transform: translate(-70%, -45%);
+    }
+    .ticket-body:after {
+      right: 0;
+      transform: translate(70%, -45%);
+    }
+    .disclaimer {
+      color: #A2A2A2;
+      font-family: "IM Fell French Canon";
+      font-size: 14px;
+      font-style: italic;
+      line-height: 1.25;
+      padding: 15px 25px;
+      text-transform: none;
+    }
+    .layer {
+      -webkit-transition: all 0.2s ease;
+      -moz-transition: all 0.2s ease;
+      -ms-transition: all 0.2s ease;
+      -o-transition: all 0.2s ease;
+      background-color: rgba(0, 0, 0, 0.4);
+      border-radius: 4px 4px 0 0;
+      height: 100%;
+      left: 0;
+      position: absolute;
+      top: 0;
+      width: 100%;
+      z-index: 1;
+    }
+    p,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      margin: 0;
+      padding: 0;
+    }
+    .qrcode { transform: scale(.2); }
   </style>
   </head>
   <body>
-    <div class="ticket">
-      <div class="left">
-        <div class="image">
-        </div>
-        <div class="ticket-info">
-          <p class="date">
-            <span class="june-29">{{date.0}}</span>
-            <span>{{date.1}}</span>
-          </p>
-          <div class="show-name">
-            <h1>{{ticket_type.event.name}}</h1>
+    <div class="container-fluid">
+      <div class="col-xs-6 text-left hidden-xs">
+        <div class="ticket dark">
+          <div 
+            class="ticket-head text-center" 
+            style="background-image: url(data:image/png;base64,{{poster}})"
+          >
+            <div class="layer"></div>
+            <div class="from-to">
+              <img class="qrcode" src="data:image/png;base64,{{image}}" alt="QRCode"/>
+            </div>
           </div>
-          <div class="time">
-            <p>{{ticket_type.event.time}}<span>TO</span>{{ticket_type.event.end_time}}</p>
+          <div class="ticket-body">
+            <div class="passenger">
+              <p>amdit</p>
+              <h4>{{ticket.payment.person.name}}</h4>
+            </div>
+            <div class="flight-info row">
+              <div class="col-xs-6">
+                <p>event</p>
+                <h4>{{ticket.ticket_type.event.name}}</h4>
+              </div>
+              <div class="col-xs-6">
+                <p>ticket number</p>
+                <h4>#{{ticket.ticket_number}}</h4>
+              </div>
+            </div>
+            <div class="flight-date">{{ticket.ticket_type.event.event_date}}</div>
           </div>
-          <p class="location"><span>{{ticket_type.event.event_location}}</span></p>
+          <div class="footer">
+            <div class="disclaimer">
+              Disclaimer: Once this ticket is scanned 
+              {{ticket.ticket_type.use_limit}} time(s), itll be invalid
+            </div>
+          </div>
         </div>
       </div>
-      <div class="right">
-        <div class="right-info-container">
-          <div class="show-name">
-            <h1>{{ticket_type.event.name}}</h1>
-          </div>
-          <div class="time">
-            <span class="june-29">{{date.0}} {{date.1}}</span>
-          </div>
-          <div class="barcode">
-            <img src="data:image/png;base64,{{image}}" alt="QRCode" style="float: right;"/>
-          </div>
-          <p class="ticket-number">
-            #{{ticket.ticket_number}}
-          </p>
-        </div>
-      </div>
-    </div>   
+    </div>
   </body>
 </html>
