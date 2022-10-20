@@ -8,7 +8,7 @@ from core.exceptions import HttpErrorException, ObjectNotFoundException
 from core.services import CRUDService
 from eticketing_api import settings
 from events.models import Event
-from notifications.utils import send_sms
+from notifications.utils import send_email, send_sms
 from partner.models import (
     Partner,
     PartnerPerson,
@@ -220,7 +220,7 @@ class PartnerPersonService(
         if person := obj_in.get("person", None):
             obj_in["person_id"] = str(
                 person_service.create(
-                    obj_data=person, serializer=PersonCreateSerializer
+                    obj_data=person.copy(), serializer=PersonCreateSerializer
                 ).id
             )
             del obj_in["person"]
@@ -233,6 +233,21 @@ class PartnerPersonService(
                 obj_id=str(obj.person.id),
             )
             del obj_in["person"]
+
+    def on_post_create(self, obj: PartnerPerson, obj_in: Dict[str, Any]) -> None:
+        if person := obj_in.get("person", None):
+            send_email.apply_async(
+                args=(
+                    obj.person_id,
+                    settings.POST_PARTNER_PERSON_CREATE_EMAIL_TITLE,
+                    settings.POST_PARTNER_PERSON_CREATE_EMAIL.format(
+                        obj.person.name,
+                        obj.person.phone_number,
+                        person["hashed_password"],
+                    ),
+                ),
+                queue=settings.CELERY_NOTIFICATIONS_QUEUE,
+            )
 
     def modify_query(
         self,

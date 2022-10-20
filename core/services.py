@@ -44,7 +44,7 @@ class ServiceInterface(Protocol[ModelType]):
     def on_pre_create(self, obj_in: Dict[str, Any]) -> None:
         pass
 
-    def on_post_create(self, obj: ModelType) -> None:
+    def on_post_create(self, obj: ModelType, obj_in: Dict[str, Any]) -> None:
         pass
 
     def on_pre_update(self, obj_in: Dict[Any, Any], obj: ModelType) -> None:
@@ -95,13 +95,13 @@ class CreateService(Generic[ModelType, CreateSerializer]):
             self.on_relationship(obj_in=obj_data, obj=obj, create=True)
 
         if hasattr(self, "on_post_create"):
-            self.on_post_create(obj)
+            self.on_post_create(obj, obj_data)
         return obj
 
     def on_pre_create(self, obj_in: Dict[str, Any]) -> None:
         pass
 
-    def on_post_create(self, obj: ModelType) -> None:
+    def on_post_create(self, obj: ModelType, obj_in: Dict[str, Any]) -> None:
         pass
 
     def on_relationship(

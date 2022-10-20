@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from http import HTTPStatus
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from django.db import transaction
 from django.db.models import Count
@@ -24,11 +24,11 @@ from tickets.utils import compute_ticket_hash
 class TicketService(
     CRUDService[Ticket, TicketCreateSerializer, TicketUpdateInnerSerializer]
 ):
-    def on_post_create(self, obj: Ticket) -> None:
+    def on_post_create(self, obj: Ticket, obj_in: Dict[str, Any]) -> None:
         hash = compute_ticket_hash(obj)
         try:
             Ticket.objects.get(hash=hash)
-            self.on_post_create(obj)
+            self.on_post_create(obj, obj_in)
         except Ticket.DoesNotExist:
             obj.hash = hash
             obj.save()
