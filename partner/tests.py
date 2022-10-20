@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 from typing import Any, Optional
 from unittest import mock
+from unittest.mock import Mock
 
 from django.test import Client, TestCase
 from rest_framework.test import APIClient
@@ -161,7 +162,8 @@ class PartnerTestCase(TestCase):
                 assert new_person[key] == person_data[key]
         assert settings.AUTH_HEADER in res.headers
 
-    def test_partner_person_create(self) -> None:
+    @mock.patch("notifications.utils.send_email.apply_async")
+    def test_partner_person_create(self, mock_send_email: Mock) -> None:
         partner_person_data = partner_fixtures.partner_person_fixture()
         partner_person_data["partner_id"] = str(partner_person_data["partner_id"])
 
@@ -170,9 +172,21 @@ class PartnerTestCase(TestCase):
             data=partner_person_data,
             format="json",
         )
-
         assert res.status_code == 200
         assert "person" in res.json()
+
+        mock_send_email.assert_called_with(
+            args=(
+                res.json()["person"]["id"],
+                settings.POST_PARTNER_PERSON_CREATE_EMAIL_TITLE,
+                settings.POST_PARTNER_PERSON_CREATE_EMAIL.format(
+                    res.json()["person"]["name"],
+                    res.json()["person"]["phone_number"],
+                    partner_person_data["person"]["hashed_password"],
+                ),
+            ),
+            queue=settings.CELERY_NOTIFICATIONS_QUEUE,
+        )
 
     def test_partner_person_create__non_owner(self) -> None:
         partner_person_data = partner_fixtures.partner_person_fixture()

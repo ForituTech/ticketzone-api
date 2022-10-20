@@ -20,13 +20,15 @@ retries = 0
 
 @celery.task(name=__name__ + ".send_email")
 def send_email(
-    person: Person,
+    person_id: str,
     header: str,
     body: str,
     attachments: Sequence[Any] = [],
     html: bool = False,
     retry: int = 0,
 ) -> bool:
+    person: Person = Person.objects.get(pk=person_id)
+
     if retry == 5:
         return False
     email = EmailMessage(
@@ -37,7 +39,7 @@ def send_email(
     email.attach()
     failed = email.send(fail_silently=True)
     if failed:
-        send_email(person, header, body, attachments, html, retry=retry + 1)
+        send_email(person_id, header, body, attachments, html, retry=retry + 1)
     Notification.objects.create(
         person=person,
         channel=NotificationsChannels.EMAIL.value,

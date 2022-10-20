@@ -231,6 +231,13 @@ REMINDER_SMS = "Hi {} :), just reminding you that {} is in the next 24 hrs ! Woh
 
 POST_RECONCILIATION_MESSAGE = "HI {}. Your weekly reconciliation has just completed. Your total balance comes out to {}"
 
+POST_PARTNER_PERSON_CREATE_EMAIL_TITLE = "Ticketzone Account Details"
+POST_PARTNER_PERSON_CREATE_EMAIL = (
+    "Hi {} your Tickezone credentials are:\n"
+    "Username: {}, password: {} \n"
+    "We would recommend you reset your password after login for safety purposes"
+)
+
 CORS_ALLOWED_ORIGIN_REGEXES = [r"^http.*$"]
 CORS_ALLOW_METHODS = [
     "DELETE",
