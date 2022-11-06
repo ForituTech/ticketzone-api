@@ -427,18 +427,38 @@ class EventTestCase(TestCase):
         assert res.json()["done"]
 
     def test_highlighted_events(self) -> None:
-        event = event_fixtures.create_event_object(owner=self.owner.person)
+        category_1_id = str(event_fixtures.create_event_category_obj().id)
+        category_2_id = str(event_fixtures.create_event_category_obj().id)
+
+        event = event_fixtures.create_event_object(
+            owner=self.owner.person, category_id=category_1_id
+        )
         ticket_type = event_fixtures.create_ticket_type_obj(event=event)
-        payment = payment_fixtures.create_payment_object(self.owner.person)
-        ticket_fixtures.create_ticket_obj(ticket_type, payment)
+        payment = payment_fixtures.create_payment_object(self.owner.person, 900.0)
         ticket_fixtures.create_ticket_obj(ticket_type, payment)
 
-        event_fixtures.create_event_object(owner=self.owner.person)
+        event_2 = event_fixtures.create_event_object(
+            owner=self.owner.person, category_id=category_2_id
+        )
+        ticket_type_2 = event_fixtures.create_ticket_type_obj(event=event_2)
+        payment = payment_fixtures.create_payment_object(self.owner.person, 500.0)
+        ticket_fixtures.create_ticket_obj(ticket_type_2, payment)
+        ticket_fixtures.create_ticket_obj(ticket_type_2, payment)
 
         res = self.client.get(f"/{API_VER}/events/highlighted/")
 
         assert res.status_code == 200
         assert res.json()["results"][0]["id"] == str(event.id)
+        assert res.json()["results"][1]["id"] == str(event_2.id)
+
+        res = self.client.get(
+            f"/{API_VER}/events/highlighted/?category_id={category_1_id}"
+        )
+
+        assert res.status_code == 200
+        returned_event_ids = [event["id"] for event in res.json()["results"]]
+        assert str(event.id) in returned_event_ids
+        assert str(event_2.id) not in returned_event_ids
 
     def test_partner_events_count(self) -> None:
         event_fixtures.create_event_object(owner=self.owner.person)
