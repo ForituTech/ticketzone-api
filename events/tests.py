@@ -451,3 +451,33 @@ class EventTestCase(TestCase):
 
         assert res.status_code == 200
         assert res.json()["count"] == 2
+
+    def test_events_list__filterable_by_multiple_values(self) -> None:
+        category_1_id = str(event_fixtures.create_event_category_obj().id)
+        category_2_id = str(event_fixtures.create_event_category_obj().id)
+        assert category_1_id != category_2_id
+        event_1 = event_fixtures.create_event_object(
+            owner=self.owner.person, category_id=category_1_id
+        )
+        event_2 = event_fixtures.create_event_object(
+            owner=self.owner.person, category_id=category_2_id
+        )
+        event_3 = event_fixtures.create_event_object(
+            owner=self.owner.person, category_id=category_1_id
+        )
+
+        res = self.client.get(f"/{API_VER}/events/events/?category_id={category_1_id}")
+        assert res.status_code == 200
+        returned_ids = [event["id"] for event in res.json()["results"]]
+        assert str(event_1.id) in returned_ids
+        assert str(event_3.id) in returned_ids
+        assert str(event_2.id) not in returned_ids
+
+        res = self.client.get(
+            f"/{API_VER}/events/events/?category_id__in={category_1_id},{category_2_id}"
+        )
+        assert res.status_code == 200
+        returned_ids = [event["id"] for event in res.json()["results"]]
+        assert str(event_1.id) in returned_ids
+        assert str(event_3.id) in returned_ids
+        assert str(event_2.id) in returned_ids

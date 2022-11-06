@@ -194,6 +194,12 @@ class ReadService(Generic[ModelType]):
             for key, value in list(filters.items()):
                 if value is None or value == "":
                     del filters[key]
+                if (
+                    isinstance(key, str)
+                    and key.endswith("__in")
+                    and isinstance(value, str)
+                ):
+                    filters[key] = filters[key].split(",")
 
     def _clean_sort_fields(self, order_by_fields: List) -> None:
         invalid_indexes = []
