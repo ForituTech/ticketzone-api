@@ -1,3 +1,4 @@
+import json
 from http import HTTPStatus
 from typing import (
     Any,
@@ -200,6 +201,10 @@ class ReadService(Generic[ModelType]):
                     and isinstance(value, str)
                 ):
                     filters[key] = filters[key].split(",")
+                if value == "true" or value == "false":
+                    filters[key] = json.loads(value)
+                if value == "True" or value == "False":
+                    filters[key] = eval(value)
 
     def _clean_sort_fields(self, order_by_fields: List) -> None:
         invalid_indexes = []
