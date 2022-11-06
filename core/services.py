@@ -242,7 +242,7 @@ class ReadService(Generic[ModelType]):
     ) -> QuerySet[ModelType]:
         self._clean_filters(filters)
         order_by_fields = ["created_at"]
-        query = self.model.objects
+        query: QuerySet = self.model.objects.distinct()
         if filters:
             if "ordering" in filters:
                 order_by_fields = filters["ordering"].split(",")
@@ -260,7 +260,7 @@ class ReadService(Generic[ModelType]):
                 query = self.search(search_term=filters["search"], query=query)
 
         if hasattr(self, "modify_query"):
-            query = self.modify_query(query, order_by_fields, filters)  # type: ignore
+            query = self.modify_query(query, order_by_fields, filters)
 
         self._clean_sort_fields(order_by_fields)
 
@@ -275,13 +275,13 @@ class ReadService(Generic[ModelType]):
             )
 
         try:
-            query = query.order_by(*order_by_fields)  # type: ignore
+            query = query.order_by(*order_by_fields)
         except FieldError as exc:
             raise HttpErrorException(
                 422, code=ErrorCodes.UNPROCESSABLE_FILTER, extra=str(exc)
             )
 
-        return query  # type: ignore
+        return query
 
     @no_type_check  # TODO: FIX
     def search(self, *, search_term: str, query: QuerySet) -> QuerySet[ModelType]:
