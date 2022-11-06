@@ -418,6 +418,41 @@ class EventTestCase(TestCase):
         assert res.status_code == 200
         assert len(res.json()) == 1
 
+    def test_category__filterable_by_assigned_events(self) -> None:
+        category_1_id = str(event_fixtures.create_event_category_obj().id)
+        category_2_id = str(event_fixtures.create_event_category_obj().id)
+        category_3_id = str(event_fixtures.create_event_category_obj().id)
+        event_fixtures.create_event_object(
+            self.owner.person, state="AE", category_id=category_1_id
+        )
+        event_fixtures.create_event_object(self.owner.person, category_id=category_3_id)
+
+        res = self.client.get(f"/{API_VER}/events/categories/?event__isnull=false")
+
+        assert res.status_code == 200
+        returned_cat_ids = [cat["id"] for cat in res.json()]
+        assert category_1_id in returned_cat_ids
+        assert category_3_id in returned_cat_ids
+        assert category_2_id not in returned_cat_ids
+
+        res = self.client.get(f"/{API_VER}/events/categories/?event__isnull=True")
+
+        assert res.status_code == 200
+        returned_cat_ids = [cat["id"] for cat in res.json()]
+        assert category_1_id not in returned_cat_ids
+        assert category_3_id not in returned_cat_ids
+        assert category_2_id in returned_cat_ids
+
+        res = self.client.get(
+            f"/{API_VER}/events/categories/?event__isnull=False&event__event_state=AE"
+        )
+
+        assert res.status_code == 200
+        returned_cat_ids = [cat["id"] for cat in res.json()]
+        assert category_1_id in returned_cat_ids
+        assert category_3_id not in returned_cat_ids
+        assert category_2_id not in returned_cat_ids
+
     def test_reminder_optin(self) -> None:
         event = event_fixtures.create_event_object()
 

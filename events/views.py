@@ -113,7 +113,8 @@ def redeem_promo_code(request: Request, code: str) -> Response:
 @swagger_auto_schema(method="get", responses={200: CategorySerializer(many=True)})
 @api_view(["GET"])
 def list_categories(request: Request) -> Response:
-    categories = category_service.get_filtered()
+    filters = request.query_params.dict()
+    categories = category_service.get_filtered(filters=filters)
     return Response(CategorySerializer(categories, many=True).data)
 
 
