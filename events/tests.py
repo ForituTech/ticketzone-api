@@ -425,6 +425,9 @@ class EventTestCase(TestCase):
         event_fixtures.create_event_object(
             self.owner.person, state="AE", category_id=category_1_id
         )
+        event_fixtures.create_event_object(
+            self.owner.person, state="AE", category_id=category_1_id
+        )
         event_fixtures.create_event_object(self.owner.person, category_id=category_3_id)
 
         res = self.client.get(f"/{API_VER}/events/categories/?event__isnull=false")
@@ -452,6 +455,7 @@ class EventTestCase(TestCase):
         assert category_1_id in returned_cat_ids
         assert category_3_id not in returned_cat_ids
         assert category_2_id not in returned_cat_ids
+        assert len(returned_cat_ids) == 1
 
     def test_reminder_optin(self) -> None:
         event = event_fixtures.create_event_object()
