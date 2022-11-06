@@ -24,7 +24,9 @@ def create_event_category_obj() -> EventCategory:
     return EventCategory.objects.create(**event_category_fixture())
 
 
-def event_fixture(partner_id: Union[str, int] = None) -> dict:
+def event_fixture(
+    partner_id: Union[str, int] = None, category_id: Optional[str] = None
+) -> dict:
     return {
         "name": random_string(),
         "poster": open("media/42_EluV6G9.jpg", "rb"),
@@ -39,14 +41,16 @@ def event_fixture(partner_id: Union[str, int] = None) -> dict:
         "event_state": "PR",
         "time": (datetime.now() + timedelta(hours=4)).strftime("%H:%M:%S"),
         "end_time": (datetime.now() + timedelta(days=1)).strftime("%H:%M:%S"),
-        "category_id": str(create_event_category_obj().id),
+        "category_id": category_id or str(create_event_category_obj().id),
     }
 
 
 def create_event_object(
-    owner: Optional[Person] = None, state: Optional[str] = "PR"
+    owner: Optional[Person] = None,
+    state: Optional[str] = "PR",
+    category_id: Optional[str] = None,
 ) -> Event:
-    data = event_fixture()
+    data = event_fixture(category_id=category_id)
     data["partner_id"] = partner_fixtures.create_partner_obj(owner=owner).id
     data["poster"] = "media/42_EluV6G9.jpg"
     data["event_state"] = state
