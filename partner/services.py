@@ -116,6 +116,12 @@ class PersonService(
 
         return create_access_token(user)
 
+    def get_or_create(self, person_data: Dict[str, Any]) -> Person:
+        if phone := person_data.get("phone_number"):
+            if person := Person.objects.filter(phone_number=phone).first():
+                return person
+        return self.create(obj_data=person_data, serializer=PersonCreateSerializer)
+
 
 person_service = PersonService(Person)
 

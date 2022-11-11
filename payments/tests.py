@@ -1,3 +1,5 @@
+import uuid
+
 from django.test import TestCase
 from rest_framework.test import APIClient
 
@@ -25,20 +27,32 @@ class PaymentTestCase(TestCase):
         )
 
     def test_create_payment(self) -> None:
-        payment_data = payment_fixtures.payment_fixture(
-            person_id=str(self.owner.person_id)
-        )
+        payment_data = payment_fixtures.payment_create_fixture(person=self.owner.person)
+
         res = self.client.post(
             f"/{API_VER}/payments/", data=payment_data, format="json"
         )
 
         assert res.status_code == 200
-        assert res.json()["person_id"] == payment_data["person_id"]
+        assert res.json()["person_id"] == str(self.owner.person.id)
 
-    def test_create_payment__not_logged_in(self) -> None:
-        payment_data = payment_fixtures.payment_fixture()
-        res = self.unauthed_client.post(
+    def test_create_payment__inavlid_ticket_type(self) -> None:
+        payment_data = payment_fixtures.payment_create_fixture(
+            person=self.owner.person,
+            ticket_types=[{"id": uuid.uuid4(), "amount": 1}],
+        )
+
+        res = self.client.post(
             f"/{API_VER}/payments/", data=payment_data, format="json"
         )
 
-        assert res.status_code == 403
+        assert res.status_code == 400
+
+    def test_list_payment_methods(self) -> None:
+        payment_method = payment_fixtures.create_payment_method_obj()
+
+        res = self.client.get(f"/{API_VER}/payments/methods/", format="json")
+
+        assert res.status_code == 200
+        returned_payment_method_names = [method["name"] for method in res.json()]
+        assert payment_method.name in returned_payment_method_names

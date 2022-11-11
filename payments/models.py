@@ -1,10 +1,7 @@
-import abc
-from typing import Optional
-
 from django.db import models
 
 from core.models import BaseModel
-from partner.models import Partner, Person
+from partner.models import Person
 from payments.constants import PaymentProviders, PaymentStates
 
 
@@ -28,34 +25,16 @@ class Payment(BaseModel):
         return f"{self.person.name} paid " f"{self.amount} at {self.created_at}"
 
 
-class AbstractModelMeta(abc.ABCMeta, type(models.Model)):  # type: ignore
-    pass
+class PaymentMethod(BaseModel):
+    name = models.CharField(
+        null=False,
+        blank=False,
+        max_length=255,
+        default=PaymentProviders.MPESA.value,
+        choices=PaymentProviders.list(),
+        unique=True,
+    )
+    poster = models.ImageField(null=True, blank=True, upload_to="media/")
 
-
-class PaymentMethodType(models.Model, metaclass=AbstractModelMeta):  # type: ignore
-
-    name = models.CharField(max_length=256, null=False, blank=False, unique=True)
-
-    class Meta:
-        abstract = True
-
-    @abc.abstractmethod
-    def verify(self) -> bool:
-        pass
-
-    @abc.abstractmethod
-    def c2b_receive(self, *, amount: int) -> PaymentStates:
-        pass
-
-    @abc.abstractmethod
-    def b2c_send(self, *, amount: int, partner: Partner) -> PaymentStates:
-        pass
-
-    # partner disbursment
-    @abc.abstractmethod
-    def b2b_send(self, *, amount: int, partner: Partner) -> PaymentStates:
-        pass
-
-    @abc.abstractmethod
-    def search(self, *, transaction_id: str) -> Optional[Payment]:
-        pass
+    def __str__(self) -> str:
+        return self.name
