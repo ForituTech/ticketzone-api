@@ -28,7 +28,7 @@ class PaymentCreateSerializerInner(BaseSerializer):
     ticket_types = serializers.ListField(child=TicketTypeSerializer())
 
 
-class PaymentCreateSerializer(BaseSerializer):
+class PaymentCreateSerializer(serializers.Serializer):
     made_through = serializers.CharField(max_length=255)
     person = PersonSerializer()
     ticket_types = serializers.ListField(child=TicketTypeSerializer())
