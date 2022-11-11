@@ -9,6 +9,7 @@ class ErrorCodes(enum.Enum):
     GENERIC_TICKET_TYPE_LISTING = (
         "Global ticket type listing is forbidden. event_id filter is required."
     )
+    INTERGRATION_ERROR = "Intergration Error: {}"
     INVALID_CREDENTIALS = "The provided credentials don't match any user"
     INVALID_EVENT_FOR_TICKET = "Invalid event id on tickect creation"
     INVALID_EVENT_ID = "An event with the given ID does not exist"

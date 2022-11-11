@@ -110,9 +110,6 @@ class TicketService(
 
         return ticket
 
-    def send(self, ticket: Ticket) -> bool:
-        pass
-
 
 ticket_service = TicketService(Ticket)
 

@@ -6,18 +6,16 @@ from rest_framework import permissions
 
 from eticketing_api.settings import API_VERSION_STRING
 
-admin.site.site_header = "Eticketing Super-Admin"
-admin.site.site_title = "Eticketing Super-Admin Portal"
-admin.site.index_title = "Welcome to Eticketing Super-Admin Portal"
+admin.site.site_header = "TicketZone Super-Admin"
+admin.site.site_title = "TicketZone Super-Admin Portal"
+admin.site.index_title = "Welcome to TicketZone Super-Admin Portal"
 
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="Ticketzone API",
+        title="TicketZone API",
         default_version="v1",
-        description="Ticketing Engine",
-        contact=openapi.Contact(email="mogendi.mongare@gmail.com"),
-        license=openapi.License(name="BSD License"),
+        description="TicketZone ticketing API",
     ),
     public=True,
     permission_classes=[permissions.AllowAny],

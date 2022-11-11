@@ -231,7 +231,7 @@ class ReadService(Generic[ModelType]):
         order_by_fields = ["created_at"]
         if not filters:
             filters = {}
-        return self.model.objects.filter(**filters).order_by(*order_by_fields)
+        return self.model.objects.filter(**filters).order_by(*order_by_fields).all()
 
     def get_filtered(
         self,

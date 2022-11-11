@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from core.serializers import BaseSerializer, InDBBaseSerializer
+from partner.serializers import PersonSerializer
 
 
 class PaymentBaseSerializer(serializers.Serializer):
@@ -15,8 +16,22 @@ class PaymentSerializer(serializers.Serializer):
     made_through = serializers.CharField(max_length=255)
 
 
-class PaymentCreateSerializer(BaseSerializer, PaymentSerializer):
-    pass
+class TicketTypeSerializer(serializers.Serializer):
+    id = serializers.CharField(max_length=255)
+    amount = serializers.IntegerField(min_value=1)
+
+
+class PaymentCreateSerializerInner(BaseSerializer):
+    amount = serializers.FloatField()
+    made_through = serializers.CharField(max_length=255)
+    person_id = serializers.CharField(max_length=255)
+    ticket_types = serializers.ListField(child=TicketTypeSerializer())
+
+
+class PaymentCreateSerializer(BaseSerializer):
+    made_through = serializers.CharField(max_length=255)
+    person = PersonSerializer()
+    ticket_types = serializers.ListField(child=TicketTypeSerializer())
 
 
 class PaymentUpdateSerializer(BaseSerializer, PaymentBaseSerializer):
@@ -24,4 +39,13 @@ class PaymentUpdateSerializer(BaseSerializer, PaymentBaseSerializer):
 
 
 class PaymentReadSerializer(InDBBaseSerializer, PaymentBaseSerializer):
+    pass
+
+
+class PaymentMethodSerialzier(serializers.Serializer):
+    name = serializers.CharField(max_length=255)
+    poster = serializers.ImageField(required=False)
+
+
+class PaymentMethodWriteSerializer(BaseSerializer, PaymentMethodSerialzier):
     pass
