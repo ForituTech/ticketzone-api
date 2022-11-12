@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Payment
+from .models import Payment, PaymentMethod
 
 
 class PaymentAdminConfig(admin.ModelAdmin):
@@ -13,4 +13,9 @@ class PaymentAdminConfig(admin.ModelAdmin):
     readonly_fields = ["verified", "reconciled"]
 
 
+class PaymentMethodAdminConfig(admin.ModelAdmin):
+    search_fields = ["name"]
+
+
 admin.site.register(Payment, PaymentAdminConfig)
+admin.site.register(PaymentMethod, PaymentMethodAdminConfig)
