@@ -155,7 +155,7 @@ class TicketType(BaseModel):
 class EventPromotion(BaseModel):
     name = models.CharField(max_length=256, null=False, blank=False)
     event = models.ForeignKey(Event, on_delete=models.CASCADE, null=False, blank=False)
-    promotion_rate = models.FloatField(null=False, blank=False, default=10.0)
+    promotion_rate = models.FloatField(null=False, blank=False, default=1.0)
     expiry = models.DateField(null=False, blank=False, auto_now=False)
     use_limit = models.IntegerField(null=False, blank=False, default=100)
 

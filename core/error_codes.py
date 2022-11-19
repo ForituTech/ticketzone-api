@@ -23,10 +23,13 @@ class ErrorCodes(enum.Enum):
     )
     NO_MEMBERSHIP = "The given person isn't associated to a partner"
     NO_PARTNERSHIP = "The given person has no partner"
+    NOT_SUPPORTED = "The action you attempted is not supported"
     PROMO_NOT_FOUND = "The promotion code was not found"
     REDEEMED_TICKET = "The current ticket has already been redeemed"
     TARGET_MODEL_HAS_NO_SEARCH_VECTOR = "The target model does not have a search vector"
     TICKET_TYPE_OBJECT_DELETED = "Ticket type object sucessfully deleted"
+    TICKET_TYPE_SOLD_OUT = "The ticket {} has just sold out :("
+    TICKET_TYPE_INSUFFICIENT = "There's is an insufficient amount of tickets: {}"
     UNPAID_FOR_TICKET = "A ticket with an unverified payment cannot be redeemed"
     UNPROCESSABLE_FILTER = "Some of the filters passed could not be processed: {}"
     UNPROCESSABLE_TOKEN = (
