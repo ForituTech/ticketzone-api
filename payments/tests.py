@@ -4,6 +4,7 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 
 from eticketing_api import settings
+from events.fixtures import event_fixtures
 from partner.constants import PersonType
 from partner.fixtures import partner_fixtures
 from payments.fixtures import payment_fixtures
@@ -56,3 +57,98 @@ class PaymentTestCase(TestCase):
         assert res.status_code == 200
         returned_payment_method_names = [method["name"] for method in res.json()]
         assert payment_method.name in returned_payment_method_names
+
+    def test_cant_bundle_unrelated_ticket_types(self) -> None:
+        ticket_type_1 = event_fixtures.create_ticket_type_obj(owner=self.owner.person)
+        ticket_type_2 = event_fixtures.create_ticket_type_obj(owner=self.owner.person)
+        payment_data = payment_fixtures.payment_create_fixture(
+            person=self.owner.person,
+            ticket_types=[
+                {"id": ticket_type_1.id, "amount": 1},
+                {"id": ticket_type_2.id, "amount": 1},
+            ],
+        )
+
+        res = self.client.post(
+            f"/{API_VER}/payments/", data=payment_data, format="json"
+        )
+
+        assert res.status_code == 400
+
+    def test_create_payment__with_promocode(self) -> None:
+        ticket_type = event_fixtures.create_ticket_type_obj(owner=self.owner.person)
+        promo_id = str(event_fixtures.create_event_promo_obj(ticket_type.event).id)
+        payment_data = payment_fixtures.payment_create_fixture(
+            person=self.owner.person,
+            ticket_types=[{"id": ticket_type.id, "amount": 1}],
+            promo=promo_id,
+        )
+
+        res = self.client.post(
+            f"/{API_VER}/payments/", data=payment_data, format="json"
+        )
+
+        assert res.status_code == 200
+        payment = res.json()
+        assert payment["amount"] == 10800.00
+
+        # invalid promocode
+        payment_data = payment_fixtures.payment_create_fixture(
+            person=self.owner.person,
+            ticket_types=[{"id": ticket_type.id, "amount": 1}],
+            promo=str(uuid.uuid4()),
+        )
+
+        res = self.client.post(
+            f"/{API_VER}/payments/", data=payment_data, format="json"
+        )
+
+        assert res.status_code == 404
+
+    def test_create_payment__ticket_type_validations(self) -> None:
+        ticket_type = event_fixtures.create_ticket_type_obj(owner=self.owner.person)
+        payment_data = payment_fixtures.payment_create_fixture(
+            person=self.owner.person, ticket_types=[{"id": ticket_type.id, "amount": 1}]
+        )
+        pre_create_amount = ticket_type.amount
+
+        res = self.client.post(
+            f"/{API_VER}/payments/", data=payment_data, format="json"
+        )
+
+        assert res.status_code == 200
+        ticket_type.refresh_from_db()
+        assert ticket_type.amount == pre_create_amount - 1
+
+        ticket_type = event_fixtures.create_ticket_type_obj(owner=self.owner.person)
+        payment_data = payment_fixtures.payment_create_fixture(
+            person=self.owner.person,
+            ticket_types=[{"id": ticket_type.id, "amount": ticket_type.amount + 1}],
+        )
+
+        res = self.client.post(
+            f"/{API_VER}/payments/", data=payment_data, format="json"
+        )
+
+        assert res.status_code == 400
+        assert (
+            f"The ticket {ticket_type.name} has only {ticket_type.amount} left"
+            in res.json()["detail"]
+        )
+
+        ticket_type.amount = 0
+        ticket_type.save()
+        assert ticket_type.amount == 0
+        payment_data = payment_fixtures.payment_create_fixture(
+            person=self.owner.person, ticket_types=[{"id": ticket_type.id, "amount": 1}]
+        )
+
+        res = self.client.post(
+            f"/{API_VER}/payments/", data=payment_data, format="json"
+        )
+
+        assert res.status_code == 400
+        assert (
+            f"The ticket {ticket_type.name} has just sold out :("
+            in res.json()["detail"]
+        )

@@ -47,6 +47,7 @@ def payment_create_fixture(
     amount: int = 2,
     person: Optional[Person] = None,
     ticket_types: Optional[List[Dict[str, Any]]] = None,
+    promo: Optional[str] = None,
 ) -> dict:
     return {
         "person": person_fixture_from_person_obj(person)
@@ -54,6 +55,7 @@ def payment_create_fixture(
         else partner_fixtures.person_fixture_no_password(),
         "ticket_types": ticket_types or [ticket_type_fixture(amount)],
         "made_through": PaymentProviders.MPESA.value,
+        "promo": promo,
     }
 
 

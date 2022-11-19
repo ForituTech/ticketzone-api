@@ -25,6 +25,7 @@ urlpatterns = [
         name="partner_events_count",
     ),
     path("export/csv/", view=views.export_events, name="export_events"),
+    path("validate/<str:event_id>/promo/<str:code>/", view=views.validate_promocode),
 ]
 
 urlpatterns += router.urls

@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from typing import Union
 from uuid import UUID
 
@@ -31,6 +32,7 @@ from events.serializers import (
     EventPromotionReadSerializer,
     EventPromotionSerializer,
     EventPromotionUpdateSerializer,
+    EventPromotionValidatedSerializer,
     EventReadSerializer,
     EventSerializer,
     EventUpdateSerializer,
@@ -71,43 +73,15 @@ def highlighted_events(request: Request) -> Response:
     )
 
 
-""" Needs to be reconsidered
-@swagger_auto_schema(
-    method="post",
-    request_body=PromoVerifyInnerSerializer,
-    responses={200: PromotionSerializer(many=True)},
-)
-@api_view(["POST"])
-@permission_classes([LoggedInPermission])
-def redeem_promo_code(request: Request, code: str) -> Response:
-    filters = {"name": code}
-    target_ids = PromoVerifyInnerSerializer(request.data).data["target_ids"]
-    ticket_promos = ticket_type_promo_service.get_all(filters=filters)
-    event_promos = event_promo_service.get_all(filters=filters)
-    if not len(ticket_promos) and not len(event_promos):
+@swagger_auto_schema(method="get", responses={200: EventPromotionValidatedSerializer})
+@api_view(["GET"])
+def validate_promocode(request: Request, event_id: str, code: str) -> Response:
+    if promo := event_promo_service.check(event_id=event_id, promo_code=code):
+        return Response({"id": str(promo.id)})
+    else:
         raise HttpErrorException(
-            status_code=HTTPStatus.NOT_FOUND,
-            code=ErrorCodes.PROMO_NOT_FOUND,
+            status_code=HTTPStatus.NOT_FOUND, code=ErrorCodes.PROMO_NOT_FOUND
         )
-    targets = [
-        {"rate": ticket_promo.promotion_rate, "target_id": str(ticket_promo.ticket.id)}
-        for ticket_promo in ticket_promos
-        if str(ticket_promo.ticket.id) in target_ids
-        and ticket_type_promo_service.redeem(ticket_promo)
-    ]
-    targets.extend(
-        [
-            {
-                "rate": event_promo.promotion_rate,
-                "target_id": str(event_promo.event.id),
-            }
-            for event_promo in event_promos
-            if str(event_promo.event.id) in target_ids
-            and event_promo_service.redeem(event_promo)
-        ]
-    )
-    return Response(json.dumps(targets))
-"""
 
 
 @swagger_auto_schema(method="get", responses={200: CategorySerializer(many=True)})

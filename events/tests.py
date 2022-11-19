@@ -568,3 +568,21 @@ class EventTestCase(TestCase):
         assert str(event_1.id) in returned_ids
         assert str(event_3.id) in returned_ids
         assert str(event_2.id) in returned_ids
+
+    def test_validate_promo_code(self) -> None:
+        event = event_fixtures.create_event_object(owner=self.owner.person)
+        event_id = str(event.id)
+        promo = event_fixtures.create_event_promo_obj(event)
+        code = promo.name
+        fake_promo = random_string()
+
+        res = self.client.get(f"/{API_VER}/events/validate/{event_id}/promo/{code}/")
+
+        assert res.status_code == 200
+        assert res.json()["id"] == str(promo.id)
+
+        res = self.client.get(
+            f"{API_VER}/events/validate/{event_id}/promo/{fake_promo}/"
+        )
+
+        assert res.status_code == 404

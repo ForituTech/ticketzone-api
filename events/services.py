@@ -207,6 +207,9 @@ class EventPromotionService(
         promo.save()
         return True
 
+    def check(self, promo_code: str, event_id: str) -> Optional[EventPromotion]:
+        return EventPromotion.objects.filter(event_id=event_id, name=promo_code).first()
+
 
 event_promo_service = EventPromotionService(EventPromotion)
 

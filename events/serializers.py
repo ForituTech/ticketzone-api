@@ -61,6 +61,10 @@ class EventPromotionReadSerializer(InDBBaseSerializer, EventPromotionSerializer)
     event_id = serializers.CharField(max_length=255)
 
 
+class EventPromotionValidatedSerializer(serializers.Serializer):
+    id = serializers.CharField(max_length=255)
+
+
 class PromoVerifySerializer(BaseSerializer):
     target_ids = serializers.ListField(child=serializers.CharField(max_length=255))
 

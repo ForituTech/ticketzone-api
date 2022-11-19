@@ -32,6 +32,7 @@ class PaymentCreateSerializer(serializers.Serializer):
     made_through = serializers.CharField(max_length=255)
     person = PersonSerializer()
     ticket_types = serializers.ListField(child=TicketTypeSerializer())
+    promo = serializers.CharField(max_length=255, required=False)
 
 
 class PaymentUpdateSerializer(BaseSerializer, PaymentBaseSerializer):
