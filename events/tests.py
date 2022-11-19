@@ -131,6 +131,34 @@ class EventTestCase(TestCase):
         )
         assert res.status_code == 422
 
+    def test_update_event__check_agent_update_replaces_original_list(self) -> None:
+        # check that the TA is dropped if not included in updated list
+        event = event_fixtures.create_event_object(owner=self.owner.person)
+        ta_1_id = str(
+            partner_fixtures.create_partner_person(partner=self.owner.partner).id
+        )
+        ta_2_id = str(
+            partner_fixtures.create_partner_person(partner=self.owner.partner).id
+        )
+
+        update_data = {"partner_person_ids": [ta_1_id]}
+        res = self.client.put(
+            f"/{API_VER}/events/events/{event.id}/", data=update_data, format="json"
+        )
+        assert res.status_code == status.HTTP_200_OK
+        ta_ids = [ta["id"] for ta in res.json()["assigned_ticketing_agents"]]
+        assert ta_1_id in ta_ids
+        assert ta_2_id not in ta_ids
+
+        update_data = {"partner_person_ids": [ta_2_id]}
+        res = self.client.put(
+            f"/{API_VER}/events/events/{event.id}/", data=update_data, format="json"
+        )
+        assert res.status_code == status.HTTP_200_OK
+        ta_ids = [ta["id"] for ta in res.json()["assigned_ticketing_agents"]]
+        assert ta_1_id not in ta_ids
+        assert ta_2_id in ta_ids
+
     def test_update_event_ticket_types(self) -> None:
         event = event_fixtures.create_event_object(owner=self.owner.person)
         tt1: TicketType = event_fixtures.create_ticket_type_obj(event=event)
