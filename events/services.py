@@ -62,6 +62,11 @@ class EventService(CRUDService[Event, EventSerializer, EventUpdateSerializer]):
                         event_id=obj.id, partner_person_id=partner_person_id
                     )
                     partner_person_schedule.save()
+            # drop all partner persons schedules for persons
+            # who aren't in the payload
+            PartnerPersonSchedule.objects.exclude(
+                partner_person_id__in=partner_person_ids
+            ).delete()
 
         if ticket_types := obj_in.get("ticket_types", None):
             if isinstance(ticket_types, dict):
