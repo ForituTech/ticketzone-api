@@ -11,6 +11,7 @@ from events.models import Ticket, TicketType
 from events.services import event_promo_service
 from notifications.utils import send_ticket_email
 from partner.services import person_service
+from payments.configs import payment_processor_map
 from payments.constants import CONFIRMED_PAYMENT_STATES
 from payments.models import Payment, PaymentMethod
 from payments.serilaizers import (
@@ -106,6 +107,13 @@ class PaymentService(
                 )
                 ticket_type_obj.amount -= ticket_type["amount"]
                 ticket_type_obj.save()
+
+            if processor := payment_processor_map.get(obj.made_through, None):
+                processor.c2b_receive(payment=obj)
+            else:
+                raise HttpErrorException(
+                    status_code=503, code=ErrorCodes.PROVIDER_NOT_SUPPORTED
+                )
 
     def on_post_update(self, obj: Payment) -> None:
         if obj.state in CONFIRMED_PAYMENT_STATES:

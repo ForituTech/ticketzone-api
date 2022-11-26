@@ -1,12 +1,20 @@
 from django.db import models
 
 from core.models import BaseModel
+from core.utils import generate_payment_number
 from partner.models import Person
-from payments.constants import PaymentProviders, PaymentStates
+from payments.constants import PaymentProviders, PaymentStates, PaymentTransactionState
 
 
 class Payment(BaseModel):
     amount = models.FloatField(null=False, blank=False)
+    number = models.CharField(
+        null=False,
+        blank=False,
+        default=generate_payment_number,
+        unique=True,
+        max_length=255,
+    )
     person = models.ForeignKey(
         Person, on_delete=models.DO_NOTHING, null=False, blank=False
     )
@@ -38,3 +46,14 @@ class PaymentMethod(BaseModel):
 
     def __str__(self) -> str:
         return self.name
+
+
+class PaymentTransactionLogs(BaseModel):
+    payment = models.ForeignKey(Payment, on_delete=models.CASCADE)
+    state = models.CharField(
+        max_length=255,
+        null=False,
+        blank=False,
+        default=PaymentTransactionState.FAILED.value,
+    )
+    message = models.CharField(max_length=2048, null=False, blank=False)
