@@ -124,9 +124,9 @@ class iPayMPesa(SharedMethods, PaymentProviderType):
 
             if int(res.json()["status"]):
                 payment_state = (
-                    PaymentStates.PAID.value
+                    PaymentStates.PENDING.value
                     if int(os.environ["PAYMENTS_LIVE"])
-                    else PaymentStates.PENDING.value
+                    else PaymentStates.PAID.value
                 )
                 payment_service.update(
                     obj_data={"state": payment_state},
