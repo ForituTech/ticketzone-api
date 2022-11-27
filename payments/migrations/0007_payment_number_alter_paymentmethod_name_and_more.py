@@ -17,8 +17,8 @@ def generate_payment_number_(apps: Any, schema_editor: Any) -> None:
     for payment in Payment_.objects.all():
         date_ = date.today()
         payment_number = (
-            f"pmnt-{date_.year}{date_.month}{date_.day}"
-            f"-{core.utils.random_string(6)}".upper()
+            f"pmnt{date_.year}{date_.month}{date_.day}"
+            f"{core.utils.random_string(6)}".upper()
         )
         payment.number = payment_number
         payment.save()
@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
             model_name="payment",
             name="number",
             field=models.CharField(
-                default=core.utils.generate_payment_number, max_length=255, unique=True
+                default=core.utils.generate_payment_number, max_length=255
             ),
         ),
         migrations.RunPython(code=generate_payment_number_),
