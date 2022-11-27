@@ -44,7 +44,7 @@ class NotificationsTestCase(TestCase):
         )
 
     @mock.patch("requests.get")
-    @mock.patch("notifications.utils.EmailMessage")
+    @mock.patch("notifications.tasks.EmailMessage")
     def test_send_ticket_email(
         self, mock_email_service: Any, mock_get_response: Any
     ) -> None:

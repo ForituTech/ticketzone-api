@@ -162,7 +162,7 @@ class PartnerTestCase(TestCase):
                 assert new_person[key] == person_data[key]
         assert settings.AUTH_HEADER in res.headers
 
-    @mock.patch("notifications.utils.send_email.apply_async")
+    @mock.patch("notifications.tasks.send_email.apply_async")
     def test_partner_person_create(self, mock_send_email: Mock) -> None:
         partner_person_data = partner_fixtures.partner_person_fixture()
         partner_person_data["partner_id"] = str(partner_person_data["partner_id"])
@@ -446,7 +446,7 @@ class PartnerTestCase(TestCase):
         assert res.status_code == 200
         assert res.json()["done"]
 
-    @mock.patch("notifications.utils.send_sms.apply_async")
+    @mock.patch("notifications.tasks.send_sms.apply_async")
     def test_send_out_reminders(self, mock_send_sms: Any) -> None:
         partner = partner_fixtures.create_partner_obj()
         partner_fixtures.create_partner_sms_obj(partner=partner)
@@ -470,7 +470,7 @@ class PartnerTestCase(TestCase):
             queue=mock.ANY,
         )
 
-    @mock.patch("notifications.utils.send_sms.apply_async")
+    @mock.patch("notifications.tasks.send_sms.apply_async")
     def test_send_out_reminders__no_optin(self, mock_send_sms: Any) -> None:
         partner = partner_fixtures.create_partner_obj()
         partner_fixtures.create_partner_sms_obj(partner=partner)
@@ -481,7 +481,7 @@ class PartnerTestCase(TestCase):
 
         assert not mock_send_sms.called
 
-    @mock.patch("notifications.utils.send_sms.apply_async")
+    @mock.patch("notifications.tasks.send_sms.apply_async")
     def test_send_out_reminders__no_sms_package(self, mock_send_sms: Any) -> None:
         partner = partner_fixtures.create_partner_obj()
         event = event_fixtures.create_event_object(owner=partner.owner)
@@ -492,7 +492,7 @@ class PartnerTestCase(TestCase):
 
         assert not mock_send_sms.called
 
-    @mock.patch("notifications.utils.send_sms.apply_async")
+    @mock.patch("notifications.tasks.send_sms.apply_async")
     def test_send_out_reminders__no_verified_sms_package(
         self, mock_send_sms: Any
     ) -> None:
@@ -508,7 +508,7 @@ class PartnerTestCase(TestCase):
 
         assert not mock_send_sms.called
 
-    @mock.patch("notifications.utils.send_sms.apply_async")
+    @mock.patch("notifications.tasks.send_sms.apply_async")
     def test_send_out_promos(self, mock_send_sms: Any) -> None:
         partner = partner_fixtures.create_partner_obj()
         sms = partner_fixtures.create_partner_sms_obj(partner=partner)
@@ -546,7 +546,7 @@ class PartnerTestCase(TestCase):
 
         return sms.per_sms_rate
 
-    @mock.patch("notifications.utils.send_sms.apply_async")
+    @mock.patch("notifications.tasks.send_sms.apply_async")
     def test_send_out_promos__no_sms_package(self, mock_send_sms: Any) -> None:
         partner = partner_fixtures.create_partner_obj()
         partner_fixtures.create_partner_promo_obj(partner=partner)
@@ -556,7 +556,7 @@ class PartnerTestCase(TestCase):
 
         assert not mock_send_sms.called
 
-    @mock.patch("notifications.utils.send_sms.apply_async")
+    @mock.patch("notifications.tasks.send_sms.apply_async")
     def test_send_out_promos__no_optin(self, mock_send_sms: Any) -> None:
         partner = partner_fixtures.create_partner_obj()
         partner_fixtures.create_partner_sms_obj(partner=partner)
@@ -566,7 +566,7 @@ class PartnerTestCase(TestCase):
 
         assert not mock_send_sms.called
 
-    @mock.patch("notifications.utils.send_sms.apply_async")
+    @mock.patch("notifications.tasks.send_sms.apply_async")
     def test_send_out_promos__no_verified_sms_package(self, mock_send_sms: Any) -> None:
         partner = partner_fixtures.create_partner_obj()
         sms_package = partner_fixtures.create_partner_sms_obj(partner=partner)
@@ -579,7 +579,7 @@ class PartnerTestCase(TestCase):
 
         assert not mock_send_sms.called
 
-    @mock.patch("notifications.utils.send_sms.apply_async")
+    @mock.patch("notifications.tasks.send_sms.apply_async")
     def test_send_out_promos__no_running_promos(self, mock_send_sms: Any) -> None:
         partner = partner_fixtures.create_partner_obj()
         partner_fixtures.create_partner_sms_obj(partner=partner)
@@ -592,7 +592,7 @@ class PartnerTestCase(TestCase):
 
         assert not mock_send_sms.called
 
-    @mock.patch("notifications.utils.send_sms.apply_async")
+    @mock.patch("notifications.tasks.send_sms.apply_async")
     def test_send_out_promos__unverified_promo(self, mock_send_sms: Any) -> None:
         partner = partner_fixtures.create_partner_obj()
         partner_fixtures.create_partner_sms_obj(partner=partner)
@@ -706,7 +706,7 @@ class PartnerTestCase(TestCase):
             t1.payment.amount + t2.payment.amount
         )
 
-    @mock.patch("notifications.utils.send_sms.apply_async")
+    @mock.patch("notifications.tasks.send_sms.apply_async")
     def test_reconciliation(self, mock_send_sms: Any) -> None:
         partner = partner_fixtures.create_partner_obj()
         partner_fixtures.create_partner_sms_obj(partner=partner)
@@ -766,7 +766,7 @@ class PartnerTestCase(TestCase):
         )
 
     @mock.patch("partner.utils.random_password")
-    @mock.patch("notifications.utils.send_sms.apply_async")
+    @mock.patch("notifications.tasks.send_sms.apply_async")
     def test_create_verify_otp(
         self, mock_send_sms: Any, mock_random_password: Any
     ) -> None:
@@ -787,7 +787,7 @@ class PartnerTestCase(TestCase):
         mock_send_sms.assert_called()
 
     @mock.patch("partner.utils.random_password")
-    @mock.patch("notifications.utils.send_sms.apply_async")
+    @mock.patch("notifications.tasks.send_sms.apply_async")
     def test_reset_password(
         self, mock_send_sms: Any, mock_random_password: Any
     ) -> None:

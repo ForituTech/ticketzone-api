@@ -24,4 +24,4 @@ class PaymentTransactionState(Enum):
     SUCCEEDED = "SUCCEEDED"
 
 
-CONFIRMED_PAYMENT_STATES = [PaymentStates.PAID, PaymentStates.OVERPAID]
+CONFIRMED_PAYMENT_STATES = [PaymentStates.PAID.value, PaymentStates.OVERPAID.value]
