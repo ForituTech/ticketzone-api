@@ -9,7 +9,7 @@ from core.services import CRUDService
 from eticketing_api import settings
 from events.models import Ticket, TicketType
 from events.services import event_promo_service
-from notifications.utils import send_ticket_email
+from notifications.tasks import send_ticket_email
 from partner.services import person_service
 from payments.configs import payment_processor_map
 from payments.constants import CONFIRMED_PAYMENT_STATES
@@ -117,6 +117,8 @@ class PaymentService(
 
     def on_post_update(self, obj: Payment) -> None:
         if obj.state in CONFIRMED_PAYMENT_STATES:
+            obj.verified = True
+            obj.save()
             tickets: QuerySet[Ticket] = Ticket.objects.filter(payment_id=obj.id)
             for ticket in tickets:
                 send_ticket_email.apply_async(

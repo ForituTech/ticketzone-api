@@ -12,8 +12,12 @@ from notifications.fixtures import notification_fixtures
 from notifications.models import Notification
 from notifications.pusher import pusher_client
 from notifications.sms import sms_client
-from notifications.tasks import cleanup_notifications
-from notifications.utils import send_push_notification, send_sms, send_ticket_email
+from notifications.tasks import (
+    cleanup_notifications,
+    send_push_notification,
+    send_sms,
+    send_ticket_email,
+)
 from partner.fixtures import partner_fixtures
 from tickets.fixtures import ticket_fixtures
 

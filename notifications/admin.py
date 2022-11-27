@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from notifications.models import Notification
-from notifications.utils import resend_notification
+from notifications.tasks import resend_notification
 
 
 class NotificationsAdminConfig(admin.ModelAdmin):

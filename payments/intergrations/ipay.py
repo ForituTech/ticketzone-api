@@ -5,7 +5,6 @@ from typing import Optional
 
 import requests
 
-from core.utils import check_in_live_env
 from partner.models import Partner
 from payments.constants import PaymentStates, PaymentTransactionState
 from payments.interfaces import PaymentProviderType
