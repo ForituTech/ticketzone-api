@@ -3,7 +3,7 @@ from typing import Any, Sequence
 from django.contrib import admin
 
 from eticketing_api import settings
-from notifications.utils import send_ticket_email
+from notifications.tasks import send_ticket_email
 from tickets.models import Ticket, TicketScan
 
 

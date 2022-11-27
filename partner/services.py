@@ -8,7 +8,7 @@ from core.exceptions import HttpErrorException, ObjectNotFoundException
 from core.services import CRUDService
 from eticketing_api import settings
 from events.models import Event
-from notifications.utils import send_email, send_sms
+from notifications.tasks import send_email, send_sms
 from partner.models import (
     Partner,
     PartnerPerson,

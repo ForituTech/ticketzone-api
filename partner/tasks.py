@@ -6,7 +6,7 @@ from django.db.models.query import QuerySet
 
 from eticketing_api import settings
 from events.models import ReminderOptIn, Ticket
-from notifications.utils import send_sms
+from notifications.tasks import send_sms
 from owners.models import Owner
 from partner.models import Partner, PartnerPromotion, PartnerSMS, PromoOptIn
 from partner.services import partner_service
