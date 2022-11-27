@@ -2,6 +2,7 @@ import uuid
 from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
+from django.db import transaction
 from django.db.models import Sum
 from django.db.models.query import QuerySet
 from rest_framework import status
@@ -208,7 +209,24 @@ class EventPromotionService(
         return True
 
     def check(self, promo_code: str, event_id: str) -> Optional[EventPromotion]:
-        return EventPromotion.objects.filter(event_id=event_id, name=promo_code).first()
+        if EventPromotion.objects.filter(
+            event_id=event_id,
+            name=promo_code,
+            expiry__gte=date.today(),
+            use_limit__gt=0,
+        ).exists():
+
+            # decrement the promos use limit
+            with transaction.atomic():
+                promo_locked = EventPromotion.objects.select_for_update().get(
+                    name=promo_code, event_id=event_id
+                )
+                promo_locked.use_limit -= 1
+                promo_locked.save()
+
+            return EventPromotion.objects.filter(name=promo_code).first()
+
+        return None
 
 
 event_promo_service = EventPromotionService(EventPromotion)

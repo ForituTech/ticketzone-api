@@ -63,6 +63,7 @@ class EventPromotionReadSerializer(InDBBaseSerializer, EventPromotionSerializer)
 
 class EventPromotionValidatedSerializer(serializers.Serializer):
     id = serializers.CharField(max_length=255)
+    percent_off = serializers.CharField(max_length=255)
 
 
 class PromoVerifySerializer(BaseSerializer):
