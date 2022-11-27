@@ -1,4 +1,4 @@
-import abc
+from abc import ABC, abstractmethod
 from typing import Optional
 
 from partner.models import Partner
@@ -6,24 +6,26 @@ from payments.constants import PaymentStates
 from payments.models import Payment
 
 
-class PaymentProviderType(abc.ABCMeta):
-    @abc.abstractmethod
+class PaymentProviderType(ABC):
+    @abstractmethod
     def verify(self) -> bool:
         pass
 
-    @abc.abstractmethod
-    def c2b_receive(self, *, amount: int) -> PaymentStates:
+    @abstractmethod
+    def c2b_receive(self, *, payment: Payment) -> None:
+        # return none becuase majority of payment providers
+        # use async [callback URLs]
         pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def b2c_send(self, *, amount: int, partner: Partner) -> PaymentStates:
         pass
 
     # partner disbursment
-    @abc.abstractmethod
+    @abstractmethod
     def b2b_send(self, *, amount: int, partner: Partner) -> PaymentStates:
         pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def search(self, *, transaction_id: str) -> Optional[Payment]:
         pass

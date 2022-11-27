@@ -35,3 +35,12 @@ class HttpErrorException(APIException):
         super().__init__(
             detail=f"{code.name}: {code.value.format(extra)}", code=code.value
         )
+
+
+class PaymentProviderException(APIException):
+    def __init__(self, extra: Optional[str] = "") -> None:
+        self.status_code = 500
+        super().__init__(
+            detail=f"{ErrorCodes.PAYMENT_PROCESSING_FAILED.value}: {extra}",
+            code=ErrorCodes.PAYMENT_PROCESSING_FAILED.name,
+        )

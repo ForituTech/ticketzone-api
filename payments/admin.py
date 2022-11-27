@@ -10,7 +10,16 @@ class PaymentAdminConfig(admin.ModelAdmin):
         "made_through",
         "transaction_id",
     ]
-    readonly_fields = ["verified", "reconciled"]
+    readonly_fields = [
+        "verified",
+        "reconciled",
+        "number",
+        "amount",
+        "person",
+        "state",
+        "made_through",
+        "transaction_id",
+    ]
 
 
 class PaymentMethodAdminConfig(admin.ModelAdmin):

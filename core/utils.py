@@ -1,3 +1,4 @@
+import os
 import random
 import string
 from datetime import date
@@ -33,6 +34,11 @@ def generate_event_number() -> str:
     return f"evnt-{date_.year}{date_.month}{date_.day}-{random_string(6)}".upper()
 
 
+def generate_payment_number() -> str:
+    date_ = date.today()
+    return f"pmnt{date_.year}{date_.month}{date_.day}{random_string(6)}".upper()
+
+
 def stream_model_data(
     *, queryset: QuerySet, serializer: Type[Serializer], chunk_size: int = 100
 ) -> Generator:
@@ -50,3 +56,10 @@ def get_selected_fields(request: Request) -> List:
         if isinstance(fields, str):
             return fields.split(",")
     return []
+
+
+def check_in_live_env() -> bool:
+    if os.environ["ENV"] in ["staging", "live"]:
+        return True
+    else:
+        return False

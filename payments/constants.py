@@ -18,4 +18,10 @@ class PaymentProviders(Enum):
         return [(entry.name, entry.value) for entry in cls]
 
 
+class PaymentTransactionState(Enum):
+    FAILED = "FAILED"
+    INITIATED = "INITIATED"
+    SUCCEEDED = "SUCCEEDED"
+
+
 CONFIRMED_PAYMENT_STATES = [PaymentStates.PAID, PaymentStates.OVERPAID]
