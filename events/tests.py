@@ -573,6 +573,7 @@ class EventTestCase(TestCase):
         event = event_fixtures.create_event_object(owner=self.owner.person)
         event_id = str(event.id)
         promo = event_fixtures.create_event_promo_obj(event)
+        event_fixtures.create_event_promo_obj(name=promo.name)
         code = promo.name
         fake_promo = random_string()
         pre_use_limit = promo.use_limit
