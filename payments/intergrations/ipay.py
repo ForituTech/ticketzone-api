@@ -45,7 +45,7 @@ class SharedMethods:
         pass
 
         payload = {
-            "live": f"{int(check_in_live_env())}",
+            "live": os.environ["PAYMENTS_LIVE"],
             "oid": payment.number,
             "inv": str(payment.id),
             "amount": f"{payment.amount}",
