@@ -95,9 +95,11 @@ def create_ticket_type_obj(
     return ticket_type
 
 
-def event_promo_fixture(event_id: Optional[str] = None) -> dict:
+def event_promo_fixture(
+    event_id: Optional[str] = None, name: Optional[str] = None
+) -> dict:
     return {
-        "name": random_string(),
+        "name": name or random_string(),
         "event_id": event_id if event_id else str(create_event_object().id),
         "promotion_rate": 10,
         "expiry": (datetime.today() + timedelta(days=10)).strftime("%Y-%m-%d"),
@@ -105,17 +107,19 @@ def event_promo_fixture(event_id: Optional[str] = None) -> dict:
     }
 
 
-def event_promo_min_fixture() -> dict:
+def event_promo_min_fixture(name: Optional[str] = None) -> dict:
     return {
-        "name": random_string(),
+        "name": name or random_string(),
         "promotion_rate": 10,
         "expiry": (datetime.today() + timedelta(days=10)).strftime("%Y-%m-%d"),
         "use_limit": 10,
     }
 
 
-def create_event_promo_obj(event: Optional[Event] = None) -> EventPromotion:
-    data = event_promo_fixture(event_id=str(event.id) if event else None)
+def create_event_promo_obj(
+    event: Optional[Event] = None, name: Optional[str] = None
+) -> EventPromotion:
+    data = event_promo_fixture(event_id=str(event.id) if event else None, name=name)
     return EventPromotion.objects.create(**data)
 
 

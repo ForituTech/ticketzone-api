@@ -209,12 +209,12 @@ class EventPromotionService(
         return True
 
     def check(self, promo_code: str, event_id: str) -> Optional[EventPromotion]:
-        if EventPromotion.objects.filter(
+        if promo := EventPromotion.objects.filter(
             event_id=event_id,
             name=promo_code,
             expiry__gte=date.today(),
             use_limit__gt=0,
-        ).exists():
+        ).first():
 
             # decrement the promos use limit
             with transaction.atomic():
@@ -224,7 +224,7 @@ class EventPromotionService(
                 promo_locked.use_limit -= 1
                 promo_locked.save()
 
-            return EventPromotion.objects.filter(name=promo_code).first()
+            return promo
 
         return None
 
