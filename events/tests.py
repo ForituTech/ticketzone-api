@@ -575,12 +575,33 @@ class EventTestCase(TestCase):
         promo = event_fixtures.create_event_promo_obj(event)
         code = promo.name
         fake_promo = random_string()
+        pre_use_limit = promo.use_limit
 
         res = self.client.get(f"/{API_VER}/events/validate/{event_id}/promo/{code}/")
 
         assert res.status_code == 200
         assert res.json()["id"] == str(promo.id)
+        # check that the promo is redeemed
+        promo.refresh_from_db()
+        assert promo.use_limit == pre_use_limit - 1
 
+        res = self.client.get(
+            f"{API_VER}/events/validate/{event_id}/promo/{fake_promo}/"
+        )
+
+        assert res.status_code == 404
+
+        promo.expiry = date.today() - timedelta(days=1)
+        promo.save()
+        res = self.client.get(
+            f"{API_VER}/events/validate/{event_id}/promo/{fake_promo}/"
+        )
+
+        assert res.status_code == 404
+
+        promo.expiry = date.today() + timedelta(days=30)
+        promo.use_limit = 0
+        promo.save()
         res = self.client.get(
             f"{API_VER}/events/validate/{event_id}/promo/{fake_promo}/"
         )

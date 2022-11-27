@@ -77,7 +77,7 @@ def highlighted_events(request: Request) -> Response:
 @api_view(["GET"])
 def validate_promocode(request: Request, event_id: str, code: str) -> Response:
     if promo := event_promo_service.check(event_id=event_id, promo_code=code):
-        return Response({"id": str(promo.id)})
+        return Response({"id": str(promo.id), "percent_off": promo.promotion_rate})
     else:
         raise HttpErrorException(
             status_code=HTTPStatus.NOT_FOUND, code=ErrorCodes.PROMO_NOT_FOUND
