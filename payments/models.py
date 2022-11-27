@@ -12,6 +12,7 @@ class Payment(BaseModel):
         null=False,
         blank=False,
         default=generate_payment_number,
+        unique=True,
         max_length=255,
     )
     person = models.ForeignKey(
