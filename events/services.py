@@ -212,7 +212,6 @@ class EventPromotionService(
         if promo := EventPromotion.objects.filter(
             event_id=event_id,
             name=promo_code,
-            expiry__gte=date.today(),
             use_limit__gt=0,
         ).first():
 

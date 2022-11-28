@@ -592,15 +592,6 @@ class EventTestCase(TestCase):
 
         assert res.status_code == 404
 
-        promo.expiry = date.today() - timedelta(days=1)
-        promo.save()
-        res = self.client.get(
-            f"{API_VER}/events/validate/{event_id}/promo/{fake_promo}/"
-        )
-
-        assert res.status_code == 404
-
-        promo.expiry = date.today() + timedelta(days=30)
         promo.use_limit = 0
         promo.save()
         res = self.client.get(
