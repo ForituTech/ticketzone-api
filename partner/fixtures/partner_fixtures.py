@@ -74,6 +74,15 @@ def partner_fixture(owner_id: Optional[str] = None) -> dict:
     }
 
 
+def partner_fixture_with_owner_data() -> dict:
+    return {
+        "name": random_string(),
+        "owner": person_fixture(),
+        "bank_code": random_string(),
+        "bank_account_number": random_string(),
+    }
+
+
 def create_partner_obj(owner: Optional[Person] = None) -> Partner:
     data = partner_fixture(owner_id=str(owner.id) if owner else None)
     if not owner:
@@ -165,7 +174,7 @@ def create_partner_sms_obj(
 def partner_promo_fixture(
     partner_id: Optional[str] = None,
     owner: Optional[Person] = None,
-    repeat: Optional[PartnerPromotionPeriod] = PartnerPromotionPeriod.FIXED,
+    repeat: Optional[PartnerPromotionPeriod] = PartnerPromotionPeriod.SINGLE_RUN,
     starts_on: date = date.today(),
     stops_on: date = date.today() + timedelta(days=1),
     verified: bool = True,
@@ -184,7 +193,7 @@ def partner_promo_fixture(
 def create_partner_promo_obj(
     partner: Optional[Partner] = None,
     owner: Optional[Person] = None,
-    repeat: Optional[PartnerPromotionPeriod] = PartnerPromotionPeriod.FIXED,
+    repeat: Optional[PartnerPromotionPeriod] = PartnerPromotionPeriod.SINGLE_RUN,
     starts_on: date = date.today(),
     stops_on: date = date.today() + timedelta(days=1),
     verified: bool = True,

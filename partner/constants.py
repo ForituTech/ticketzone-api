@@ -10,6 +10,6 @@ class PersonType(models.TextChoices):
 
 
 class PartnerPromotionPeriod(models.TextChoices):
-    WEEKLY = "WK", _("WEEKLY")
-    MONTHLY = "MN", _("MONTHLY")
-    FIXED = "FX", _("FIXED")
+    WEEKLY = "WEEKLY", _("WEEKLY")
+    MONTHLY = "MONTHLY", _("MONTHLY")
+    SINGLE_RUN = "SINGLE_RUN", _("SINGLE_RUN")

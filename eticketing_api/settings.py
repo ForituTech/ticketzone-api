@@ -235,7 +235,7 @@ POST_PARTNER_PERSON_CREATE_EMAIL_TITLE = "Ticketzone Account Details"
 POST_PARTNER_PERSON_CREATE_EMAIL = (
     "Hi {} your Tickezone credentials are:\n"
     "Username: {}, password: {} \n"
-    "We would recommend you reset your password after login for safety purposes"
+    "We would recommend you reset your for safety purposes"
 )
 
 CORS_ALLOWED_ORIGIN_REGEXES = [r"^http.*$"]

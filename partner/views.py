@@ -32,6 +32,7 @@ from partner.permissions import (
 )
 from partner.serializers import (
     PartnerBaseSerializer,
+    PartnerCreateSerializer,
     PartnerPersonBaseSerializer,
     PartnerPersonCreateSerializer,
     PartnerPersonReadSerializer,
@@ -273,6 +274,16 @@ class PartnerViewSet(AbstractPermissionedView):
         )
         return Response(PartnerReadSerializer(partner).data)
 
+    @swagger_auto_schema(
+        request_body=PartnerCreateSerializer,
+        responses={200: PartnerPersonReadSerializer},
+    )
+    def create(self, request: Request) -> Response:
+        partner_person = partner_service.create(
+            obj_data=request.data, serializer=PartnerCreateSerializer
+        )
+        return Response(PartnerReadSerializer(partner_person).data)
+
 
 class PartnerPersonViewset(AbstractPermissionedView):
 
@@ -292,7 +303,7 @@ class PartnerPersonViewset(AbstractPermissionedView):
         )
 
     @swagger_auto_schema(
-        request_body=PartnerPersonBaseSerializer,
+        request_body=PartnerPersonCreateSerializer,
         responses={200: PartnerPersonReadSerializer},
     )
     def create(self, request: Request) -> Response:
@@ -349,9 +360,9 @@ class PartnerSMSPackageViewset(AbstractPermissionedView):
         return Response(PartnerSMSPackageReadSerializer(partner_sms).data)
 
     @swagger_auto_schema(responses={200: PartnerSMSPackageReadSerializer})
-    def retrieve(self, request: Request, pk: Union[str, int]) -> Response:
+    def list(self, request: Request) -> Response:
         partner_id = get_request_partner_id(request)
-        partner_sms = partner_sms_service.get(pk=pk, partner_id=partner_id)
+        partner_sms = partner_sms_service.get_latest_sms_package(partner_id=partner_id)
         return Response(PartnerSMSPackageReadSerializer(partner_sms).data)
 
 

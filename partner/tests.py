@@ -107,6 +107,28 @@ class PartnerTestCase(TestCase):
         )
         assert res.status_code == 403
 
+    @mock.patch("notifications.tasks.send_email.apply_async")
+    def test_partner_create(self, mock_send_email: Mock) -> None:
+        partner_data = partner_fixtures.partner_fixture_with_owner_data()
+
+        res = self.authed_client.post(
+            f"/{API_VER}/partner/partner/", data=partner_data, format="json"
+        )
+        assert res.status_code == 200
+
+        mock_send_email.assert_called_with(
+            args=(
+                res.json()["owner"]["id"],
+                settings.POST_PARTNER_PERSON_CREATE_EMAIL_TITLE,
+                settings.POST_PARTNER_PERSON_CREATE_EMAIL.format(
+                    res.json()["owner"]["name"],
+                    res.json()["owner"]["phone_number"],
+                    partner_data["owner"]["hashed_password"],
+                ),
+            ),
+            queue=settings.CELERY_NOTIFICATIONS_QUEUE,
+        )
+
     def test_update_partner(self) -> None:
         code = "789101112"
         update_data = {"bank_code": code}
@@ -620,7 +642,7 @@ class PartnerTestCase(TestCase):
     def test_partner_sms_package_read(self) -> None:
         sms = partner_fixtures.create_partner_sms_obj(partner=self.owner.partner)
 
-        res = self.authed_client.get(f"/{API_VER}/partner/sms/{sms.id}/")
+        res = self.authed_client.get(f"/{API_VER}/partner/sms/")
 
         assert res.status_code == 200
         assert res.json()["id"] == str(sms.id)
