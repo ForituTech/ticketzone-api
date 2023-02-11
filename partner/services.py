@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from django.db.models.query import QuerySet
 from rest_framework.request import Request
@@ -127,6 +127,30 @@ person_service = PersonService(Person)
 
 
 class PartnerService(CRUDService[Partner, PartnerSerializer, PartnerUpdateSerializer]):
+    def on_post_create(self, obj: Partner, obj_in: Dict[str, Any]) -> None:
+        if person := obj_in.get("owner", None):
+            send_email.apply_async(
+                args=(
+                    str(obj.owner.id),
+                    settings.POST_PARTNER_PERSON_CREATE_EMAIL_TITLE,
+                    settings.POST_PARTNER_PERSON_CREATE_EMAIL.format(
+                        obj.owner.name,
+                        obj.owner.phone_number,
+                        person["hashed_password"],
+                    ),
+                ),
+                queue=settings.CELERY_NOTIFICATIONS_QUEUE,
+            )
+
+    def on_pre_create(self, obj_in: Dict[str, Any]) -> None:
+        if person := obj_in.get("owner", None):
+            obj_in["owner_id"] = str(
+                person_service.create(
+                    obj_data=person.copy(), serializer=PersonCreateSerializer
+                ).id
+            )
+            del obj_in["owner"]
+
     def get_total_sales(self, partner_id: str) -> int:
         filters = {
             "ticket_type__event__partner_id": partner_id,
@@ -284,7 +308,18 @@ class PartnerSMSPackageSerivce(
         PartnerSMS, PartnerSMSPackageCreateSerializer, PartnerSMSPackageUpdateSerializer
     ]
 ):
-    pass
+    def get_latest_sms_package(self, *, partner_id: Union[str, int]) -> PartnerSMS:
+        sms_package = (
+            PartnerSMS.objects.filter(partner_id=partner_id)
+            .order_by(*["created_at"])
+            .first()
+        )
+        if not sms_package:
+            raise HttpErrorException(
+                status_code=404,
+                code=ErrorCodes.NO_SMS_PACKAGE,
+            )
+        return sms_package
 
 
 partner_sms_service = PartnerSMSPackageSerivce(PartnerSMS)

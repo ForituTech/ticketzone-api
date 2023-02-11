@@ -70,7 +70,7 @@ def send_out_promos() -> None:
                     partner_id=promo_optin.partner.id
                 )
             except PartnerSMS.DoesNotExist:
-                continue
+                break
             if event_partner_sms.sms_left:
                 send_sms.apply_async(
                     args=(

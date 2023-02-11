@@ -93,6 +93,10 @@ class PartnerUpdateSerializer(BaseSerializer, PartnerBaseSerializer):
     pass
 
 
+class PartnerCreateSerializer(PartnerSerializer):
+    owner = PersonSerializer()  # type: ignore [assignment]
+
+
 class UserSerializer(serializers.Serializer):
     phone_number = serializers.CharField()
     password = serializers.CharField()

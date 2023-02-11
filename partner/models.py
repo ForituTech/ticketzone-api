@@ -114,7 +114,7 @@ class PartnerSMS(BaseModel):
         related_name="sms_package",
     )
     per_sms_rate = models.FloatField(
-        "Partner Cost Per SMS", null=False, blank=False, default=0.0
+        "Partner Cost Per SMS (KES)", null=False, blank=False, default=0.0
     )
     sms_limit = models.IntegerField(null=False, blank=False, default=0)
     sms_used = models.IntegerField(null=False, blank=False, default=0)
@@ -138,7 +138,7 @@ class PartnerPromotion(BaseModel):
         choices=PartnerPromotionPeriod.choices,
         null=False,
         blank=False,
-        default=PartnerPromotionPeriod.FIXED,
+        default=PartnerPromotionPeriod.SINGLE_RUN,
     )
     message = models.TextField(null=False, blank=False, max_length=10240)
     # channel = models.CharField()
@@ -158,7 +158,7 @@ class PartnerPromotion(BaseModel):
             return self.last_run + timedelta(weeks=1)
         if self.repeat == PartnerPromotionPeriod.MONTHLY:
             return self.last_run + timedelta(days=30)
-        if self.repeat == PartnerPromotionPeriod.FIXED:
+        if self.repeat == PartnerPromotionPeriod.SINGLE_RUN:
             return self.starts_on
         return None
 

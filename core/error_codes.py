@@ -23,6 +23,7 @@ class ErrorCodes(enum.Enum):
     )
     NO_MEMBERSHIP = "The given person isn't associated to a partner"
     NO_PARTNERSHIP = "The given person has no partner"
+    NO_SMS_PACKAGE = "The given partner has no sms package"
     NOT_SUPPORTED = "The action you attempted is not supported"
     PAYMENT_PROCESSING_FAILED = "Payment processing failed"
     PROMO_NOT_FOUND = "The promotion code was not found"
