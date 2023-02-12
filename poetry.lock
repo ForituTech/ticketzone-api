@@ -1350,7 +1350,7 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "cba4a038988cc8d4a35eef82efc9ab8ebeea9be57beb4ddb3219463ae4f581d6"
+content-hash = "98dc19b241dfaddcdf763e10b020cb33fb25d0557e482ad2be0ce47a16e52f58"
 
 [metadata.files]
 africastalking = [

@@ -22,7 +22,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 cipher = AES.new(SECRET_KEY[:16].encode("utf-8"), AES.MODE_EAX)
-cipher_nonce = cipher.nonce  # type: ignore
+cipher_nonce = cipher.nonce
 
 
 def reset_cipher() -> None:
