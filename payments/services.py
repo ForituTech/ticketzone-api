@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from typing import Any, Dict, Optional
 
 from django.db import transaction
@@ -10,7 +11,8 @@ from eticketing_api import settings
 from events.models import Ticket, TicketType
 from events.services import event_promo_service
 from notifications.tasks import send_ticket_email
-from partner.services import person_service
+from partner.models import PartnerSMS
+from partner.services import partner_service, partner_sms_service, person_service
 from payments.configs import payment_processor_map
 from payments.constants import CONFIRMED_PAYMENT_STATES
 from payments.models import Payment, PaymentMethod
@@ -18,6 +20,7 @@ from payments.serilaizers import (
     PaymentCreateSerializerInner,
     PaymentMethodWriteSerializer,
     PaymentUpdateSerializer,
+    SMSPaymentCreateSerializerInner,
 )
 from tickets.serializers import TicketCreateSerializer
 from tickets.services import ticket_service
@@ -125,6 +128,31 @@ class PaymentService(
                     args=(ticket.id,),
                     queue=settings.CELERY_MAIN_QUEUE,
                 )
+
+    def fund_sms_package(
+        self, partner_id: str, payment_in: SMSPaymentCreateSerializerInner
+    ) -> PartnerSMS:
+        partner = partner_service.get(id=partner_id)
+        if not partner:
+            raise HttpErrorException(
+                status_code=HTTPStatus.NOT_FOUND, code=ErrorCodes.INVALID_PARTNER_ID
+            )
+        sms_package = partner_sms_service.get_latest_sms_package(partner_id=partner_id)
+
+        if processor := payment_processor_map.get(payment_in.made_through, None):  # type: ignore
+            state = processor.b2b_recieve(amount=payment_in.amount, partner=partner)
+        else:
+            raise HttpErrorException(
+                status_code=503, code=ErrorCodes.PROVIDER_NOT_SUPPORTED
+            )
+
+        if state.value in CONFIRMED_PAYMENT_STATES:
+            credited_sms = int(payment_in.amount / sms_package.per_sms_rate)  # type: ignore
+            with transaction.atomic():
+                sms_package.sms_limit += credited_sms
+                sms_package.save()
+
+        return sms_package
 
 
 payment_service = PaymentService(Payment)

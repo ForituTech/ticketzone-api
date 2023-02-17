@@ -1,6 +1,7 @@
 import uuid
 from typing import Any, Optional
 from unittest import mock
+from unittest.mock import Mock
 
 from django.test import TestCase
 from rest_framework.test import APIClient
@@ -9,6 +10,7 @@ from eticketing_api import settings
 from events.fixtures import event_fixtures
 from partner.constants import PersonType
 from partner.fixtures import partner_fixtures
+from payments.constants import PaymentProviders, PaymentStates
 from payments.fixtures import payment_fixtures
 from payments.intergrations.ipay import iPayCard, iPayMPesa
 
@@ -158,3 +160,27 @@ class PaymentTestCase(TestCase):
             f"The ticket {ticket_type.name} has just sold out :("
             in res.json()["detail"]
         )
+
+    @mock.patch.object(iPayMPesa, "create_partner_owner_payment")
+    def test_fund_sms_package(
+        self, mock_payment_create: Mock, *args: Optional[Any]
+    ) -> None:
+        sms_package = partner_fixtures.create_partner_sms_obj(self.owner.partner)
+        pre_purchase_sms = sms_package.sms_limit
+        payment = payment_fixtures.create_payment_object(
+            self.owner.person, amount=sms_package.per_sms_rate * 10
+        )
+        payment.state = PaymentStates.PAID.value
+        payment.save()
+        mock_payment_create.return_value = payment
+
+        res = self.client.post(
+            f"/{API_VER}/payments/fund/sms/package/",
+            data={
+                "amount": sms_package.per_sms_rate * 10,
+                "made_through": PaymentProviders.MPESA.value,
+            },
+            format="json",
+        )
+        assert res.status_code == 200
+        assert res.json()["sms_limit"] == pre_purchase_sms + 10

@@ -6,7 +6,7 @@ from typing import Optional
 import requests
 
 from partner.models import Partner
-from payments.constants import PaymentStates, PaymentTransactionState
+from payments.constants import PaymentProviders, PaymentStates, PaymentTransactionState
 from payments.interfaces import PaymentProviderType
 from payments.models import Payment, PaymentTransactionLogs
 from payments.serilaizers import PaymentUpdateSerializer
@@ -86,6 +86,13 @@ class SharedMethods:
     def validate_transaction_response(self, resp_data: dict) -> bool:
         pass
 
+    def create_partner_owner_payment(
+        self, *, amount: float, partner: Partner, provider: PaymentProviders
+    ) -> Payment:
+        return Payment.objects.create(
+            amount=amount, person=partner.owner, made_through=provider.value
+        )
+
     def initiate_transaction(self, payment: Payment) -> Optional[str]:
         payload = self.construct_initiator_payload(payment=payment)
         res = requests.post(self.INITIATOR_URL, data=payload)
@@ -158,6 +165,13 @@ class iPayMPesa(SharedMethods, PaymentProviderType):
     def b2b_send(self, *, amount: int, partner: Partner) -> PaymentStates:
         pass
 
+    def b2b_recieve(self, *, amount: float, partner: Partner) -> PaymentStates:
+        payment: Payment = self.create_partner_owner_payment(
+            amount=amount, partner=partner, provider=PaymentProviders.MPESA
+        )
+        self.c2b_receive(payment=payment)
+        return PaymentStates[payment.state]
+
     def search(self, *, transaction_id: str) -> Optional[Payment]:
         pass
 
@@ -175,6 +189,9 @@ class iPayCard(SharedMethods, PaymentProviderType):
 
     # partner disbursment
     def b2b_send(self, *, amount: int, partner: Partner) -> PaymentStates:
+        pass
+
+    def b2b_recieve(self, *, amount: float, partner: Partner) -> PaymentStates:
         pass
 
     def search(self, *, transaction_id: str) -> Optional[Payment]:

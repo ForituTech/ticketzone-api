@@ -5,6 +5,7 @@ class ErrorCodes(enum.Enum):
     ACCESS_DENIED = "You don't have permissions to access this resource"
     ACCESS_ONLY_FOR_SELF = "This action can only be performed on your own data"
     BAD_PHONENUMBER = "The phone number provided is invalid/ doesn't belong to any user"
+    ENTITY_NOT_FOUND = "entity {} with identitfier {} not found"
     EVENT_DELETED = "The event has been deleted"
     GENERIC_TICKET_TYPE_LISTING = (
         "Global ticket type listing is forbidden. event_id filter is required."

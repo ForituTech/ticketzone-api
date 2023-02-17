@@ -57,3 +57,16 @@ class PaymentTransactionLogs(BaseModel):
         default=PaymentTransactionState.FAILED.value,
     )
     message = models.CharField(max_length=2048, null=False, blank=False)
+
+
+class B2BTransactionLogs(BaseModel):
+    from partner.models import Partner
+
+    partner = models.ForeignKey(Partner, on_delete=models.DO_NOTHING)
+    state = models.CharField(
+        max_length=255,
+        null=False,
+        blank=False,
+        default=PaymentTransactionState.FAILED.value,
+    )
+    message = models.CharField(max_length=2048, null=False, blank=False)
