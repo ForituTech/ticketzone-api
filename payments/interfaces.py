@@ -17,6 +17,7 @@ class PaymentProviderType(ABC):
         # use async [callback URLs]
         pass
 
+    # refunds
     @abstractmethod
     def b2c_send(self, *, amount: int, partner: Partner) -> PaymentStates:
         pass
@@ -24,6 +25,11 @@ class PaymentProviderType(ABC):
     # partner disbursment
     @abstractmethod
     def b2b_send(self, *, amount: int, partner: Partner) -> PaymentStates:
+        pass
+
+    # partner purchase/ wallet funding
+    @abstractmethod
+    def b2b_recieve(self, *, amount: float, partner: Partner) -> PaymentStates:
         pass
 
     @abstractmethod
