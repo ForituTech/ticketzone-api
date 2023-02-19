@@ -32,8 +32,8 @@ class Partner(BaseModel):
     contact_person = models.ForeignKey(
         Person, on_delete=models.SET_NULL, null=True, blank=True
     )
-    bank_code = models.CharField(null=False, blank=False, max_length=255)
-    bank_account_number = models.CharField(null=False, blank=False, max_length=512)
+    bank_code = models.CharField(null=True, blank=True, max_length=255)
+    bank_account_number = models.CharField(null=True, blank=True, max_length=512)
     comission_rate = models.FloatField(null=False, blank=False, default=3.0)
 
     def __str__(self) -> str:
