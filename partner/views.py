@@ -276,7 +276,7 @@ class PartnerViewSet(AbstractPermissionedView):
 
     @swagger_auto_schema(
         request_body=PartnerCreateSerializer,
-        responses={200: PartnerPersonReadSerializer},
+        responses={200: PartnerReadSerializer},
     )
     def create(self, request: Request) -> Response:
         partner_person = partner_service.create(
