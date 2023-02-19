@@ -13,6 +13,7 @@ from payments.serilaizers import (
     PaymentCreateSerializerInner,
     PaymentMethodSerialzier,
     PaymentReadSerializer,
+    SMSPaymentCreateSerializer,
     SMSPaymentCreateSerializerInner,
 )
 from payments.services import payment_method_service, payment_service
@@ -30,7 +31,7 @@ def list_payment_methods(request: Request) -> Response:
 
 @swagger_auto_schema(
     method="post",
-    request_body=SMSPaymentCreateSerializerInner,
+    request_body=SMSPaymentCreateSerializer,
     responses={200: PartnerSMSPackageReadSerializer},
 )
 @api_view(["POST"])

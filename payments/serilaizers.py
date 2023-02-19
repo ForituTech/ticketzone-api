@@ -52,6 +52,10 @@ class PaymentMethodWriteSerializer(BaseSerializer, PaymentMethodSerialzier):
     pass
 
 
-class SMSPaymentCreateSerializerInner(BaseSerializer):
+class SMSPaymentCreateSerializer(serializers.Serializer):
     amount = serializers.FloatField()
     made_through = serializers.CharField(max_length=255)
+
+
+class SMSPaymentCreateSerializerInner(BaseSerializer, SMSPaymentCreateSerializer):
+    pass
