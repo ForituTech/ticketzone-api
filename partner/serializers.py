@@ -80,8 +80,8 @@ class PartnerSerializer(BaseSerializer):
     name = serializers.CharField(max_length=255)
     owner = serializers.CharField()
     contact_person = serializers.CharField(required=False)
-    bank_code = serializers.CharField(max_length=255)
-    bank_account_number = serializers.CharField(max_length=512)
+    bank_code = serializers.CharField(max_length=255, required=False)
+    bank_account_number = serializers.CharField(max_length=512, required=False)
 
 
 class PartnerReadSerializer(InDBBaseSerializer, PartnerBaseSerializer):
