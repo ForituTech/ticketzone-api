@@ -30,6 +30,7 @@ class ErrorCodes(enum.Enum):
     PROMO_NOT_FOUND = "The promotion code was not found"
     PROVIDER_NOT_SUPPORTED = "The chosen provider is not currently supported"
     REDEEMED_TICKET = "The current ticket has already been redeemed"
+    SERVICE_EXCEPTION = "Operation Failed: {}"
     TARGET_MODEL_HAS_NO_SEARCH_VECTOR = "The target model does not have a search vector"
     TICKET_TYPE_OBJECT_DELETED = "Ticket type object sucessfully deleted"
     TICKET_TYPE_SOLD_OUT = "The ticket {} has just sold out :("
