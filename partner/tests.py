@@ -129,6 +129,21 @@ class PartnerTestCase(TestCase):
             queue=settings.CELERY_NOTIFICATIONS_QUEUE,
         )
 
+    @mock.patch("notifications.tasks.send_email.apply_async")
+    def test_partner_create__duplicate(self, _: Mock) -> None:
+        partner_data = partner_fixtures.partner_fixture_with_owner_data()
+
+        res = self.authed_client.post(
+            f"/{API_VER}/partner/partner/", data=partner_data, format="json"
+        )
+        assert res.status_code == 200
+
+        res = self.authed_client.post(
+            f"/{API_VER}/partner/partner/", data=partner_data, format="json"
+        )
+        assert res.status_code == 409
+        assert "already exists" in res.json()["detail"]
+
     def test_update_partner(self) -> None:
         code = "789101112"
         update_data = {"bank_code": code}
