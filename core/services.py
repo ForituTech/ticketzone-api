@@ -15,6 +15,7 @@ from typing import (
 
 from django.contrib.postgres.search import SearchQuery, SearchVector
 from django.core.exceptions import FieldError, ValidationError
+from django.db import IntegrityError
 from django.db.models import Model
 from django.db.models.query import QuerySet
 from rest_framework.exceptions import ValidationError as ValidationErrDRF
@@ -90,12 +91,19 @@ class CreateService(Generic[ModelType, CreateSerializer]):
             raise ObjectInvalidException(self.model.__name__, extra=str(exc))
         try:
             obj = self.model.objects.create(**obj_data_cleaned)
-        except Exception as e:
-            raise HttpErrorException(
-                status_code=HTTPStatus.BAD_REQUEST,
-                code=ErrorCodes.SERVICE_EXCEPTION,
-                extra=str(e),
-            )
+        except IntegrityError as e:
+            if e.__cause__.pgcode == "23505":  # type: ignore
+                raise HttpErrorException(
+                    status_code=HTTPStatus.CONFLICT,
+                    code=ErrorCodes.SERVICE_EXCEPTION,
+                    extra=f"{self.model.__name__} with those details already exists",
+                )
+            else:
+                raise HttpErrorException(
+                    status_code=HTTPStatus.CONFLICT,
+                    code=ErrorCodes.SERVICE_EXCEPTION,
+                    extra=str(e),
+                )
 
         obj.save()
 
