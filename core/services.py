@@ -96,7 +96,7 @@ class CreateService(Generic[ModelType, CreateSerializer]):
                 raise HttpErrorException(
                     status_code=HTTPStatus.CONFLICT,
                     code=ErrorCodes.SERVICE_EXCEPTION,
-                    extra=f"{self.model.__name__} with those details already exists",
+                    extra=f"A {self.model.__name__} with those details already exists",
                 )
             else:
                 raise HttpErrorException(
