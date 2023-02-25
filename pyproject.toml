@@ -45,6 +45,7 @@ django-filter = "^21.1"
 djangorestframework-csv = "^2.1.1"
 dj-inmemorystorage = "^2.1.0"
 python-pdf = "^0.39"
+cryptography = "^39.0.1"
 
 [tool.isort]
 profile = "black"

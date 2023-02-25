@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, Tuple, Union
 
 import phonenumbers
-from Crypto.Cipher import AES
+from cryptography.fernet import Fernet
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from phonenumbers import NumberParseException, carrier
@@ -21,13 +21,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-cipher = AES.new(SECRET_KEY[:16].encode("utf-8"), AES.MODE_EAX)
-cipher_nonce = cipher.nonce  # type: ignore
-
-
-def reset_cipher() -> None:
-    global cipher
-    cipher = AES.new(SECRET_KEY[:16].encode("utf-8"), AES.MODE_EAX, nonce=cipher_nonce)
+fernet = Fernet(SECRET_KEY.encode("utf-8"))
 
 
 def random_password() -> str:
@@ -186,20 +180,18 @@ def create_otp(user: Person) -> Tuple[str, str]:
         "phone_number": user.phone_number,
         "otp": otp,
     }
-    token = cipher.encrypt(
+    token = fernet.encrypt(
         jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM).encode("utf-8")
     )
-    reset_cipher()
 
     return (otp, token.hex())
 
 
 def verify_otp(secret: str, otp: str) -> Tuple[bool, str]:
     otp_data: dict = jwt.decode(
-        cipher.decrypt(bytes.fromhex(secret)),
+        fernet.decrypt(bytes.fromhex(secret)),
         SECRET_KEY,
         algorithms=[ALGORITHM],
     )
-    reset_cipher()
 
     return ((otp_data["otp"] == otp), otp_data["phone_number"])
