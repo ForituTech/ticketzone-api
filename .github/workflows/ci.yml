@@ -38,7 +38,7 @@ jobs:
       - name: Setup poetry
         uses: Gr1N/setup-poetry@v7
         with:
-          poetry-version: 1.1.12
+          poetry-version: 1.2.2
 
       - name: Setup cache
         uses: actions/cache@v2
@@ -97,7 +97,7 @@ jobs:
       - name: Setup poetry
         uses: Gr1N/setup-poetry@v7
         with:
-          poetry-version: 1.1.12
+          poetry-version: 1.2.2
 
       - name: Setup cache
         uses: actions/cache@v2
@@ -153,7 +153,7 @@ jobs:
       - name: Setup poetry
         uses: Gr1N/setup-poetry@v7
         with:
-          poetry-version: 1.1.12
+          poetry-version: 1.2.2
 
       - name: Setup cache
         uses: actions/cache@v2
@@ -209,7 +209,7 @@ jobs:
       - name: Setup poetry
         uses: Gr1N/setup-poetry@v7
         with:
-          poetry-version: 1.1.12
+          poetry-version: 1.2.2
 
       - name: Setup cache
         uses: actions/cache@v2
