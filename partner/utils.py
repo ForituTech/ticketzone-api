@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, Tuple, Union
 
 import phonenumbers
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from phonenumbers import NumberParseException, carrier
@@ -188,10 +188,13 @@ def create_otp(user: Person) -> Tuple[str, str]:
 
 
 def verify_otp(secret: str, otp: str) -> Tuple[bool, str]:
-    otp_data: dict = jwt.decode(
-        fernet.decrypt(secret.encode("utf-8")),
-        SECRET_KEY,
-        algorithms=[ALGORITHM],
-    )
+    try:
+        otp_data: dict = jwt.decode(
+            fernet.decrypt(secret.encode("utf-8")),
+            SECRET_KEY,
+            algorithms=[ALGORITHM],
+        )
+    except InvalidToken:
+        raise HttpErrorException(status_code=400, code=ErrorCodes.INVALID_OTP)
 
     return ((otp_data["otp"] == otp), otp_data["phone_number"])
