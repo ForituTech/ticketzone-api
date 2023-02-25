@@ -182,14 +182,14 @@ def create_otp(user: Person) -> Tuple[str, str]:
     }
     token = fernet.encrypt(
         jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM).encode("utf-8")
-    )
+    ).decode("utf-8")
 
-    return (otp, token.hex())
+    return (otp, token)
 
 
 def verify_otp(secret: str, otp: str) -> Tuple[bool, str]:
     otp_data: dict = jwt.decode(
-        fernet.decrypt(bytes.fromhex(secret)),
+        fernet.decrypt(secret.encode("utf-8")),
         SECRET_KEY,
         algorithms=[ALGORITHM],
     )
