@@ -18,7 +18,7 @@ schema_view = get_schema_view(
         description="TicketZone ticketing API",
     ),
     public=True,
-    permission_classes=[permissions.AllowAny],
+    permission_classes=[permissions.IsAuthenticated],
 )
 
 
