@@ -47,7 +47,7 @@ def get_application() -> FastAPI:
     app.include_router(api_router, prefix=f"/{settings.OPEN_API_VERSION_STRING}")
 
     # Mounts an independent web URL for DRF API
-    app.mount(f"/{settings.API_VERSION_STRING}", WSGIMiddleware(application))
+    app.mount("/", WSGIMiddleware(application))
 
     # Set Up the static files and directory to serve django static files
     app.mount("/static", StaticFiles(directory=settings.STATIC_ROOT), name="static")
