@@ -30,7 +30,7 @@ def get_application() -> FastAPI:
     # Main Fast API application
     app = FastAPI(
         title=settings.PROJECT_NAME,
-        openapi_url=f"/{settings.API_VERSION_STRING}/openapi.json",
+        openapi_url=f"/{settings.OPEN_API_VERSION_STRING}/openapi.json",
         debug=settings.DEBUG,
     )
 
