@@ -30,8 +30,11 @@ DEBUG = bool(int(os.environ["DEBUG"]))
 
 ALLOWED_HOSTS = [os.environ["ALLOWED_HOSTS"]]
 
-API_VERSION_STRING = "v1"
 # Application definition
+PROJECT_NAME = "TicketZone API"
+
+API_VERSION_STRING = "v1/tziapi"
+OPEN_API_VERSION_STRING = "v1"
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -206,6 +209,8 @@ DATABASES["default"].update(prod_db)
 # Celery
 CELERY_RESULT_BACKEND = "django-db"
 CELERY_BROKER_URL = os.environ["BROKER_URL"]
+CELERY_MAIN_QUEUE = "main_queue"
+CELERY_NOTIFICATIONS_QUEUE = "notifications-queue"
 
 # EMail
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -216,13 +221,15 @@ EMAIL_HOST_USER = "nellymogesh2@gmail.com"
 EMAIL_HOST_PASSWORD = os.environ["EMAIL_HOST_PASSWORD"]
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-
+# Pusher
 PUSHER_INSTANCE_ID = "test"
 PUSHER_SECRET_KEY = "test"
 
+# SMS
 AFRICAS_TALKING_USERNAME = "test"
 AFRICAS_TALKING_KEY = "test"
 
+# Messages
 DEFAULT_TICKET_TEMPLATE = "tickets/templates/ticket.html"
 TICKET_EMAIL_TITLE = "Your ticket is here :) !"
 TICKET_EMAIL_BODY = "Hi {} :), your ticket is here! The attachment on this email has all the relevant details"
@@ -238,6 +245,7 @@ POST_PARTNER_PERSON_CREATE_EMAIL = (
     "We would recommend you reset your for safety purposes"
 )
 
+# CORS
 CORS_ALLOWED_ORIGIN_REGEXES = [r"^http.*$"]
 CORS_ALLOW_METHODS = [
     "DELETE",
@@ -253,19 +261,18 @@ CORS_ALLOW_HEADERS = list(default_headers)
 AUTH_HEADER = "HTTP_AUTHORIZATION"
 
 if os.environ.get("ENV") != "dev" and not os.environ.get("GITHUB_WORKFLOW", None):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = True
+
+# Storages
+if os.environ.get("ENV") != "dev" and not os.environ.get("GITHUB_WORKFLOW", None):
     DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 else:
     DEFAULT_FILE_STORAGE = "inmemorystorage.InMemoryStorage"
 
+# AWS
 AWS_ACCESS_KEY_ID = os.environ["AWS_ACCESS_KEY_ID"]
 AWS_SECRET_ACCESS_KEY = os.environ["AWS_SECRET_ACCESS_KEY"]
 AWS_STORAGE_BUCKET_NAME = os.environ["AWS_STORAGE_BUCKET_NAME"]
 AWS_QUERYSTRING_AUTH = False
 BASE_S3_URL = os.environ["BASE_S3_URL"]
-
-if os.environ.get("ENV") != "dev" and not os.environ.get("GITHUB_WORKFLOW", None):
-    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-    SECURE_SSL_REDIRECT = True
-
-CELERY_MAIN_QUEUE = "main_queue"
-CELERY_NOTIFICATIONS_QUEUE = "notifications-queue"
