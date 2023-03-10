@@ -48,6 +48,7 @@ python-pdf = "^0.39"
 cryptography = "^39.0.1"
 fastapi = "^0.92.0"
 uvicorn = "^0.20.0"
+httpx = "^0.23.3"
 
 [tool.isort]
 profile = "black"

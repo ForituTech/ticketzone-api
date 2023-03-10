@@ -37,25 +37,26 @@ API_VERSION_STRING = "v1/tziapi"
 OPEN_API_VERSION_STRING = "v1"
 
 INSTALLED_APPS = [
+    "core",
+    "corsheaders",
+    "django_celery_results",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "corsheaders",
-    "storages",
-    "rest_framework",
     "django_filters",
-    "core",
-    "events",
-    "payments",
-    "tickets",
-    "partner",
     "drf_yasg",
-    "django_celery_results",
+    "events",
     "notifications",
     "owners",
+    "partner",
+    "partner_api",
+    "payments",
+    "rest_framework",
+    "storages",
+    "tickets",
 ]
 
 MIDDLEWARE = [
@@ -92,36 +93,35 @@ WSGI_APPLICATION = "eticketing_api.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
-if os.environ.get("ENV") == "dev":
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql_psycopg2",
-            "NAME": os.environ["POSTGRES_DB"],
-            "USER": os.environ["POSTGRES_USER"],
-            "PASSWORD": os.environ["POSTGRES_PASSWORD"],
-            "HOST": os.environ["POSTGRES_SERVER"],
-            "PORT": os.environ["POSTGRES_PORT"],
-        }
+LOCAL_DB = (
+    {
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": os.environ["POSTGRES_DB"],
+        "USER": os.environ["POSTGRES_USER"],
+        "PASSWORD": os.environ["POSTGRES_PASSWORD"],
+        "HOST": os.environ["POSTGRES_SERVER"],
+        "PORT": os.environ["POSTGRES_PORT"],
     }
-else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql_psycopg2",
-        }
+    if os.environ.get("ENV") == "dev"
+    else {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "github_actions",
+        "USER": "postgres",
+        "PASSWORD": "postgres",
+        "HOST": "127.0.0.1",
+        "PORT": "5432",
     }
+)
 
-
-if os.environ.get("GITHUB_WORKFLOW"):
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": "github_actions",
-            "USER": "postgres",
-            "PASSWORD": "postgres",
-            "HOST": "127.0.0.1",
-            "PORT": "5432",
+DATABASES = {
+    "default": (
+        LOCAL_DB
+        if os.environ.get("ENV") == "dev" or os.environ.get("GITHUB_WORKFLOW")
+        else {
+            "ENGINE": "django.db.backends.postgresql_psycopg2",
         }
-    }
+    )
+}
 
 
 # Password validation
@@ -276,3 +276,6 @@ AWS_SECRET_ACCESS_KEY = os.environ["AWS_SECRET_ACCESS_KEY"]
 AWS_STORAGE_BUCKET_NAME = os.environ["AWS_STORAGE_BUCKET_NAME"]
 AWS_QUERYSTRING_AUTH = False
 BASE_S3_URL = os.environ["BASE_S3_URL"]
+
+
+TEST_RUNNER = "core.tests.TestRunner"

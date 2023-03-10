@@ -224,4 +224,4 @@ jobs:
           poetry install --no-root
       - name: Run Tests
         run: |
-          poetry run ./manage.py test partner
+          poetry run ./manage.py test partner partner_api
