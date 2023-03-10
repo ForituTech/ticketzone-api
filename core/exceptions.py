@@ -1,6 +1,7 @@
 import uuid
 from typing import Optional, Union
 
+from fastapi import HTTPException
 from rest_framework import status
 from rest_framework.exceptions import APIException
 
@@ -35,6 +36,15 @@ class HttpErrorException(APIException):
         super().__init__(
             detail=f"{code.name}: {code.value.format(extra)}", code=code.value
         )
+
+
+class HttpErrorExceptionFA(HTTPException):
+    def __init__(
+        self, status_code: int, code: ErrorCodes, extra: Optional[str] = ""
+    ) -> None:
+        self.status_code = status_code
+        self.code = code
+        self.extra = extra
 
 
 class PaymentProviderException(APIException):

@@ -15,15 +15,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.wsgi import WSGIMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from core.handlers import register_exception_handlers
 from eticketing_api import settings
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eticketing_api.settings")
+application = get_wsgi_application()
 
 # This endpoint imports should be placed below the settings env declaration
 # Otherwise, django will throw a configure() settings error
 from eticketing_api.fastapi_router import router as api_router  # noqa
-
-application = get_wsgi_application()
 
 
 def get_application() -> FastAPI:
@@ -42,6 +42,8 @@ def get_application() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    register_exception_handlers(app)
 
     # Include all api endpoints
     app.include_router(api_router, prefix=f"/{settings.OPEN_API_VERSION_STRING}")

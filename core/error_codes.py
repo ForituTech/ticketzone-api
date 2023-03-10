@@ -7,6 +7,7 @@ class ErrorCodes(enum.Enum):
     BAD_PHONENUMBER = "The phone number provided is invalid/ doesn't belong to any user"
     ENTITY_NOT_FOUND = "entity {} with identitfier {} not found"
     EVENT_DELETED = "The event has been deleted"
+    EXPIRED_REFRESH_TOKEN = "The refresh token has expired, please login again"
     GENERIC_TICKET_TYPE_LISTING = (
         "Global ticket type listing is forbidden. event_id filter is required."
     )
@@ -17,6 +18,7 @@ class ErrorCodes(enum.Enum):
     INVALID_OTP = "The provided OTP could not be verified"
     INVALID_PARTNER_ID = "A partner with the given ID does not exist"
     INVALID_PERSON_ID = "The person with the given ID does not exist"
+    INVALID_SIGNATURE = "The auth request signature was invalid"
     INVALID_TICKET_ID = "A ticket with the given ID was not found"
     MULTIPLE_TICKETS_ONE_HASH = "Can't resolve target ticket from hash value"
     MULTIPLE_USERS_SAME_PHONENUMBER = (
@@ -26,6 +28,7 @@ class ErrorCodes(enum.Enum):
     NO_PARTNERSHIP = "The given person has no partner"
     NO_SMS_PACKAGE = "The given partner has no sms package"
     NOT_SUPPORTED = "The action you attempted is not supported"
+    PARTNER_NOT_FOUND = "The partnership was not found"
     PAYMENT_PROCESSING_FAILED = "Payment processing failed"
     PROMO_NOT_FOUND = "The promotion code was not found"
     PROVIDER_NOT_SUPPORTED = "The chosen provider is not currently supported"

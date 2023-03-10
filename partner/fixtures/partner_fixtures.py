@@ -24,12 +24,12 @@ def random_phone_number() -> str:
     return str(base + randint(1, 99999999))
 
 
-def person_fixture() -> dict:
+def person_fixture(password: Optional[str] = None) -> dict:
     return {
         "name": random_string(),
         "email": f"{random_string()[:5]}@{random_string()[:4]}.com",
         "phone_number": f"+{random_phone_number()}",
-        "hashed_password": random_password(),
+        "hashed_password": password or random_password(),
     }
 
 
@@ -47,8 +47,8 @@ partner_banking_info_fixture = {
 }
 
 
-def create_person_obj() -> Person:
-    person_data = person_fixture()
+def create_person_obj(password: Optional[str] = None) -> Person:
+    person_data = person_fixture(password=password)
     try:
         person: Person = Person.objects.get(phone_number=person_data["phone_number"])
     except Person.DoesNotExist:
