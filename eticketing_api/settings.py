@@ -259,6 +259,7 @@ CORS_URLS_REGEX = r"^.*$"
 CORS_ALLOW_HEADERS = list(default_headers)
 
 AUTH_HEADER = "HTTP_AUTHORIZATION"
+EXTERNAL_API_AUTH_HEADER = "access-token"
 
 if os.environ.get("ENV") != "dev" and not os.environ.get("GITHUB_WORKFLOW", None):
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
