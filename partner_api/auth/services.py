@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from jwt import DecodeError
+
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorExceptionFA as HttpErrorException
 from partner_api.auth.serializers import LoginCredentialsSerializer
@@ -29,7 +31,12 @@ class AuthService:
         return create_auth_token(api_creds=api_creds)
 
     def refresh_token(self, *, refresh_token: str) -> TokenResponse:
-        details = decode_token(refresh_token)
+        try:
+            details = decode_token(refresh_token)
+        except DecodeError:
+            raise HttpErrorException(
+                status_code=400, code=ErrorCodes.INVALID_REFRESH_TOKEN
+            )
         expiry = datetime.fromisoformat(details["expires"])
         if expiry < datetime.now():
             raise HttpErrorException(

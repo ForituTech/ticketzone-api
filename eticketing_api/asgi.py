@@ -14,6 +14,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.wsgi import WSGIMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi_pagination import add_pagination
 
 from core.handlers import register_exception_handlers
 from eticketing_api import settings
@@ -53,6 +54,8 @@ def get_application() -> FastAPI:
 
     # Mounts an independent web URL for DRF API
     app.mount("/", WSGIMiddleware(application))
+
+    add_pagination(app)
 
     return app
 
