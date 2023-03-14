@@ -24,7 +24,7 @@ application = get_wsgi_application()
 
 # This endpoint imports should be placed below the settings env declaration
 # Otherwise, django will throw a configure() settings error
-from eticketing_api.fastapi_router import router as api_router  # noqa
+from partner_api.router import router as api_router  # noqa
 
 
 def get_application() -> FastAPI:
