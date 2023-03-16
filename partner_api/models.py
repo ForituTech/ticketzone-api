@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
+from typing import Sequence
 
 from django.db import models
 
 from core.models import BaseModel
-from partner.models import Partner
+from events.models import TicketType
+from partner.models import Partner, Person
 from partner_api.utils import generate_resource_secret
 
 
@@ -24,3 +26,30 @@ class ApiAuthToken(BaseModel):
     partner = models.OneToOneField(Partner, on_delete=models.CASCADE)
     expiry = models.DateTimeField(default=default_token_expiry)
     refresh_expiry = models.DateTimeField(default=default_refresh_token_expiry)
+
+
+# Pivot model for payment intents and ticket types
+# given there can be a many to one relationship
+# between the 2
+class PaymentIntentTicketType(BaseModel):
+    ticket_type = models.ForeignKey(
+        TicketType, on_delete=models.CASCADE, null=False, blank=False
+    )
+    payment_intent = models.ForeignKey(
+        "PaymentIntent", on_delete=models.CASCADE, null=False, blank=False
+    )
+
+
+class PaymentIntent(BaseModel):
+    amount = models.FloatField(null=False, blank=False)
+    person = models.ForeignKey(
+        Person, on_delete=models.CASCADE, null=False, blank=False
+    )
+    ticket_type_rel = models.ManyToManyField(
+        TicketType, through=PaymentIntentTicketType
+    )
+    redirect_to = models.URLField(null=False, blank=False)
+
+    @property
+    def ticket_types(self) -> Sequence[TicketType]:
+        return [ticket_type for ticket_type in self.ticket_type_rel.all()]
