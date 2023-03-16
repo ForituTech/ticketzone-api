@@ -89,6 +89,7 @@ class CreateService(Generic[ModelType, CreateSerializer]):
             obj_in.is_valid(raise_exception=True)
         except ValidationErrDRF as exc:
             raise ObjectInvalidException(self.model.__name__, extra=str(exc))
+
         try:
             obj = self.model.objects.create(**obj_data_cleaned)
         except IntegrityError as e:

@@ -94,6 +94,7 @@ class PaymentTestCase(TestCase):
         res = self.client.post(
             f"/{API_VER}/payments/", data=payment_data, format="json"
         )
+
         assert res.status_code == 200
         payment = res.json()
         assert payment["amount"] == 10800.00

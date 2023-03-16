@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from django.db import transaction
 from django.db.models.query import QuerySet
@@ -29,10 +29,12 @@ from tickets.services import ticket_service
 class PaymentService(
     CRUDService[Payment, PaymentCreateSerializerInner, PaymentUpdateSerializer]
 ):
-    @staticmethod
-    def validate_ticket_types_and_person(obj_data: Dict[str, Any]) -> Dict[str, Any]:
+    def validate_ticket_types_and_person(
+        self, obj_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         amount = 0
         event_id: Optional[str] = ""
+        ticket_type_objs: List[TicketType] = []
         if ticket_types := obj_data.get("ticket_types", None):
             for ticket_type in ticket_types:
                 if ticket_type_obj := TicketType.objects.filter(
@@ -63,6 +65,7 @@ class PaymentService(
                                 f" only {ticket_type_obj.amount} left"
                             ),
                         )
+                    ticket_type_objs.append(ticket_type_obj)
 
                 else:
                     raise HttpErrorException(
@@ -71,6 +74,7 @@ class PaymentService(
                         extra=f"Invalid Ticket Type id {ticket_type['id']}",
                     )
             obj_data["amount"] = amount
+            obj_data["tt_objs"] = ticket_type_objs
 
         if person := obj_data.get("person", None):
             obj_data["person_id"] = str(person_service.get_or_create(person).id)

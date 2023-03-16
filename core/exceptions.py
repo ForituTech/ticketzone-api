@@ -33,6 +33,8 @@ class HttpErrorException(APIException):
         self, status_code: int, code: ErrorCodes, extra: Optional[str] = ""
     ) -> None:
         self.status_code = status_code
+        self.code = code
+        self.extra = extra
         super().__init__(
             detail=f"{code.name}: {code.value.format(extra)}", code=code.value
         )
