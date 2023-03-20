@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "django.contrib.sites",
     "django.contrib.staticfiles",
     "django_filters",
     "drf_yasg",
@@ -278,5 +279,10 @@ AWS_STORAGE_BUCKET_NAME = os.environ["AWS_STORAGE_BUCKET_NAME"]
 AWS_QUERYSTRING_AUTH = False
 BASE_S3_URL = os.environ["BASE_S3_URL"]
 
-
+# Tests
 TEST_RUNNER = "core.tests.TestRunner"
+
+# Payments
+SITE_ID = 1
+PROTO = "https" if os.environ.get("ENV", "GCI") in ["staging", "prod"] else "http"
+PAYMENT_PAGE_RELATIVE_URL = f"/{OPEN_API_VERSION_STRING}/payments/"

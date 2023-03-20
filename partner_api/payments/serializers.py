@@ -41,7 +41,7 @@ class PersonInDBSerializer(PersonSerializer, InDBBaseSerializer):
 class PaymentIntentCreateSerializer(BaseModel):
     person: PersonSerializer
     ticket_types: List[TicketTypeSerializer]
-    redirect_to: AnyUrl
+    callback_url: AnyUrl
 
 
 class PaymentIntentSerializer(InDBBaseSerializer):

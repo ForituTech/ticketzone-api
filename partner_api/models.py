@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
 from typing import Sequence
 
+from django.contrib.sites.models import Site
 from django.db import models
 
 from core.models import BaseModel
+from eticketing_api.settings import PAYMENT_PAGE_RELATIVE_URL, PROTO
 from events.models import TicketType
 from partner.models import Partner, Person
 from partner_api.utils import generate_resource_secret
@@ -48,8 +50,13 @@ class PaymentIntent(BaseModel):
     ticket_type_rel = models.ManyToManyField(
         TicketType, through=PaymentIntentTicketType
     )
-    redirect_to = models.URLField(null=False, blank=False)
+    callback_url = models.URLField(null=False, blank=False)
 
     @property
     def ticket_types(self) -> Sequence[TicketType]:
         return [ticket_type for ticket_type in self.ticket_type_rel.all()]
+
+    @property
+    def redirect_to(self) -> str:
+        current_site = Site.objects.get_current().domain
+        return "".join([PROTO, "://", current_site, PAYMENT_PAGE_RELATIVE_URL])
