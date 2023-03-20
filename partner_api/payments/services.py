@@ -16,7 +16,7 @@ class PaymentsService:
         intent = PaymentIntent.objects.create(
             amount=obj_data["amount"],
             person_id=obj_data["person_id"],
-            redirect_to=payment_in.redirect_to,
+            callback_url=payment_in.callback_url,
         )
         intent.save()
         for ticket_type in obj_data.get("tt_objs", None):

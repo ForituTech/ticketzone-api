@@ -35,7 +35,7 @@ class AuthTestCase(TransactionTestCase):
         intent = {
             "person": person_data,
             "ticket_types": ticket_type_data,
-            "redirect_to": "http://127.0.0.1:8000/payments",
+            "callback_url": "http://127.0.0.1:8000/payments",
         }
 
         res = self.fa_client.post(f"{API_BASE_URL}/intent/", json=intent)
