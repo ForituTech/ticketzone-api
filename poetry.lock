@@ -1534,7 +1534,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "36c4cacd0b39f2fb13d67596eba204124977568d1dcacad0b69d257c5be224d3"
+content-hash = "393cd640752f8a139cccced6429227e98c5fb026525df3c590260e5560bcc3b6"
 
 [metadata.files]
 africastalking = [
