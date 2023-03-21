@@ -31,6 +31,7 @@ class ErrorCodes(enum.Enum):
     NO_SMS_PACKAGE = "The given partner has no sms package"
     NOT_SUPPORTED = "The action you attempted is not supported: {}"
     PARTNER_NOT_FOUND = "The partnership was not found"
+    PAYMENT_INTENT_NOT_FOUND = "Related payment intent could not be found"
     PAYMENT_PROCESSING_FAILED = "Payment processing failed"
     PROMO_NOT_FOUND = "The promotion code was not found"
     PROVIDER_NOT_SUPPORTED = "The chosen provider is not currently supported"

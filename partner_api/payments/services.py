@@ -1,3 +1,6 @@
+from core.error_codes import ErrorCodes
+from core.exceptions import HttpErrorExceptionFA as HttpErrorException
+from events.models import Event
 from partner.utils import random_password
 from partner_api.models import PaymentIntent, PaymentIntentTicketType
 from partner_api.payments.serializers import PaymentIntentCreateSerializer
@@ -26,6 +29,32 @@ class PaymentsService:
             tt_intent.save()
 
         return intent
+
+    def get_payment_intent(self, intent_id: str) -> PaymentIntent:
+        intent = PaymentIntent.objects.filter(pk=intent_id).first()
+        if not intent:
+            raise HttpErrorException(
+                status_code=404, code=ErrorCodes.PAYMENT_INTENT_NOT_FOUND
+            )
+
+        return intent
+
+    def get_related_event(self, intent_id: str) -> Event:
+        intent = PaymentIntent.objects.filter(pk=intent_id).first()
+        if not intent:
+            raise HttpErrorException(
+                status_code=404, code=ErrorCodes.PAYMENT_INTENT_NOT_FOUND
+            )
+
+        ticket_type = intent.ticket_type_rel.first()
+        if not ticket_type:
+            raise HttpErrorException(
+                status_code=400,
+                code=ErrorCodes.INTERGRATION_ERROR,
+                extra="Intent doesn't have any ticket types",
+            )
+
+        return Event.objects.get(id=ticket_type.event_id)
 
 
 payments_service = PaymentsService()

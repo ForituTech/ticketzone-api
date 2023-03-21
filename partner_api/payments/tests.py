@@ -46,3 +46,26 @@ class AuthTestCase(TransactionTestCase):
         returned_tts = [tt["id"] for tt in res_data["ticket_types"]]
         for tt in ticket_types:
             assert str(tt.id) in returned_tts
+
+    def test_ipn_page(self) -> None:
+        event = create_event_object(owner=self.partner.owner)
+        ticket_types = [
+            create_ticket_type_obj(event=event),
+            create_ticket_type_obj(event=event),
+            create_ticket_type_obj(event=event),
+        ]
+        person_data = person_fixture()
+        ticket_type_data = [
+            {"id": str(ticket_type.id), "amount": 1} for ticket_type in ticket_types
+        ]
+        intent = {
+            "person": person_data,
+            "ticket_types": ticket_type_data,
+            "callback_url": "http://127.0.0.1:8000/payments",
+        }
+
+        create_res = self.fa_client.post(f"{API_BASE_URL}/intent/", json=intent)
+        assert create_res.status_code == 200
+
+        res = self.fa_client.get(f"{API_BASE_URL}/{create_res.json()['id']}/")
+        assert res.status_code == 200

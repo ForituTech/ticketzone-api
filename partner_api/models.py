@@ -59,4 +59,6 @@ class PaymentIntent(BaseModel):
     @property
     def redirect_to(self) -> str:
         current_site = Site.objects.get_current().domain
-        return "".join([PROTO, "://", current_site, PAYMENT_PAGE_RELATIVE_URL])
+        return "".join(
+            [PROTO, "://", current_site, PAYMENT_PAGE_RELATIVE_URL, str(self.id), "/"]
+        )
