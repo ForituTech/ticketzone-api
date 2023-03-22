@@ -82,3 +82,27 @@ class PaymentTestCase(TransactionTestCase):
         res = self.fa_client.post(f"{API_BASE_URL}/", json=payment_data)
         assert res.status_code == 200
         mock_c2b_recieve.assert_called()
+
+    def test_read_intent(self) -> None:
+        event = create_event_object(owner=self.partner.owner)
+        ticket_types = [
+            create_ticket_type_obj(event=event),
+            create_ticket_type_obj(event=event),
+            create_ticket_type_obj(event=event),
+        ]
+        person_data = person_fixture()
+        ticket_type_data = [
+            {"id": str(ticket_type.id), "amount": 1} for ticket_type in ticket_types
+        ]
+        intent = {
+            "person": person_data,
+            "ticket_types": ticket_type_data,
+            "callback_url": "http://127.0.0.1:8000/payments",
+        }
+
+        intent_res = self.fa_client.post(f"{API_BASE_URL}/intent/", json=intent)
+        assert intent_res.status_code == 200
+        intent = intent_res.json()
+
+        res = self.fa_client.get(f"{API_BASE_URL}/intent/{intent['id']}/")
+        assert res.status_code == 200

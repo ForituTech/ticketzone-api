@@ -21,6 +21,11 @@ def create_payment_from_intent(*, payment_in: PaymentCreateSerializer) -> Any:
     return payments_service.create_payment_from_intent(payment_in)
 
 
+@router.get("/intent/{intent_id}/", response_model=PaymentIntentSerializer)
+def read_intent(*, intent_id: str) -> Any:
+    return payments_service.get_payment_intent(intent_id)
+
+
 @router.post("/intent/", response_model=PaymentIntentSerializer)
 def create_payment_intent(
     *,
