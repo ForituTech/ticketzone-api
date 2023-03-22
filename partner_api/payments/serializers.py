@@ -54,6 +54,7 @@ class PaymentIntentSerializer(InDBBaseSerializer):
     ticket_types: Sequence[TicketTypeInnerSerializer]
     redirect_to: AnyUrl
     event_poster: Optional[str]
+    event_id: str
 
     @validator("event_poster", pre=True)
     def validate_event_poster(cls, value: ImageField) -> str:
