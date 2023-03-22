@@ -52,6 +52,9 @@ class PaymentIntent(BaseModel):
     )
     callback_url = models.URLField(null=False, blank=False)
 
+    def __str__(self) -> str:
+        return f"{self.person.name}'s payment intent of {self.amount}"
+
     @property
     def ticket_types(self) -> Sequence[TicketType]:
         ticket_types = [ticket_type for ticket_type in self.ticket_type_rel.all()]
