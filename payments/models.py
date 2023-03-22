@@ -30,7 +30,10 @@ class Payment(BaseModel):
     reconciled = models.BooleanField(null=False, blank=False, default=False)
 
     def __str__(self) -> str:
-        return f"{self.person.name} paid " f"{self.amount} at {self.created_at}"
+        return (
+            f"{self.person.name} {self.state} payment"
+            f" of {self.amount} @ {self.created_at.date()}"
+        )
 
 
 class PaymentMethod(BaseModel):

@@ -1,3 +1,6 @@
+from unittest import mock
+from unittest.mock import Mock
+
 from django.test import TransactionTestCase
 from fastapi.testclient import TestClient
 
@@ -7,11 +10,13 @@ from events.fixtures.event_fixtures import create_event_object, create_ticket_ty
 from partner.fixtures.partner_fixtures import create_partner_obj, person_fixture
 from partner_api.auth.tests.fixtures import create_partner_api_credentials_obj
 from partner_api.auth.utils import create_auth_token
+from payments.constants import PaymentProviders
+from payments.intergrations.ipay import iPayMPesa
 
 API_BASE_URL = "/v1/payments"
 
 
-class AuthTestCase(TransactionTestCase):
+class PaymentTestCase(TransactionTestCase):
     def setUp(self) -> None:
         # fastapi client
         self.partner = create_partner_obj()
@@ -43,11 +48,12 @@ class AuthTestCase(TransactionTestCase):
         assert res.status_code == 200
         res_data = res.json()
         assert res_data["amount"] == 36000
-        returned_tts = [tt["id"] for tt in res_data["ticket_types"]]
-        for tt in ticket_types:
-            assert str(tt.id) in returned_tts
+        returned_tts = [(tt["id"], tt["amount"]) for tt in res_data["ticket_types"]]
+        for tt in ticket_type_data:
+            assert (tt["id"], tt["amount"]) in returned_tts
 
-    def test_ipn_page(self) -> None:
+    @mock.patch.object(iPayMPesa, "c2b_receive")
+    def test_create_payment__from_intent(self, mock_c2b_recieve: Mock) -> None:
         event = create_event_object(owner=self.partner.owner)
         ticket_types = [
             create_ticket_type_obj(event=event),
@@ -64,8 +70,15 @@ class AuthTestCase(TransactionTestCase):
             "callback_url": "http://127.0.0.1:8000/payments",
         }
 
-        create_res = self.fa_client.post(f"{API_BASE_URL}/intent/", json=intent)
-        assert create_res.status_code == 200
+        intent_res = self.fa_client.post(f"{API_BASE_URL}/intent/", json=intent)
+        assert intent_res.status_code == 200
+        intent = intent_res.json()
 
-        res = self.fa_client.get(f"{API_BASE_URL}/{create_res.json()['id']}/")
+        payment_data = {
+            "intent_id": intent["id"],
+            "made_through": PaymentProviders.MPESA.value,
+        }
+
+        res = self.fa_client.post(f"{API_BASE_URL}/", json=payment_data)
         assert res.status_code == 200
+        mock_c2b_recieve.assert_called()

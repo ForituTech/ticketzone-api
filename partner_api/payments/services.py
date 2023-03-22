@@ -3,7 +3,12 @@ from core.exceptions import HttpErrorExceptionFA as HttpErrorException
 from events.models import Event
 from partner.utils import random_password
 from partner_api.models import PaymentIntent, PaymentIntentTicketType
-from partner_api.payments.serializers import PaymentIntentCreateSerializer
+from partner_api.payments.serializers import (
+    PaymentCreateSerializer,
+    PaymentIntentCreateSerializer,
+    TicketTypeInnerSerializer,
+)
+from payments.models import Payment
 from payments.services import payment_service
 
 
@@ -22,9 +27,11 @@ class PaymentsService:
             callback_url=payment_in.callback_url,
         )
         intent.save()
-        for ticket_type in obj_data.get("tt_objs", None):
+        for ticket_type in payment_in.ticket_types:
             tt_intent = PaymentIntentTicketType.objects.create(
-                payment_intent=intent, ticket_type=ticket_type
+                payment_intent=intent,
+                ticket_type_id=ticket_type.id,
+                amount=ticket_type.amount,
             )
             tt_intent.save()
 
@@ -55,6 +62,23 @@ class PaymentsService:
             )
 
         return Event.objects.get(id=ticket_type.event_id)
+
+    def create_payment_from_intent(self, payment: PaymentCreateSerializer) -> Payment:
+        intent = self.get_payment_intent(intent_id=str(payment.intent_id))
+        payment_data = {
+            "amount": intent.amount,
+            "person_id": str(intent.person_id),
+            "made_through": payment.made_through.value,
+        }
+        payment_obj = Payment.objects.create(**payment_data)
+        payment_obj.save()
+        payment_data["ticket_types"] = [
+            TicketTypeInnerSerializer.from_orm(ticket_type).dict()
+            for ticket_type in intent.ticket_types
+        ]
+        payment_service.on_post_create(payment_obj, payment_data)
+
+        return payment_obj
 
 
 payments_service = PaymentsService()
