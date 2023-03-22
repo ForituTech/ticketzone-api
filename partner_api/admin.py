@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from partner_api.models import PaymentIntent
+from partner_api.models import PaymentIntent, PaymentIntentTicketType
 
 
 class PaymentIntentAdmin(admin.ModelAdmin):
@@ -8,3 +8,4 @@ class PaymentIntentAdmin(admin.ModelAdmin):
 
 
 admin.site.register(PaymentIntent, PaymentIntentAdmin)
+admin.site.register(PaymentIntentTicketType, PaymentIntentAdmin)
