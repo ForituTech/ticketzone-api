@@ -78,3 +78,7 @@ class PaymentIntent(BaseModel):
             return self.ticket_types[0].event.poster
 
         return None
+
+    @property
+    def event_id(self) -> str:
+        return str(self.ticket_types[0].event_id)
