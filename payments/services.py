@@ -100,7 +100,7 @@ class PaymentService(
         for ticket_type in obj_in["ticket_types"]:
             ticket_service.create(
                 obj_data={
-                    "ticket_type_id": ticket_type["id"],
+                    "ticket_type_id": str(ticket_type["id"]),
                     "payment_id": str(obj.id),
                 },
                 serializer=TicketCreateSerializer,

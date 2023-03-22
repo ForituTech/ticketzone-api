@@ -1,11 +1,10 @@
 from datetime import datetime, timedelta
-from typing import Sequence
+from typing import Optional, Sequence
 
-from django.contrib.sites.models import Site
 from django.db import models
 
 from core.models import BaseModel
-from eticketing_api.settings import PAYMENT_PAGE_RELATIVE_URL, PROTO
+from eticketing_api.settings import PAYMENT_PAGE_URL
 from events.models import TicketType
 from partner.models import Partner, Person
 from partner_api.utils import generate_resource_secret
@@ -40,6 +39,7 @@ class PaymentIntentTicketType(BaseModel):
     payment_intent = models.ForeignKey(
         "PaymentIntent", on_delete=models.CASCADE, null=False, blank=False
     )
+    amount = models.IntegerField(default=0, null=False, blank=False)
 
 
 class PaymentIntent(BaseModel):
@@ -54,11 +54,24 @@ class PaymentIntent(BaseModel):
 
     @property
     def ticket_types(self) -> Sequence[TicketType]:
-        return [ticket_type for ticket_type in self.ticket_type_rel.all()]
+        ticket_types = [ticket_type for ticket_type in self.ticket_type_rel.all()]
+        for tt in ticket_types:
+            amount = (
+                PaymentIntentTicketType.objects.values("amount")
+                .filter(ticket_type_id=tt.id, payment_intent_id=self.id)
+                .first()
+            )
+            setattr(tt, "amount", amount["amount"] if amount else 0)
+
+        return ticket_types
 
     @property
     def redirect_to(self) -> str:
-        current_site = Site.objects.get_current().domain
-        return "".join(
-            [PROTO, "://", current_site, PAYMENT_PAGE_RELATIVE_URL, str(self.id), "/"]
-        )
+        return "".join([PAYMENT_PAGE_URL, "/", str(self.id)])
+
+    @property
+    def event_poster(self) -> Optional[str]:
+        if self.ticket_types:
+            return self.ticket_types[0].event.poster
+
+        return None

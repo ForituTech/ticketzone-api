@@ -1,9 +1,12 @@
-from typing import List, Sequence
+from typing import List, Optional, Sequence
+from uuid import UUID
 
 from pydantic import AnyUrl, BaseModel, validator
+from rest_framework.serializers import ImageField
 
 from partner.utils import validate_email, validate_phonenumber
 from partner_api.serializers import InDBBaseSerializer
+from payments.constants import PaymentProviders
 
 
 class TicketTypeSerializer(BaseModel):
@@ -14,6 +17,7 @@ class TicketTypeSerializer(BaseModel):
 class TicketTypeInnerSerializer(InDBBaseSerializer):
     name: str
     price: float
+    amount: int
 
 
 class PersonSerializer(BaseModel):
@@ -49,3 +53,19 @@ class PaymentIntentSerializer(InDBBaseSerializer):
     person: PersonInDBSerializer
     ticket_types: Sequence[TicketTypeInnerSerializer]
     redirect_to: AnyUrl
+    event_poster: Optional[str]
+
+    @validator("event_poster", pre=True)
+    def validate_event_poster(cls, value: ImageField) -> str:
+        return str(value)
+
+
+class PaymentCreateSerializer(BaseModel):
+    intent_id: UUID
+    made_through: PaymentProviders
+
+
+class PaymentSerializer(InDBBaseSerializer):
+    amount: float
+    person_id: str
+    made_through: str
