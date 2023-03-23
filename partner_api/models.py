@@ -70,7 +70,7 @@ class PaymentIntent(BaseModel):
 
     @property
     def redirect_to(self) -> str:
-        return "".join([PAYMENT_PAGE_URL, "/", str(self.id)])
+        return "".join([PAYMENT_PAGE_URL, "/", str(self.id), "/"])
 
     @property
     def event_poster(self) -> Optional[str]:
