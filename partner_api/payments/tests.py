@@ -83,6 +83,42 @@ class PaymentTestCase(TransactionTestCase):
         assert res.status_code == 200
         mock_c2b_recieve.assert_called()
 
+    @mock.patch.object(iPayMPesa, "c2b_receive")
+    def test_create_payment__from_intent__with_new_person_details(
+        self, mock_c2b_recieve: Mock
+    ) -> None:
+        event = create_event_object(owner=self.partner.owner)
+        ticket_types = [
+            create_ticket_type_obj(event=event),
+            create_ticket_type_obj(event=event),
+            create_ticket_type_obj(event=event),
+        ]
+        person_data = person_fixture()
+        ticket_type_data = [
+            {"id": str(ticket_type.id), "amount": 1} for ticket_type in ticket_types
+        ]
+        intent = {
+            "person": person_data,
+            "ticket_types": ticket_type_data,
+            "callback_url": "http://127.0.0.1:8000/payments",
+        }
+
+        intent_res = self.fa_client.post(f"{API_BASE_URL}/intent/", json=intent)
+        assert intent_res.status_code == 200
+        intent = intent_res.json()
+
+        new_person_data = person_fixture()
+        payment_data = {
+            "intent_id": intent["id"],
+            "made_through": PaymentProviders.MPESA.value,
+            "person": new_person_data,
+        }
+
+        res = self.fa_client.post(f"{API_BASE_URL}/", json=payment_data)
+        assert res.status_code == 200
+        assert res.json()["person"]["phone_number"] == new_person_data["phone_number"]
+        mock_c2b_recieve.assert_called()
+
     def test_read_intent(self) -> None:
         event = create_event_object(owner=self.partner.owner)
         ticket_types = [

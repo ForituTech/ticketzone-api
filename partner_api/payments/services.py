@@ -1,6 +1,8 @@
 from core.error_codes import ErrorCodes
 from core.exceptions import HttpErrorExceptionFA as HttpErrorException
 from events.models import Event
+from partner.serializers import PersonUpdateSerializer
+from partner.services import person_service
 from partner.utils import random_password
 from partner_api.models import PaymentIntent, PaymentIntentTicketType
 from partner_api.payments.serializers import (
@@ -65,6 +67,16 @@ class PaymentsService:
 
     def create_payment_from_intent(self, payment: PaymentCreateSerializer) -> Payment:
         intent = self.get_payment_intent(intent_id=str(payment.intent_id))
+
+        if payment.person:
+            person = person_service.update(
+                obj_data=payment.person.dict(),
+                serializer=PersonUpdateSerializer,
+                obj_id=str(intent.person_id),
+            )
+            intent.person = person
+            intent.save()
+
         payment_data = {
             "amount": intent.amount,
             "person_id": str(intent.person_id),

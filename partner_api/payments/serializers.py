@@ -64,9 +64,11 @@ class PaymentIntentSerializer(InDBBaseSerializer):
 class PaymentCreateSerializer(BaseModel):
     intent_id: UUID
     made_through: PaymentProviders
+    person: Optional[PersonSerializer]
 
 
 class PaymentSerializer(InDBBaseSerializer):
     amount: float
     person_id: str
     made_through: str
+    person: PersonInDBSerializer
