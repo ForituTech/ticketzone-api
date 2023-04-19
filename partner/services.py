@@ -60,6 +60,12 @@ class PersonService(
             raise credential_error_exception
         try:
             user = Person.objects.get(phone_number=user_in.data["phone_number"])
+            partner = Partner.objects.filter(owner_id=user.id).first()
+            if partner and not partner.verified:
+                raise HttpErrorException(
+                    status_code=400,
+                    code=ErrorCodes.PARTNER_NOT_VERIFIED,
+                )
         except Person.DoesNotExist:
             raise credential_error_exception
         except Person.MultipleObjectsReturned:
@@ -109,10 +115,17 @@ class PersonService(
             raise credential_error_exception
 
         user: Person = Person.objects.get(phone_number=verification[1])
-        user.hashed_password = hash_password(
-            otp_verification_payload.data["new_password"]
-        )
-        user.save()
+        if "new_password" in otp_verification_payload.data:
+            user.hashed_password = hash_password(
+                otp_verification_payload.data["new_password"]
+            )
+            user.save()
+        else:
+            if partner := Partner.objects.get(owner_id=user.id):
+                partner.verified = True
+                partner.save()
+            else:
+                raise ObjectNotFoundException("Partner", user.id)
 
         return create_access_token(user)
 
@@ -127,21 +140,6 @@ person_service = PersonService(Person)
 
 
 class PartnerService(CRUDService[Partner, PartnerSerializer, PartnerUpdateSerializer]):
-    def on_post_create(self, obj: Partner, obj_in: Dict[str, Any]) -> None:
-        if person := obj_in.get("owner", None):
-            send_email.apply_async(
-                args=(
-                    str(obj.owner.id),
-                    settings.POST_PARTNER_PERSON_CREATE_EMAIL_TITLE,
-                    settings.POST_PARTNER_PERSON_CREATE_EMAIL.format(
-                        obj.owner.name,
-                        obj.owner.phone_number,
-                        person["hashed_password"],
-                    ),
-                ),
-                queue=settings.CELERY_NOTIFICATIONS_QUEUE,
-            )
-
     def on_pre_create(self, obj_in: Dict[str, Any]) -> None:
         if person := obj_in.get("owner", None):
             obj_in["owner_id"] = str(
@@ -150,6 +148,20 @@ class PartnerService(CRUDService[Partner, PartnerSerializer, PartnerUpdateSerial
                 ).id
             )
             del obj_in["owner"]
+
+    def send_verification_email(self, partner: Partner) -> str:
+        otp, token = create_otp(partner.owner)
+        send_email.apply_async(
+            args=(
+                str(partner.owner.id),
+                settings.POST_PARTNER_PERSON_CREATE_EMAIL_TITLE,
+                settings.POST_PARTNER_PERSON_CREATE_EMAIL.format(
+                    partner.owner.name, otp
+                ),
+            ),
+            queue=settings.CELERY_NOTIFICATIONS_QUEUE,
+        )
+        return token
 
     def get_total_sales(self, partner_id: str) -> int:
         filters = {

@@ -99,6 +99,10 @@ class EventService(CRUDService[Event, EventSerializer, EventUpdateSerializer]):
                 event_promo_copy["event_id"] = obj.id
                 EventPromotion.objects.create(**event_promo_copy)
 
+        if "listed" in obj_in:
+            obj.is_public = obj_in["listed"]
+            obj.save()
+
     def modify_query(
         self,
         query: QuerySet,

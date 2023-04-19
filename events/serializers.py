@@ -104,6 +104,7 @@ class EventBaseSerializer(serializers.Serializer):
         child=TickeTypeReadSerializer(), max_length=100, required=False
     )
     category_id = serializers.CharField(required=False, max_length=255)
+    listed = serializers.BooleanField(required=False, source="is_public")
 
 
 class EventSerializer(BaseSerializer):
@@ -126,6 +127,7 @@ class EventSerializer(BaseSerializer):
     event_promotions = serializers.ListField(
         child=EventPromotionSerializer(), max_length=10, required=False
     )
+    listed = serializers.BooleanField(required=False, default=True)
 
 
 class EventReadSerializer(InDBBaseSerializer, EventBaseSerializer):

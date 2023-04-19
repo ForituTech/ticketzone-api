@@ -17,37 +17,33 @@ from notifications.sms import sms_client
 from partner.models import Person
 from tickets.utils import generate_ticket_pdf
 
-retries = 0
-
 
 @celery.task(name=__name__ + ".send_email")
 def send_email(
     person_id: str,
     header: str,
     body: str,
-    attachments: Sequence[Any] = [],
     html: bool = False,
     retry: int = 0,
 ) -> bool:
     person: Person = Person.objects.get(pk=person_id)
-
-    if retry == 5:
-        return False
     email = EmailMessage(
-        subject=header,
+        subject=settings.TICKET_EMAIL_TITLE,
+        to=(person.email,),
         body=body,
-        to=[person.email],
     )
-    email.attach()
-    failed = email.send(fail_silently=True)
-    if failed:
-        send_email(person_id, header, body, attachments, html, retry=retry + 1)
+    email.content_subtype = "html"
+    sent = email.send(fail_silently=True)
+    if not sent and retry < 5:
+        send_email(person_id, header, body, html, retry=retry + 1)
+        return False
     Notification.objects.create(
         person=person,
         channel=NotificationsChannels.EMAIL.value,
-        has_data=True if len(attachments) else False,
+        has_data=False,
+        sent=bool(sent),
     )
-    return True
+    return bool(sent)
 
 
 @celery.task(name=__name__ + ".send_multi_email")
@@ -59,7 +55,7 @@ def send_multi_email(
     html: bool = False,
     retry: int = 0,
 ) -> bool:
-    if retries == 5:
+    if retry == 5:
         return False
     email = EmailMessage(
         subject=header,

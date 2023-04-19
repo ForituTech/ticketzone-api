@@ -109,7 +109,7 @@ class CreateService(Generic[ModelType, CreateSerializer]):
         obj.save()
 
         if hasattr(self, "on_relationship"):
-            self.on_relationship(obj_in=obj_data, obj=obj, create=True)
+            self.on_relationship(obj_in=obj_data.copy(), obj=obj, create=True)
 
         if hasattr(self, "on_post_create"):
             self.on_post_create(obj, obj_data)

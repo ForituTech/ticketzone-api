@@ -240,9 +240,8 @@ POST_RECONCILIATION_MESSAGE = "HI {}. Your weekly reconciliation has just comple
 
 POST_PARTNER_PERSON_CREATE_EMAIL_TITLE = "Ticketzone Account Details"
 POST_PARTNER_PERSON_CREATE_EMAIL = (
-    "Hi {} your Tickezone credentials are:\n"
-    "Username: {}, password: {} \n"
-    "We would recommend you reset your for safety purposes"
+    "Hi {} your Tickezone account has been created, please use the "
+    "OTP: {} to verify your email."
 )
 
 # CORS
