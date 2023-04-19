@@ -150,6 +150,8 @@ class EventViewset(AbstractPermissionedView):
             partner_id = ""
         filters = request.query_params.dict()
         filters["partner_id"] = partner_id
+        if not partner_id:
+            filters["is_public"] = True  # type: ignore[assignment]
         events = event_service.get_filtered(filters=filters, paginator=paginator)
         paginated_events = paginator.paginate_queryset(events, request=request)
         return paginator.get_paginated_response(

@@ -36,6 +36,7 @@ class EventTestCase(TestCase):
         }
         self.client = APIClient(False, **self.auth_header)
         self.ta_client = APIClient(False, **self.ta_auth_header)
+        self.unauthed_client = APIClient(False)
 
     def test_create_event__no_data(self) -> None:
         res = self.client.post(f"/{API_VER}/events/events/", data={})
@@ -105,12 +106,14 @@ class EventTestCase(TestCase):
             "partner_person_ids": [ta_id],
             "ticket_types": ticket_types,
             "event_promotions": event_promos,
+            "listed": False,
         }
         res = self.client.put(
             f"/{API_VER}/events/events/{event.id}/", data=update_data, format="json"
         )
         assert res.status_code == status.HTTP_200_OK
         assert res.json()["name"] == name
+        assert not res.json()["listed"]
         ta_ids = [ta["id"] for ta in res.json()["assigned_ticketing_agents"]]
         assert ta_id in ta_ids
         tt_names = [tt["name"] for tt in res.json()["ticket_types"]]
@@ -232,9 +235,12 @@ class EventTestCase(TestCase):
     def test_list_events(self) -> None:
         event = event_fixtures.create_event_object(owner=self.owner.person)
         event2 = event_fixtures.create_event_object(owner=self.owner.person)
+        event3 = event_fixtures.create_event_object(owner=self.owner.person)
         event_fixtures.create_event_object()
         event2.created_at = date.today() - timedelta(days=1)
         event2.save()
+        event3.is_public = False
+        event3.save()
         partner_person_schedule = event_fixtures.create_partner_person_schedule(
             event_id=str(event.id)
         )
@@ -246,7 +252,7 @@ class EventTestCase(TestCase):
         )
 
         assert res.status_code == 200
-        assert res.json()["count"] == 2
+        assert res.json()["count"] == 3
         returned_events_created_at = [
             event["created_at"] for event in res.json()["results"]
         ]
@@ -267,6 +273,11 @@ class EventTestCase(TestCase):
         assert res.status_code == 200
         returned_sales_figures = [event["sales"] for event in res.json()["results"]]
         assert sorted(returned_sales_figures) == returned_sales_figures
+
+        public_res = self.unauthed_client.get(f"/{API_VER}/events/events/")
+        assert public_res.status_code == 200
+        returned_event_ids = [event["id"] for event in public_res.json()["results"]]
+        assert str(event3.id) not in returned_event_ids
 
     def test_export_events(self) -> None:
         event_fixtures.create_event_object(owner=self.owner.person)

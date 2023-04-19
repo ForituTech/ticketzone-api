@@ -37,7 +37,7 @@ def event_fixture(
         "partner_id": partner_id
         if partner_id
         else str(partner_fixtures.create_partner_obj().id),
-        "is_public": False,
+        "is_public": True,
         "event_state": "PR",
         "time": (datetime.now() + timedelta(hours=4)).strftime("%H:%M:%S"),
         "end_time": (datetime.now() + timedelta(days=1)).strftime("%H:%M:%S"),

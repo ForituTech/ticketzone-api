@@ -279,10 +279,13 @@ class PartnerViewSet(AbstractPermissionedView):
         responses={200: PartnerReadSerializer},
     )
     def create(self, request: Request) -> Response:
-        partner_person = partner_service.create(
+        partner = partner_service.create(
             obj_data=request.data, serializer=PartnerCreateSerializer
         )
-        return Response(PartnerReadSerializer(partner_person).data)
+        verification_token = partner_service.send_verification_email(partner)
+        partner_data = PartnerReadSerializer(partner).data
+        partner_data["verification_token"] = verification_token
+        return Response(partner_data)
 
 
 class PartnerPersonViewset(AbstractPermissionedView):

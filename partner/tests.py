@@ -67,6 +67,23 @@ class PartnerTestCase(TestCase):
         assert res.status_code == 200
         assert "token" in res.json()
 
+    def test_login__partner_not_verified(self) -> None:
+        self.owner.partner.verified = False
+        self.owner.partner.save()
+
+        login_credentials = {
+            "phone_number": str(self.owner.person.phone_number),
+            "password": self.password,
+        }
+        res = self.unauthed_client.post(
+            f"/{API_VER}/partner/login/", data=login_credentials, format="json"
+        )
+        assert res.status_code == 400
+        assert "PARTNER_NOT_VERIFIED" in res.json()["detail"]
+
+        self.owner.partner.verified = True
+        self.owner.partner.save()
+
     def test_login__no_credentials(self) -> None:
         login_credentials = {
             "phone_number": partner_fixtures.random_phone_number(),
@@ -107,27 +124,49 @@ class PartnerTestCase(TestCase):
         )
         assert res.status_code == 403
 
+    @mock.patch("partner.utils.random_password")
     @mock.patch("notifications.tasks.send_email.apply_async")
-    def test_partner_create(self, mock_send_email: Mock) -> None:
+    def test_partner_create(
+        self, mock_send_email: Mock, mock_random_password: Mock
+    ) -> None:
+        otp = random_password()
+        mock_random_password.return_value = otp
         partner_data = partner_fixtures.partner_fixture_with_owner_data()
 
         res = self.authed_client.post(
             f"/{API_VER}/partner/partner/", data=partner_data, format="json"
         )
         assert res.status_code == 200
+        returned_partner = res.json()
+        assert "verification_token" in returned_partner
 
         mock_send_email.assert_called_with(
             args=(
                 res.json()["owner"]["id"],
                 settings.POST_PARTNER_PERSON_CREATE_EMAIL_TITLE,
                 settings.POST_PARTNER_PERSON_CREATE_EMAIL.format(
-                    res.json()["owner"]["name"],
-                    res.json()["owner"]["phone_number"],
-                    partner_data["owner"]["hashed_password"],
+                    res.json()["owner"]["name"], otp
                 ),
             ),
             queue=settings.CELERY_NOTIFICATIONS_QUEUE,
         )
+
+        verification_payload = {
+            "secret": returned_partner["verification_token"],
+            "otp": otp,
+        }
+        res = self.unauthed_client.post(
+            f"/{API_VER}/partner/verify/otp/", data=verification_payload, format="json"
+        )
+        assert res.status_code == 200
+        assert res.json()["token"]
+
+        res = self.unauthed_client.get(
+            f"/{API_VER}/partner/partner/{returned_partner['id']}/",
+            **{settings.AUTH_HEADER: res.json()["token"]},
+        )
+        assert res.status_code == 200
+        assert res.json()["verified"]
 
     @mock.patch("notifications.tasks.send_email.apply_async")
     def test_partner_create__duplicate(self, _: Mock) -> None:

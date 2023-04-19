@@ -58,6 +58,9 @@ def create_access_token(
     user: Person, expires_delta: Union[timedelta, None] = None
 ) -> str:
     membership = get_membership_or_ownership(user)
+    partner = Partner.objects.get(id=membership[0])
+    if not partner.verified:
+        raise HttpErrorException(status_code=412, code=ErrorCodes.PARTNER_NOT_FOUND)
     to_encode = {
         "phone_number": user.phone_number,
         "name": user.name,

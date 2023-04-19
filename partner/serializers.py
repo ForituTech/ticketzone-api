@@ -87,6 +87,7 @@ class PartnerSerializer(BaseSerializer):
 class PartnerReadSerializer(InDBBaseSerializer, PartnerBaseSerializer):
     owner = PersonReadSerializer()
     sms_package = PartnerSMSPackageReadSerializer()
+    verified = serializers.BooleanField()
 
 
 class PartnerUpdateSerializer(BaseSerializer, PartnerBaseSerializer):
@@ -153,7 +154,7 @@ class PasswordResetPayloadSerializer(serializers.Serializer):
 class PasswordResetVerificationSerializer(serializers.Serializer):
     secret = serializers.CharField(max_length=1024)
     otp = serializers.CharField(max_length=10)
-    new_password = serializers.CharField(max_length=256)
+    new_password = serializers.CharField(max_length=256, required=False)
 
 
 class SalesSerializer(serializers.Serializer):

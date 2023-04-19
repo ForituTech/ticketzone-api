@@ -35,6 +35,7 @@ class Partner(BaseModel):
     bank_code = models.CharField(null=True, blank=True, max_length=255)
     bank_account_number = models.CharField(null=True, blank=True, max_length=512)
     comission_rate = models.FloatField(null=False, blank=False, default=3.0)
+    verified = models.BooleanField(null=False, blank=False, default=False)
 
     def __str__(self) -> str:
         return self.name

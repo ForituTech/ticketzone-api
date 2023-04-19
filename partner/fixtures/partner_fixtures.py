@@ -70,6 +70,7 @@ def partner_fixture(owner_id: Optional[str] = None) -> dict:
     return {
         "name": random_string(),
         "owner_id": owner_id if owner_id else str(create_person_obj().id),
+        "verified": True,
         **partner_banking_info_fixture,
     }
 

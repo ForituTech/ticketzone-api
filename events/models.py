@@ -44,8 +44,8 @@ class Event(BaseModel):
     is_public = models.BooleanField(
         null=False,
         blank=False,
-        default=False,
-        verbose_name="Has the event been published",
+        default=True,
+        verbose_name="Is the event publically listed",
     )
     event_state = models.CharField(
         max_length=256,
