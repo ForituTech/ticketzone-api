@@ -174,10 +174,3 @@ class PromoOptIn(BaseModel):
 
     def __str__(self) -> str:
         return f"{self.person.name}'s promo opt in for {self.partner.name}'s events"
-
-
-class TempOTPStore(BaseModel):
-    otp = models.CharField(max_length=255, null=False, blank=False)
-
-    def __str__(self) -> str:
-        return self.otp
