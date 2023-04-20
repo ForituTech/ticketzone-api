@@ -28,7 +28,7 @@ def send_email(
 ) -> bool:
     person: Person = Person.objects.get(pk=person_id)
     email = EmailMessage(
-        subject=settings.TICKET_EMAIL_TITLE,
+        subject=header,
         to=(person.email,),
         body=body,
     )

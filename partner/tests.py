@@ -842,9 +842,9 @@ class PartnerTestCase(TestCase):
         )
 
     @mock.patch("partner.utils.random_password")
-    @mock.patch("notifications.tasks.send_sms.apply_async")
+    @mock.patch("notifications.tasks.send_email.apply_async")
     def test_create_verify_otp(
-        self, mock_send_sms: Any, mock_random_password: Any
+        self, mock_send_email: Any, mock_random_password: Any
     ) -> None:
         otp = random_password()
         mock_random_password.return_value = otp
@@ -860,12 +860,12 @@ class PartnerTestCase(TestCase):
         verification = verify_otp(token, random_password())
 
         assert not verification[0]
-        mock_send_sms.assert_called()
+        mock_send_email.assert_called()
 
     @mock.patch("partner.utils.random_password")
-    @mock.patch("notifications.tasks.send_sms.apply_async")
+    @mock.patch("notifications.tasks.send_email.apply_async")
     def test_reset_password(
-        self, mock_send_sms: Any, mock_random_password: Any
+        self, mock_send_email: Any, mock_random_password: Any
     ) -> None:
         otp = random_password()
         mock_random_password.return_value = otp
@@ -881,7 +881,7 @@ class PartnerTestCase(TestCase):
 
         assert res.status_code == 200
         assert res.json()["secret"]
-        mock_send_sms.assert_called()
+        mock_send_email.assert_called()
         reset_secret = res.json()["secret"]
 
         new_password = random_string()

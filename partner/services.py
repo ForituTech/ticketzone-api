@@ -8,7 +8,7 @@ from core.exceptions import HttpErrorException, ObjectNotFoundException
 from core.services import CRUDService
 from eticketing_api import settings
 from events.models import Event
-from notifications.tasks import send_email, send_sms
+from notifications.tasks import send_email
 from partner.models import (
     Partner,
     PartnerPerson,
@@ -16,7 +16,6 @@ from partner.models import (
     PartnerSMS,
     Person,
     PromoOptIn,
-    TempOTPStore,
 )
 from partner.serializers import (
     PartnerPersonCreateSerializer,
@@ -90,11 +89,14 @@ class PersonService(
 
     def reset_password(self, user: Person) -> str:
         otp, token = create_otp(user)
-        send_sms.apply_async(
-            args=(user.id, f"Your ticketzone OTP is: {otp}"),
+        send_email.apply_async(
+            args=(
+                user.id,
+                "Ticketzone Account Support",
+                f"Your ticketzone OTP is: {otp}",
+            ),
             queue=settings.CELERY_NOTIFICATIONS_QUEUE,
         )
-        TempOTPStore.objects.create(otp=otp)
         return token
 
     def verify_otp(self, request: Request) -> str:
@@ -132,6 +134,8 @@ class PersonService(
     def get_or_create(self, person_data: Dict[str, Any]) -> Person:
         if phone := person_data.get("phone_number"):
             if person := Person.objects.filter(phone_number=phone).first():
+                person.email = person_data.get("email") or person.email
+                person.save()
                 return person
         return self.create(obj_data=person_data, serializer=PersonCreateSerializer)
 
