@@ -121,13 +121,21 @@ class iPayMPesa(SharedMethods, PaymentProviderType):
         return payload
 
     def c2b_receive(self, *, payment: Payment) -> None:
+        from payments.services import payment_service
+
+        if round(payment.amount, 2) == 0.00:
+            payment_service.update(
+                obj_data={"state": PaymentStates.PAID.value},
+                serializer=PaymentUpdateSerializer,
+                obj_id=str(payment.id),
+            )
+            return
+
         if transaction_id := self.initiate_transaction(payment=payment):
             payload = self.create_payment_payload(
                 transation_id=transaction_id, phone=payment.person.phone_number
             )
             res = requests.post(self.MOBILE_MONEY_URL, data=payload)
-
-            from payments.services import payment_service
 
             if int(res.json()["status"]):
                 payment_state = (

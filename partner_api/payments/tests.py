@@ -1,3 +1,4 @@
+from typing import Any
 from unittest import mock
 from unittest.mock import Mock
 
@@ -26,7 +27,8 @@ class PaymentTestCase(TransactionTestCase):
             app, headers={settings.EXTERNAL_API_AUTH_HEADER: self.token["access_token"]}
         )
 
-    def test_create_payment_intent(self) -> None:
+    @mock.patch("notifications.tasks.send_email.apply_async")
+    def test_create_payment_intent(self, *args: Any) -> None:
         event = create_event_object(owner=self.partner.owner)
         ticket_types = [
             create_ticket_type_obj(event=event),
@@ -52,8 +54,11 @@ class PaymentTestCase(TransactionTestCase):
         for tt in ticket_type_data:
             assert (tt["id"], tt["amount"]) in returned_tts
 
+    @mock.patch("notifications.tasks.send_email.apply_async")
     @mock.patch.object(iPayMPesa, "c2b_receive")
-    def test_create_payment__from_intent(self, mock_c2b_recieve: Mock) -> None:
+    def test_create_payment__from_intent(
+        self, mock_c2b_recieve: Mock, *args: Any
+    ) -> None:
         event = create_event_object(owner=self.partner.owner)
         ticket_types = [
             create_ticket_type_obj(event=event),
@@ -83,9 +88,10 @@ class PaymentTestCase(TransactionTestCase):
         assert res.status_code == 200
         mock_c2b_recieve.assert_called()
 
+    @mock.patch("notifications.tasks.send_email.apply_async")
     @mock.patch.object(iPayMPesa, "c2b_receive")
     def test_create_payment__from_intent__with_new_person_details(
-        self, mock_c2b_recieve: Mock
+        self, mock_c2b_recieve: Mock, *args: Any
     ) -> None:
         event = create_event_object(owner=self.partner.owner)
         ticket_types = [
