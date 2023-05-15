@@ -32,7 +32,13 @@ from partner.serializers import (
     UserPasswordResetSerializer,
     UserSerializer,
 )
-from partner.utils import create_access_token, create_otp, hash_password, verify_otp
+from partner.utils import (
+    create_access_token,
+    create_otp,
+    hash_password,
+    random_password,
+    verify_otp,
+)
 from tickets.models import Ticket
 
 
@@ -137,7 +143,23 @@ class PersonService(
                 person.email = person_data.get("email") or person.email
                 person.save()
                 return person
-        return self.create(obj_data=person_data, serializer=PersonCreateSerializer)
+        if "hashed_password" not in person_data:
+            person_data["hashed_password"] = random_password()
+        person = self.create(obj_data=person_data, serializer=PersonCreateSerializer)
+        send_email.apply_async(
+            args=(
+                person.id,
+                settings.POST_PARTNER_PERSON_CREATE_EMAIL_TITLE,
+                settings.POST_PARTNER_PERSON_CREATE_EMAIL.format(
+                    person.name,
+                    person.phone_number,
+                    person_data["hashed_password"],
+                ),
+            ),
+            queue=settings.CELERY_NOTIFICATIONS_QUEUE,
+        )
+
+        return person
 
 
 person_service = PersonService(Person)

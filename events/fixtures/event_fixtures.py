@@ -59,10 +59,12 @@ def create_event_object(
     return event
 
 
-def ticket_type_fixture(event_id: Union[str, int] = None, use_limit: int = 1) -> dict:
+def ticket_type_fixture(
+    event_id: Union[str, int] = None, use_limit: int = 1, price: int = 12000
+) -> dict:
     return {
         "name": random_string(),
-        "price": 12000,
+        "price": price,
         "event_id": event_id if event_id else str(create_event_object().id),
         "active": True,
         "amsg": random_string(),
@@ -83,9 +85,12 @@ def ticket_type_min_fixture(use_limit: int = 1) -> dict:
 
 
 def create_ticket_type_obj(
-    event: Optional[Event] = None, owner: Optional[Person] = None, use_limit: int = 1
+    event: Optional[Event] = None,
+    owner: Optional[Person] = None,
+    use_limit: int = 1,
+    price: int = 12000,
 ) -> TicketType:
-    data = ticket_type_fixture(use_limit=use_limit)
+    data = ticket_type_fixture(use_limit=use_limit, price=price)
     if not event:
         data["event_id"] = create_event_object(owner).id
     else:
