@@ -17,6 +17,7 @@ from payments.intergrations.ipay import iPayCard, iPayMPesa
 API_VER = settings.API_VERSION_STRING
 
 
+@mock.patch("notifications.tasks.send_email.apply_async")
 @mock.patch.object(iPayMPesa, "c2b_receive")
 @mock.patch.object(iPayCard, "c2b_receive")
 class PaymentTestCase(TestCase):
@@ -185,3 +186,16 @@ class PaymentTestCase(TestCase):
         )
         assert res.status_code == 200
         assert res.json()["sms_limit"] == pre_purchase_sms + 10
+
+    def test_create_payment__free_ticket(self, *args: Optional[Any]) -> None:
+        ticket_type = event_fixtures.create_ticket_type_obj(price=0)
+        assert int(ticket_type.price) == 0
+        payment_data = payment_fixtures.payment_create_fixture(
+            ticket_types=[{"id": str(ticket_type.id), "amount": 1}]
+        )
+
+        res = self.client.post(
+            f"/{API_VER}/payments/", data=payment_data, format="json"
+        )
+        assert res.status_code == 200
+        assert int(res.json()["amount"]) == 0
