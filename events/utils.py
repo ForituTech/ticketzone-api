@@ -13,4 +13,6 @@ def pre_process_data(data: dict) -> dict:
                     data[key] = literal_eval(data[key])
                 except ValueError:
                     pass
+        if data[key] in ["true", "false"]:
+            data[key] = json.loads(data[key])
     return data

@@ -106,7 +106,7 @@ class EventTestCase(TestCase):
             "partner_person_ids": [ta_id],
             "ticket_types": ticket_types,
             "event_promotions": event_promos,
-            "listed": False,
+            "listed": "false",
         }
         res = self.client.put(
             f"/{API_VER}/events/events/{event.id}/", data=update_data, format="json"
